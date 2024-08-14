@@ -1,0 +1,42 @@
+comandos 
+Client:
+npx create-expo-app . = crea appa expo en el cliente"El punto es para que no pida nombre y cree la app en la carpeta que estemos"
+- una vez creado el expo app
+npx expo start = 'Inicia el server del cliente'
+
+Server:
+npm add mysql2 = 'Instala Mysql a la app
+npm add cors = 'Instala cors
+npm add dotenv = 'Crea variables de entorno para pasar user y pass'
+npm add express  =  express
+npm add nodemon -d = al guardar se corre automaticamente la app  'el -d es para que quede como dependencia'
+
+npm run dev = corre el script que hay en package.json "npx nodemon app,js".. app.js porque es el archivo que a refrescar cada que guardemos
+
+
+
+// todo el contenido se debe encerra denreo de <GestureHandlerRootView> para que funcione la ventana modal
+
+
+// Estas dependencias son para NAVIGATION 
+npm install @react-navigation/native
+npx expo install react-native-screens react-native-safe-area-context
+npx expo install react-native-gesture-handler
+npx expo install react-native-reanimated
+npx expo install expo-system-ui
+ 
+npm install @react-navigation/bottom-tabs
+npm install @react-navigation/native-stack
+npm install @react-navigation/drawer
+npm install @react-navigation/material-top-tabs
+npx expo install react-native-pager-view
+
+GIT: ................>>
+git init .................. inicia git en el proyecto
+git status ................ Muestra cambios pendientes por actualizar
+git add .  ________________ Adiciona los archivos que se van a actualizar
+git commit -m "mensaje" ___ prepara los archivos para subir y dejar una nota de los cambios realizados
+git push -u origin main ... Sube los archivos a la rama main o master
+
+   git branch.............. Muestra la rama sobre la cualestamos trabajando
+   git checkout -b master .. Cambia de rama main a master
