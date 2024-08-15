@@ -2,7 +2,6 @@
 import { StyleSheet, Text, View, FlatList, SafeAreaView } from "react-native"; 
 import React from "react";
 import Navigation from "./Navigation";
-import { HeladoProvider } from "./context/HeladoContext";
 import { CartModalProvider } from "./context/CartModalContext";
 
 import {LogBox} from 'react-native';
@@ -29,9 +28,7 @@ export default function App(){
     return(
         <GestureHandlerRootView style={{ flex: 1 }}>
         <CartModalProvider>
-            <HeladoProvider>
-                <Navigation />
-            </HeladoProvider>
+            <Navigation />
         </CartModalProvider>
         </GestureHandlerRootView>
     )

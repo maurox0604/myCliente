@@ -12,7 +12,6 @@ import CreaHeladoScreen from './screens/CreaHeladoScreen';
 import StackEdit from './screens/StackEdit';
 import ListaHelados from './screens/ListaHelados';
 import CartModalContent from './components/CartModalContent';
-import { HeladoContext } from './context/HeladoContext';
 import { CartContext, CartProvider } from './context/CartContext';
 
 const CreateNew = () => { <View style={{ flex:1, backgroundColor: 'red'}}>

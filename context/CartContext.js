@@ -108,7 +108,7 @@ export const  CartProvider = ({children}) => {
 
         setCarts((prevState) =>
             prevState.filter((carts, id) => index !== indexItem)
-          );
+        );
 
         const filtredData = carts.filter(item => item.id !== id);
         console.log("filterData: ", filtredData)

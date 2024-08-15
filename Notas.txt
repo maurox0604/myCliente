@@ -40,3 +40,7 @@ git push -u origin main ... Sube los archivos a la rama main o master
 
    git branch.............. Muestra la rama sobre la cualestamos trabajando
    git checkout -b master .. Cambia de rama main a master
+
+
+   Crear APK : ........................
+   eas build -p android --profile preview

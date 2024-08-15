@@ -52,9 +52,10 @@ import { useState } from "react";
         shared_with_id,
         editItem,
         completed,
-        clearTodo,
+        reloadListDB,
         toggleTodo,
-        activaDeleteItem
+        activaDeleteItem,
+        updateHeladoCantidad 
         }) 
     {
         const datosPaCalc = { id, sabor, cantidad, icon,precio, closeCartModal }
@@ -101,7 +102,7 @@ import { useState } from "react";
             },
             method: "DELETE",
         });
-        clearTodo(id);
+        reloadListDB(id);
         console.log(response.status);
 }
 
@@ -119,7 +120,7 @@ async function updateHelado() {
             cantidad: cantidad,
         }),
     });
-    clearTodo(id);
+    reloadListDB(id);
     console.log(response.status);
 }
 
@@ -130,7 +131,7 @@ async function updateHelado() {
 //         },
 //     method: "GET",
 // });
-// clearTodo(id);
+// reloadListDB(id);
 // console.log(response.status);
 // }
 
@@ -204,7 +205,8 @@ return (
                     completed={completed}
                     // closeCartModal={closeCartModal}
                     datosPaCalc = {datosPaCalc}
-                    clearTodo={clearTodo} 
+                    reloadListDB={reloadListDB}
+                    updateHeladoCantidad={updateHeladoCantidad}
                 />
             </BottomSheetModal> 
 
@@ -215,7 +217,7 @@ return (
                 snapPoints={snapPointsEditar}
                 backgroundStyle={{ borderRadius: 30, borderWidth: 4 }}
                 >
-                <EditModalContent id={id} _sabor={sabor} _precio={precio} _cantidad={cantidad} clearTodo={clearTodo} closeModal={closeModal}/>
+                <EditModalContent id={id} _sabor={sabor} _precio={precio} _cantidad={cantidad} reloadListDB={reloadListDB} closeModal={closeModal}/>
             </BottomSheetModal>
     </TouchableOpacity>
     </GestureHandlerRootView>

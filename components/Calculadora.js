@@ -13,7 +13,8 @@ export default function Calculadora({
   // shared_with_id,
   completed,
   // closeCartModal,
-  datosPaCalc
+  datosPaCalc,
+  updateHeladoCantidad
 }) {
   
   const { addToCart, existCart } = useContext(CartContext);
@@ -55,18 +56,27 @@ export default function Calculadora({
   
 
   console.log("[[[[[[ datosPaCalc: ]]]]]]", datosPaCalc)
+ 
   // const existe = existCart(item);
   // console.log("Si exite y es ESTE: ", existe)
 
 
 
   const handleAddToCart = (item) =>{
+    
     if (cantCompra > 0) {
-      
-      // console.log("////item: ", item);
+      console.log("♥♥   ENVIANDO ITEM PAL CARRITO   datosPaCalc.cantidad : ", datosPaCalc.cantidad, " **** cantCompra: ",cantCompra)
+      const nuevaCantidad = datosPaCalc.cantidad - cantCompra;
+      updateHeladoCantidad(datosPaCalc.id, nuevaCantidad); // Actualiza la cantidad en ListaHelados
       addToCart(item);
-
+      
       datosPaCalc.closeCartModal();
+
+
+
+      
+      // datosPaCalc.closeCartModal(); // Cierra el modal si es necesario
+
     }else
       setActivMensaje(true);
       console.log('♥ Debes tener al menos 1 helado ');

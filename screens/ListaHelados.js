@@ -4,13 +4,12 @@ import { StyleSheet, Text, View, FlatList, SafeAreaView } from "react-native";
 import Helado from '../components/Helado'
 import { BottomSheetModalProvider } from '@gorhom/bottom-sheet';
 import { GestureHandlerRootView } from 'react-native-gesture-handler';
-import { HeladoContext } from '../context/HeladoContext';
+
 
 // import Navigation from '../Navigation';
 
 
 export default function ListaHelados({deletItem=false, editItem=false}){
-    const { setBadgeCount } = useContext(HeladoContext);
     const [helados, setHelados] = useState([]);
     const [activaDeleteItem, setActivaDeleteItem] = useState(false);
 
@@ -42,12 +41,23 @@ export default function ListaHelados({deletItem=false, editItem=false}){
         console.log('LOS DATOS: '+helados.length);
     }
 
-    function clearTodo(id){
+    function reloadListDB(id){
         // setHelados(helados.filter((helado) => helado.id !== id ));
         fetchHelados();
+        console.log(             "--"                 )
+        console.log(             "- LIMOPAINDOA LA LISTA -"                 )
         setHelados();
        // setSelectedHelado(null);
     }
+
+    function updateHeladoCantidad(id, nuevaCantidad) {
+        setHelados(prevHelados =>
+            prevHelados.map(helado =>
+                helado.id === id ? { ...helado, cantidad: nuevaCantidad } : helado
+            )
+        );
+    }
+
 
     function toggleTodo(id){
         setHelados(
@@ -67,14 +77,16 @@ export default function ListaHelados({deletItem=false, editItem=false}){
                         data={helados}
                         keyExtractor={(todo) => todo.id}
                         renderItem={({ item }) => (
-                            <>
-                            <Helado {...item}  clearTodo={clearTodo} toggleTodo={toggleTodo} activaDeleteItem={deletItem} editItem={editItem}/>
-                            {/* <Text>prueba</Text> */}
-                            {/* {console.log("item: ", item)}
-                            {console.log("data: ", {helados})} */}
-                            </>
-
-                            )}
+                            
+                            <Helado 
+                                {...item}  
+                                reloadListDB={reloadListDB} // Recarga los datos de la base de datos
+                                toggleTodo={toggleTodo} 
+                                activaDeleteItem={deletItem} 
+                                editItem={editItem}
+                                updateHeladoCantidad={updateHeladoCantidad}  // Actualiza los datos "cantidad" de la lista
+                            />
+                        )}
                         ListHeaderComponent={() => <Text style={styles.title}>Queen - Hoy </Text>}
                         contentContainerStyle={styles.contentContainerStyle}
                     />
