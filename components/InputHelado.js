@@ -114,6 +114,7 @@ import { TouchableOpacity } from "react-native-gesture-handler";
             const response = await fetch(`https://backend-de-prueba-delta.vercel.app/helados`, {
             headers: {
               "Content-Type": "application/json",
+              'Access-Control-Allow-Origin': '*',
             },
             method: "POST",
             body: JSON.stringify({

@@ -32,6 +32,7 @@ export default function ListaHelados({deletItem=false, editItem=false}){
             mode: "cors",
             headers: {
                 // "x-api-key": "abcdef123456",
+                'Access-Control-Allow-Origin': '*',
                 'Content-Type': 'application/json',
                 'Accept': 'application/json'
             },

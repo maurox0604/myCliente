@@ -30,6 +30,7 @@ const CartModalContent = ({ closeModal, carrito }) => {
                     const response = await fetch(`https://backend-de-prueba-delta.vercel.app/multicompra`, {
                     headers: {
                     "Content-Type": "application/json",
+                    'Access-Control-Allow-Origin': '*',
                 },
                 method: "PUT",
                 body: JSON.stringify({ items: carts }),

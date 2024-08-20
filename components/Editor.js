@@ -18,6 +18,7 @@ export default function Editor({
       const response = await fetch(`https://backend-de-prueba-delta.vercel.app/helados/${id}`, {
         headers: {
           "x-api-key": "abcdef123456",
+          'Access-Control-Allow-Origin': '*',
         },
         method: "GET",
       }

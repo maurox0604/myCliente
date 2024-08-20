@@ -99,6 +99,7 @@ import { useState } from "react";
             const response = await fetch(`https://backend-de-prueba-delta.vercel.app/helados/${id}`, {
             headers: {
             "x-api-key": "abcdef123456",
+            'Access-Control-Allow-Origin': '*',
             },
             method: "DELETE",
         });
@@ -150,6 +151,8 @@ return (
             <Image style={styles.iconImg}
                 source={{ uri: icon }}
             />
+                         {/* .................................................................... Cantidad */}
+        <Text style={styles.textCantidad}>{cantidad}</Text>
         </View>
 
         {/* ............................................................................ Nombre */}
@@ -159,15 +162,11 @@ return (
             <View style={styles.cantPrecio}>
                 {/* .................................................................... Precio */}
                 <Text style={styles.description}>${precio} </Text>
-
-                
             </View>
-           
         </View>
 
         {/* ......................... EDITAR Items o CALCULADORA en MODAL  <Feather> is a collection of simply beautiful open source icons for React Nativ*/}
         <View style={styles.contBotMas}>
-       
         
             {/* {shared_with_id !== null ? ( */}
             {editItem === false ? (  
@@ -187,9 +186,6 @@ return (
 
                 />)
             }
-
-             {/* .................................................................... Cantidad */}
-        <Text style={styles.textCantidad}>{cantidad}</Text>
         </View>
         
         
@@ -313,8 +309,8 @@ textCantidad:{
     backgroundColor:"#00b0e4",
     borderRadius:20,
     position:"absolute",
-    top:35,
-    right:-5,
+    top:-2,
+    right:42,
     alignContent:"center",
     justifyContent:"center",
 

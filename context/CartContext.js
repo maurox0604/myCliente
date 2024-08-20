@@ -42,7 +42,9 @@ export const  CartProvider = ({children}) => {
         setCartItemCount(totalItems);
 
         let itemCero = cartItems.reduce((total, item) => totalItems === 0 && total + item.cantCompra, 0);
-        setCartItemCero();
+        setCartItemCero(itemCero);
+        console.log("                            .", cartItemCero)
+        console.log("........☺ cart Items ☺..........", cartItemCero)
     }
 
     const existCart = (item) => {
