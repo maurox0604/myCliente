@@ -42,7 +42,7 @@ function MyStak() {
                 name="ListaHelados"
                 component={ListaHelados}
             />
-             <HomeStackNavigator.Screen 
+            <HomeStackNavigator.Screen 
                 name="CreateNew"
                 component={CreateNew}
                 options={{animation:true}}
@@ -61,8 +61,7 @@ function MyTabs({ openCartModal }) {
     //const {carts} = useContext(CartContext);
     // const { badgeCount } = carts?.length;
     //const { badgeCount } = 2;
-    
-
+    const { cartItemCount, cartItemCero } = useContext(CartContext);
     
     return (
         
@@ -90,7 +89,7 @@ function MyTabs({ openCartModal }) {
                     tabBarIcon: ({ color, size }) => (
                         <MaterialCommunityIcons name="dots-triangle" color={color} size={size} />
                     ),
-                    tabBarBadge: 2,
+                    // tabBarBadge: 2,
                 }}
             />
             <Tab.Screen 
@@ -108,17 +107,19 @@ function MyTabs({ openCartModal }) {
                         
                         return(
                             <View style={{top: -15 }}>
-                                <View onPress={openCartModal} style={styles.cartButton} >
-                                    <MaterialCommunityIcons name={"cart"} color={"#00f" }size={30} 
+                                <View onPress={openCartModal} style={[styles.cartButton, styles.shadowProp]} >
+                                    <MaterialCommunityIcons name={"cart"} color={"#e91e63" }size={30} 
                                     />
-                                    <View style={{height:14, width:14, borderRadius:7, backgroundColor:"#0ff", justifyContent:"center", alignItems:"center", position:"absolute", top:10, right:40, color:"black"}}>
-                                        <Text>{carts.cantCompra}</Text>
-                                    </View>
+                                    {cartItemCount > 0 ? 
+                                        <View style={{size:12, height:20, width:20, borderRadius:20, backgroundColor:"#f00", justifyContent:"center", alignItems:"center", position:"absolute", top:-12, right:14, color:"#ffffff"}}>
+                                            <Text>{cartItemCount > 0 ? cartItemCount : undefined}</Text> 
+                                        </View> : undefined
+                                    }
                                 </View>
                             </View>
                         );
                     },
-                    tabBarBadge: 2,
+                    // tabBarBadge: cartItemCount > 0 ? cartItemCount : undefined,
                 }}
 
                 listeners={({ navigation }) => ({
@@ -154,6 +155,7 @@ function MyTabs({ openCartModal }) {
                     tabBarIcon: ({ color, size }) => (
                         <MaterialCommunityIcons name="ice-pop" color={color} size={size} />
                     ),
+                    tabBarBadge: cartItemCero > 0 ? cartItemCero : 0,
                 }}
             />
 
@@ -197,8 +199,9 @@ export default function Navigation() {
                 <MyTabs openCartModal={openCartModal} />
                     <BottomSheetModal 
                         ref={cartModalRef} 
-                        snapPoints={['60%']}
+                        snapPoints={['80%']}
                         onDismiss={() => console.log("Cart Modal Dismissed")}
+                        handleComponent={null}
                         // enabledGestureInteraction={false}
                         // enableHeaderGestures={false}
                         // enableContentGestures={false}
@@ -219,10 +222,20 @@ const styles = StyleSheet.create({
         width: 60,
         height: 60,
         borderRadius: 30,
-        backgroundColor: '#e91e63',
+        backgroundColor: '#ffffff',
         justifyContent: 'center',
         alignItems: 'center',
-
+        borderWidth:5,
+        borderColor:"#e91e63",
         position:"relative",
+        margin:5,
     },
+
+    shadowProp: {
+  shadowColor: 'rgba(0, 0, 0, 0.4)',
+        shadowOpacity: 0.8,
+        elevation: 4,
+        shadowRadius: 7 ,
+        shadowOffset : { width: 1, height: 7},
+},
 });

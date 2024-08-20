@@ -1,9 +1,10 @@
 import { StatusBar } from 'expo-status-bar';
-import { useContext, useEffect, useState } from 'react';
+import { useCallback, useContext, useEffect, useState } from 'react';
 import { StyleSheet, Text, View, FlatList, SafeAreaView } from "react-native"; 
 import Helado from '../components/Helado'
 import { BottomSheetModalProvider } from '@gorhom/bottom-sheet';
 import { GestureHandlerRootView } from 'react-native-gesture-handler';
+import { CartContext } from '../context/CartContext';
 
 
 // import Navigation from '../Navigation';
@@ -11,6 +12,7 @@ import { GestureHandlerRootView } from 'react-native-gesture-handler';
 
 export default function ListaHelados({deletItem=false, editItem=false}){
     const [helados, setHelados] = useState([]);
+    const { updateHeladoCantidadContext } = useContext(CartContext); // Obtener la función del contexto
     const [activaDeleteItem, setActivaDeleteItem] = useState(false);
 
 
@@ -25,18 +27,21 @@ export default function ListaHelados({deletItem=false, editItem=false}){
     async function fetchHelados() {
 
         console.log("Esta es fethcData")
-            const response = await fetch(`https://backend-de-prueba-delta.vercel.app/helados`, {
-        //   headers: {
-        //     "x-api-key": "abcdef123456",
-    
-        //   },
+        const response = await fetch(`https://backend-de-prueba-delta.vercel.app/helados`, {
+            method: "GET",
+            mode: "cors",
+            headers: {
+                // "x-api-key": "abcdef123456",
+                'Content-Type': 'application/json',
+                'Accept': 'application/json'
+            },
         });
         const data = await response.json();
         console.log("Los datos:  ", data)
         console.log("//Los datos:  ", data[0].sabor)
 
-        const lowQuantityCount = data.filter(helado => helado.cantidad === 1).length;
-            setBadgeCount(lowQuantityCount);
+        // const lowQuantityCount = data.filter(helado => helado.cantidad === 1).length;
+        //     setBadgeCount(lowQuantityCount);
             setHelados(data);
         console.log('LOS DATOS: '+helados.length);
     }
@@ -50,14 +55,27 @@ export default function ListaHelados({deletItem=false, editItem=false}){
        // setSelectedHelado(null);
     }
 
-    function updateHeladoCantidad(id, nuevaCantidad) {
-        setHelados(prevHelados =>
+    // function updateHeladoCantidad(id, nuevaCantidad) {
+    //     setHelados(prevHelados =>
+    //         prevHelados.map(helado =>
+    //             helado.id === id ? { ...helado, cantidad: nuevaCantidad } : helado
+    //         )
+    //     );
+    // }
+    const updateHeladoCantidad = useCallback((id, nuevaCantidad) => {
+
+        console.log('Actualizando helado con ID:', id, 'a nueva cantidad:', nuevaCantidad);     
+    setHelados(prevHelados =>
             prevHelados.map(helado =>
                 helado.id === id ? { ...helado, cantidad: nuevaCantidad } : helado
             )
         );
-    }
+    }, [setHelados]);
 
+    useEffect(() => {
+        // Pasar la función a través del contexto para que pueda ser usada en cualquier parte
+        updateHeladoCantidadContext(updateHeladoCantidad);
+    }, [updateHeladoCantidadContext]);
 
     function toggleTodo(id){
         setHelados(
@@ -66,14 +84,15 @@ export default function ListaHelados({deletItem=false, editItem=false}){
         )
     }
 
-
     return(
         
         // todo el contenido se debe encerrar dentro de <GestureHandlerRootView> para que funcione la ventana modal
     <GestureHandlerRootView style={{flex: 1}}>
         <BottomSheetModalProvider>
                 <SafeAreaView style={styles.container}> 
-                    <FlatList
+                    <FlatList 
+                    style={styles.contFlatList}
+                    
                         data={helados}
                         keyExtractor={(todo) => todo.id}
                         renderItem={({ item }) => (
@@ -87,6 +106,7 @@ export default function ListaHelados({deletItem=false, editItem=false}){
                                 updateHeladoCantidad={updateHeladoCantidad}  // Actualiza los datos "cantidad" de la lista
                             />
                         )}
+                        showsVerticalScrollIndicator={false}
                         ListHeaderComponent={() => <Text style={styles.title}>Queen - Hoy </Text>}
                         contentContainerStyle={styles.contentContainerStyle}
                     />
@@ -111,17 +131,28 @@ export default function ListaHelados({deletItem=false, editItem=false}){
 const styles = StyleSheet.create({
     container: {
         flex: 1,
-        backgroundColor: "#E9E9EF",
+        backgroundColor: "#ddd",
         alignItems: "center",
         justifyContent : "center",
         fontWeight: "400",
         fontSize: 29,
-        width:"100%",
-        marginTop:40,
+
+        // borderBlockColor:"red",
+        // borderWidth:2,
+    },
+    contFlatList:{
+        flex:1,
+        // borderBlockColor:"blue",
+        // borderWidth:2,
+        width:"100%", // define el ancho de la fila
     },
     contentContainerStyle: {
-        padding: 18,
+        paddingHorizontal:10,
+        // borderColor:"green",
+        // borderWidth:2,
+        backgroundColor: "#eeeeee"
     },
+    
     title: {
         fontWeight: "800",
         fontSize: 28,

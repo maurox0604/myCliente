@@ -82,13 +82,11 @@ const CartModalContent = ({ closeModal, carrito }) => {
 
     useEffect(() => {
         // fetchData();
-         fetchHelados();
-     },  
-     [] );
- 
+        fetchHelados();
+    },  
+    [] );
 
     async function fetchHelados() {
- 
         console.log("Esta es fethcData")
 
         // const response = await fetch("http://10.0.2.2:8000/helados", {
@@ -101,10 +99,10 @@ const CartModalContent = ({ closeModal, carrito }) => {
         console.log("Los datos:  ", data)
         console.log("//Los datos:  ", data[0].sabor)
 
-        const lowQuantityCount = data.filter(helado => helado.cantidad === 1).length;
-            setBadgeCount(lowQuantityCount);
+        // const lowQuantityCount = data.filter(helado => helado.cantidad === 1).length;
+        //     setBadgeCount(lowQuantityCount);
         //  setHelados(data);
-        console.log('LOS DATOS: '+helados.length);
+       // console.log('LOS DATOS: '+helados.length);
     }
 
     const clearModal = () => {
@@ -115,74 +113,105 @@ const CartModalContent = ({ closeModal, carrito }) => {
     return (
 
         <SafeAreaView style={styles.contentContainer}> 
-            <View>
-                <Button title="Close" onPress={closeModal} />
-                <Text style={styles.title}> Este es CartModalContent Cart</Text>
-                {carts.length == 0 &&
+            <View style={styles.contHeader}>
+                {carts.length == 0 ?
                     <Text>
                         NO hay nada en el carrito
                     </Text>
+                    :
+                    <Text style={styles.title}> Este es CartModalContent </Text>
                 } 
-
+                {/* <Button 
+                    style={styles.botCerrarModal}
+                    title="X" onPress={closeModal} 
+                /> */}
+                <Pressable onPress={closeModal} style={styles.botCerrarModal}>
+                    <Text style={{ color: "white", fontWeight: "bold" }}>x</Text>
+                </Pressable>
             </View>
-                    <FlatList
-                        data={carts}
-                        keyExtractor={(todo) => todo.id}
-                        renderItem={({ item }) => (
-                            <>
-                            <ItemCart {...item} />
 
-                            {/* {console.log("item: ", item)} */}
-                            {/* {console.log("data: ", {helados})} */}
-                            </>
-                            )}
-                        ListHeaderComponent={() => <Text style={styles.title}>Queen - Hoy </Text>}
-                        contentContainerStyle={styles.contentContainerStyle}
-                    /> 
+            <View style={styles.contFlatList}>
+                <FlatList
+                    style={{flex:1}}
+                    data={carts}
+                    keyExtractor={(todo) => todo.id}
+                    renderItem={({ item }) => (
+                        <>
+                        <ItemCart {...item} />
 
-                    <View>
-                        <View style={styles.priceText}> 
-                            <Text>TOTAL COMPRA </Text>
-                            <Text style={styles.priceText}> ${totalPrice}</Text>
-                        </View>
-                    
-                    </View>
-                    
-                    <View>
-                        <Pressable  style={styles.button} onPress={() => actualizarHelado() } disabled={carts.length === 0}>
-                            <Text style={styles.buttonText}> Compra </Text>
-                        </Pressable>
-                    </View>
+                        {/* {console.log("item: ", item)} */}
+                        {/* {console.log("data: ", {helados})} */}
+                        </>
+                        )}
+                    // ListHeaderComponent={() => <Text style={styles.title}>Queen - Hoy </Text>}
+                    contentContainerStyle={styles.contentContainerStyle}
+                /> 
+            </View>
 
+            <View style={styles.pie}>
+                <View> 
+                    <Text>TOTAL: </Text>
+                    <Text style={styles.priceText}> ${(totalPrice).toLocaleString('es-ES') }</Text>
+                </View>
 
-                    {/* <View>
-                
-                    {helados.map((person) => {
-                        return (
-                            <Text>{person.sabor}</Text>
-                        );
-                    })}
-                </View> */}
-                    <StatusBar style="auto" />
-                </SafeAreaView>
-
-                
-                
-        
+                <View>
+                    <Pressable  style={styles.button} onPress={() => actualizarHelado() } disabled={carts.length === 0}>
+                        <Text style={styles.buttonText}> Compra </Text>
+                    </Pressable>
+                </View>
+            </View>
+            <StatusBar style="auto" />
+        </SafeAreaView>
     );
 };
 
 const styles = StyleSheet.create({
     contentContainer: {
         flex: 1,
+        backgroundColor: "#00E9ff",
+        alignItems: "center",
+        justifyContent : "center",
+        fontWeight: "400",
+        fontSize: 29,
+
+        borderBlockColor:"red",
+        borderWidth:2,
+    },
+    contHeader:{
+        flex:2,
+        flexDirection:'row',
+        alignContent:"space-between",
+        height:20,
+    },
+    contFlatList:{
+        flex:8,
+        borderBlockColor:"blue",
+        borderWidth:2,
+        width:"100%", // define el ancho de la fila
+    },
+    contentContainerStyle: {
+        paddingHorizontal:10,
+        borderColor:"green",
+        borderWidth:2,
+        backgroundColor: "#aa00dd"
+    },
+    pie: {
+        flex: 3,
+        flexWrap:"wrap",
+        width:"100%",
+        // height:30,
+        flexDirection:"row",
         alignItems: 'center',
-        justifyContent: 'center',
+        alignContent:"center",
+        justifyContent: 'space-around',
         backgroundColor:'#FDEBD0'
     },
+
     title: {
         fontSize: 24,
         marginBottom: 20,
     },
+
     priceText: {
         fontSize: 34,
         color: "#757575",
@@ -192,17 +221,26 @@ const styles = StyleSheet.create({
     },
     button: {
         backgroundColor: "#E96E6E",
-        height: 60,
+        height: 50,
         alignItems: "center",
         justifyContent: "center",
-        borderRadius: 20,
-        marginTop: 30,
-      },
-      buttonText: {
-        fontSize: 24,
-        color: "#FFFFFF",
-        fontWeight: "700",
-      },
+        borderRadius: 15,
+        // marginTop: 30,
+    },
+    buttonText: {
+    fontSize: 24,
+    color: "#FFFFFF",
+    fontWeight: "700",
+    },
+    botCerrarModal:{
+        width:30,
+        height:30,
+        backgroundColor:"red",
+        borderRadius:20,
+        justifyContent:"center",
+        alignItems:"center",
+        textAlign:"center"
+    }
 });
 
 export default CartModalContent;

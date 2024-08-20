@@ -142,51 +142,56 @@ return (
         onLongPress={() => activaDelete()}// Activa el boton BORRAR Item
         onPress={() => setIsDeleteActive(false)}
         activeOpacity={0.8}
-        style={cantidad === 0 ? [styles.container, styles.containerVacio] : [styles.container] }
+        style={cantidad === 0 ? [styles.container, styles.containerVacio, styles.shadowProp] : [styles.container, styles.shadowProp] }
+            // & cantidad === 1 && [styles.containerCasiVacio] }
         >
-        {/* ......................... Icono */}
-        <View>
-            <Image
-                style={styles.iconImg}
+        {/* ............................................................................ Icono */}
+        <View style={styles.contImg}>
+            <Image style={styles.iconImg}
                 source={{ uri: icon }}
             />
         </View>
 
-        {/* ......................... Nombre */}
-        <View style={styles.containerTextCheckBox}>
+        {/* ............................................................................ Nombre */}
+        <View style={styles.containerDatos}>
             {/* <CheckMark id={id} completed={completed} toggleTodo={toggleTodo} /> */}
-            <Text style={styles.text}>{sabor}</Text>
-        </View>
+            <Text style={styles.title}>{sabor}</Text>
+            <View style={styles.cantPrecio}>
+                {/* .................................................................... Precio */}
+                <Text style={styles.description}>${precio} </Text>
 
-        {/* ......................... Precio */}
-        <View style={styles.containerTextCheckBox}>
-            <Text style={styles.text}>{precio} </Text>
-        </View>
-
-        {/* ......................... Cantidad */}
-        <View style={styles.containerTextCheckBox}>
-            <Text style={styles.textCantidad}>{cantidad}</Text>
+                
+            </View>
+           
         </View>
 
         {/* ......................... EDITAR Items o CALCULADORA en MODAL  <Feather> is a collection of simply beautiful open source icons for React Nativ*/}
-        {/* {shared_with_id !== null ? ( */}
-        {editItem === false ? (  
-            <Feather
-                onPress={handleEditModal}
-                name="plus-circle"
-                size={30}
-                color="#239B56"
-            />
-            ) : (
+        <View style={styles.contBotMas}>
+       
         
-            <Feather
-                onPress={handlePresentModal}
-                name="book-open"
-                size={20}
-                color="#3800ff"
+            {/* {shared_with_id !== null ? ( */}
+            {editItem === false ? (  
+                <Feather
+                    onPress={handleEditModal}
+                    name="plus-circle"
+                    size={30}
+                    color="#fff"
+                />
+                ) : (
+            
+                <Feather
+                    onPress={handlePresentModal}
+                    name="book-open"
+                    size={20}
+                    color="#fff"
 
-            />)
-        }
+                />)
+            }
+
+             {/* .................................................................... Cantidad */}
+        <Text style={styles.textCantidad}>{cantidad}</Text>
+        </View>
+        
         
         {/* // Opcion de BORRAR un item al dejar presionado sobre el item */}
         {isDeleteActive && (
@@ -229,42 +234,93 @@ const styles = StyleSheet.create({
 container: {
     flex: 1,
     flexDirection: "row",
-    alignItems: "center",
     justifyContent: "space-between",
-    padding: 14,
-    borderRadius: 45,
-    marginBottom: 5,
+    alignItems:"center",
+    padding: 5,
+    borderRadius: 15,
+    marginBottom: 15,
     backgroundColor: "white",
+
+    // borderBlockColor:"green",
+    // borderWidth:2,
     width:"100%",
+    
 },
-containerVacio:{
-    backgroundColor: "red",
-},
-containerTextCheckBox: {
-    flex: 1,
-    flexDirection: "row",
-    alignItems: "center",
-    flexGrow: 1,
-},
-text: {
-    fontSize: 17,
-    fontWeight: "600",
-    color: "#383839",
-    letterSpacing: -0.011 * 16, // 16 = baseFontSize
-    flexShrink: 1,
+containerDatos: {
+    flex: 11,
+    flexDirection: "colum",
+    justifyContent: "center",
+    // padding: 5,
+    // paddingHorizontal: 5,
     marginHorizontal: 8,
+    // backgroundColor: "green",
+    // width:"60%",
+    alignItems:"stretch",
+    // borderBlockColor:"green",
+    // borderWidth:2,
 },
+contImg:{
+    flex:3,
+    // borderBlockColor:"red",
+    // borderWidth:2,
+},
+contBotMas:{
+    flex:2,
+    alignItems:"center",
+    justifyContent:"center",
+    backgroundColor:'#e91e63',
+    // alignSelf:"stretch",
+    borderRadius:30,
+    height:40,
+    position:"relative"
+    // borderBlockColor:"blue",
+    // borderWidth:2,
+},
+cantPrecio: {
+    // flex: 1,
+    flexDirection: "row",
+    justifyContent: "space-between",
+    // padding: 5,
+    // paddingHorizontal: 5,
+    // marginHorizontal: 10,
+    // backgroundColor: "red",
+    // width:"100%",
+    // alignItems:"stretch",
+    position:"relative"
+},
+
+containerCasiVacio:{
+    backgroundColor: "#aaf",
+    borderColor:"#cc2",
+    borderWidth:2,
+    // color:"#ff0000"
+},
+
+containerVacio:{
+    backgroundColor: "#fee",
+    borderColor:"red",
+    borderWidth:2,
+    color:"#ff0000"
+},
+
 textCantidad:{
-    fontSize: 17,
+    fontSize: 15,
     fontWeight: "600",
-    color: "#383839",
-    textAlign: "right",
+    color: "#ffffff",
+    width:22,
+    height:22,
+    textAlign: "center",
+    backgroundColor:"#00b0e4",
+    borderRadius:20,
+    position:"absolute",
+    top:35,
+    right:-5,
+    alignContent:"center",
+    justifyContent:"center",
+
+    // textAlign: "right",
 },
-checkMark: {
-    width: 20,
-    height: 20,
-    borderRadius: 7,
-},
+
 deleteButton: {
     position: "absolute",
     right: 0,
@@ -276,36 +332,39 @@ deleteButton: {
     backgroundColor: "#ef4444",
     borderRadius: 10,
 },
-contentContainer: {
-    flex: 1,
-    alignItems: "center",
-    paddingHorizontal: 15,
-},
-row: {
-    width: "100%",
-    flexDirection: "row",
-    alignItems: "center",
-    justifyContent: "space-between",
-    marginVertical: 10,
-},
+
 title: {
-    fontWeight: "900",
-    letterSpacing: 0.5,
-    fontSize: 16,
-},
-subtitle: {
-    color: "#101318",
-    fontSize: 14,
     fontWeight: "bold",
+    letterSpacing: 0.5,
+    fontSize: 20,
+    // width: "100%",
 },
 description: {
     color: "#56636F",
     fontSize: 13,
     fontWeight: "normal",
-    width: "100%",
+    // width: "100%",
 },
 iconImg:{
-    width: 30,
-    height:30,
-}
+    height: 60,
+    // width: 60,
+    resizeMode: "contain",
+    borderRadius: 15,
+    borderColor:"#ccc",
+    borderWidth:2,
+},
+
+elevation: {
+    elevation: 20,
+    shadowColor: '#52006A',
+},
+
+shadowProp: {
+    shadowColor: 'rgba(0, 0, 0, 0.4)',
+    shadowOpacity: 0.8,
+    elevation: 4,
+    shadowRadius: 7 ,
+    shadowOffset : { width: 1, height: 7},
+},
+
 });

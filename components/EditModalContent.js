@@ -2,7 +2,7 @@ import { useState } from "react";
 import { Keyboard, View, Text, StyleSheet, Button, Alert, Pressable, TouchableOpacity } from "react-native";
 import { ScrollView, TextInput } from "react-native-gesture-handler";
 
-export default function EditModalContent({ id, _sabor, _precio, _cantidad, clearTodo, closeModal }) {
+export default function EditModalContent({ id, _sabor, _precio, _cantidad, reloadListDB, closeModal }) {
   const [email, setEmail] = useState("");
   const [focus, setFocus] = useState(false);
   const [sabor, setSabor] = useState(_sabor);// Campo input
@@ -60,7 +60,7 @@ export default function EditModalContent({ id, _sabor, _precio, _cantidad, clear
       const data = await response.json();
       console.log("Datos actualizados: ", data);
       Alert.alert('Éxito', 'Helado actualizado correctamente');
-      clearTodo(id); // Si clearTodo se encarga de limpiar o recargar datos
+      reloadListDB(id); // Si reloadListDB se encarga de limpiar o recargar datos
       closeModal(); // Cerrar el modal después de la actualización exitosa
     } catch (error) {
       console.error('Error al actualizar el helado:', error);

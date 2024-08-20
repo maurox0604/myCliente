@@ -19,7 +19,8 @@ export default function ItemCart ({
     clearTodo,
     })
 {
-    const {carts, handleRemoveItem} = useContext(CartContext);
+
+        const { handleRemoveItem } = useContext(CartContext);
         const [isDeleteActive, setIsDeleteActive] = React.useState(false);
 
         function activaDelete(){
@@ -40,32 +41,27 @@ export default function ItemCart ({
                 style={cantCompra === 0 ? [styles.container, styles.containerVacio] : [styles.container] }
             >
         {/* ......................... Icono */}
-        <View>
-            <Image
+        <View style={styles.contImg}>
+            <Image 
                 style={styles.iconImg}
                 source={{ uri: icon }}
             />
         </View>
-
-        {/* ......................... Nombre */}
-        <View style={styles.containerTextCheckBox}>
-            {/* <CheckMark id={id} completed={completed} toggleTodo={toggleTodo} /> */}
+        <View style={styles.containerDatos}>
+            {/* ......................... Nombre */}
             <Text style={styles.text}>{sabor}</Text>
-        </View>
 
-        {/* ......................... Precio */}
-        <View style={styles.containerTextCheckBox}>
+            {/* ......................... Precio */}
             <Text style={styles.text}>{precio} </Text>
+            {/* <Text style={styles.textCantidad}>{cantCompra}</Text> */}
         </View>
-
-        {/* ......................... cantCompra */}
-        <View style={styles.containerTextCheckBox}>
+        
+        
+        <View style={styles.contTotalItem}>
+            {/* ......................... cantCompra por item */}
             <Text style={styles.textCantidad}>{cantCompra}</Text>
-        </View>
-
-        {/* ......................... total item */}
-        <View style={styles.containerTextCheckBox}>
-            <Text style={styles.textCantidad}> ${ cantCompra * precio}</Text>
+             {/* ......................... total item */}
+            <Text style={styles.textTotItem}> ${ (cantCompra * precio).toLocaleString('es-CO') }</Text>
         </View>
 
         {/* ......................... EDITAR Items en MODAL  <Feather> is a collection of simply beautiful open source icons for React Nativ*/}
@@ -105,26 +101,48 @@ export default function ItemCart ({
 
 const styles = StyleSheet.create({
     container: {
-        flex: 1,
-        flexDirection: "row",
-        alignItems: "center",
-        justifyContent: "space-between",
-        padding: 5,
-        borderRadius: 45,
-        marginBottom: 5,
-        backgroundColor: "white",
-        width:"100%",
-    },
-    containerVacio:{
-        backgroundColor: "red",
-    },
-    containerTextCheckBox: {
-        flex: 1,
-        flexDirection: "row",
-        alignItems: "center",
-        flexGrow: 1,
-    },
-    text: {
+    flex: 1,
+    flexDirection: "row",
+    justifyContent: "space-between",
+    alignItems:"center",
+    padding: 5,
+    borderRadius: 10,
+    marginBottom: 15,
+    paddingHorizontal:10,
+    backgroundColor: "white",
+
+    borderBlockColor:"green",
+    borderWidth:2,
+    width:"100%",
+    
+},
+    containerDatos: {
+    flex: 8,
+    flexDirection: "colum",
+    justifyContent: "space-between",
+    // padding: 5,
+    // paddingHorizontal: 5,
+    marginHorizontal: 8,
+    backgroundColor: "#ccc",
+    // width:"60%",
+    alignItems:"stretch",
+    borderBlockColor:"#555",
+    borderWidth:2,
+},
+contImg:{
+    flex:3,
+    borderBlockColor:"red",
+    borderWidth:2,
+},
+contTotalItem:{
+    flex:6,
+    flexDirection:"row",
+    alignItems:"center",
+    justifyContent:"center",
+    borderBlockColor:"blue",
+    borderWidth:2,
+},
+text: {
         fontSize: 17,
         fontWeight: "600",
         color: "#383839",
@@ -133,15 +151,16 @@ const styles = StyleSheet.create({
         marginHorizontal: 8,
     },
     textCantidad:{
-        fontSize: 17,
+        fontSize: 20,
         fontWeight: "600",
         color: "#383839",
-        textAlign: "right",
+        textAlign: "left",
     },
-    checkMark: {
-        width: 20,
-        height: 20,
-        borderRadius: 7,
+    textTotItem:{
+        fontSize: 20,
+        fontWeight: "bold",
+        color: "#383839",
+        textAlign: "right",
     },
     deleteButton: {
         position: "absolute",
@@ -166,24 +185,10 @@ const styles = StyleSheet.create({
         justifyContent: "space-between",
         marginVertical: 10,
     },
-    title: {
-        fontWeight: "900",
-        letterSpacing: 0.5,
-        fontSize: 16,
-    },
-    subtitle: {
-        color: "#101318",
-        fontSize: 14,
-        fontWeight: "bold",
-    },
-    description: {
-        color: "#56636F",
-        fontSize: 13,
-        fontWeight: "normal",
-        width: "100%",
-    },
     iconImg:{
-        width: 30,
-        height:30,
-    }
+    height: 60,
+    // width: 60,
+    resizeMode: "contain",
+    borderRadius: 20,
+},
     });

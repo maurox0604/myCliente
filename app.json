@@ -9,7 +9,14 @@
     "splash": {
       "image": "./assets/images/splash.png",
       "resizeMode": "contain",
-      "backgroundColor": "#ffffff"
+      "backgroundColor": "#ffffff",
+      "entryPoint": "./node_modules/expo-router/entry",
+
+      "web": {
+      "output": "single",
+      "bundler": "metro"
+    }
+
     },
     "updates": {
       "fallbackToCacheTimeout": 0

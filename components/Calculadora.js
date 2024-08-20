@@ -33,54 +33,59 @@ export default function Calculadora({
   }
   const totVentaXhelado = ventaXhelado();
   const item = { id:datosPaCalc.id, sabor:datosPaCalc.sabor, cantCompra, cantQueda,  totVentaXhelado, icon:datosPaCalc.icon, precio:datosPaCalc.precio };
-
-
-  function revisarItem(){
-    const { itemObj, itemExiste } = existCart(item);
-    if (itemExiste === -1) {
-      
-    }else{
-      console.log("SI EXISTE.y vamos a actualizarlo........");
-      console.log("itemObj: ", itemObj)
-      // datosPaCalc.sabor = "CARNE"
-      setCantCompra(itemObj.cantCompra);
-      setCantQueda(itemObj.cantQueda);
-    }
-    
-    console.log("revisarItem() itemObj: ", itemObj, "   itemExiste:", itemExiste)
-
-  }
+ 
   useEffect(() => {
     revisarItem();
   },[])
   
 
-  console.log("[[[[[[ datosPaCalc: ]]]]]]", datosPaCalc)
- 
+  // function revisarItem(){
+  //   const { itemObj, itemExiste } = existCart(item);
+  //   if (itemExiste === -1) {
+      
+  //   }else{
+  //     console.log("SI EXISTE.y vamos a actualizarlo........");
+  //     console.log("itemObj: ", itemObj)
+  //     // datosPaCalc.sabor = "CARNE"
+  //     setCantCompra(itemObj.cantCompra);
+  //     setCantQueda(itemObj.cantQueda);
+  //   }
+    
+  //   console.log("revisarItem() itemObj: ", itemObj, "   itemExiste:", itemExiste)
+  // };
+
+  const revisarItem = () => {
+    console.log("Dentro de Revisaritem()")
+    const { itemObj, itemExiste } = existCart(item);
+    if (itemExiste !== -1) {
+      console.log("Dentro de Revisaritem() ... si existe: ", itemExiste)
+      setCantCompra(itemObj.cantCompra);
+      setCantQueda(itemObj.cantQueda);
+    }
+  }
+
+
+  //console.log("[[[[[[ datosPaCalc: ]]]]]]", datosPaCalc)
+
   // const existe = existCart(item);
   // console.log("Si exite y es ESTE: ", existe)
 
 
 
   const handleAddToCart = (item) =>{
-    
+    console.log("Dentro de HANDLE ADD TO CART")
     if (cantCompra > 0) {
-      console.log("♥♥   ENVIANDO ITEM PAL CARRITO   datosPaCalc.cantidad : ", datosPaCalc.cantidad, " **** cantCompra: ",cantCompra)
-      const nuevaCantidad = datosPaCalc.cantidad - cantCompra;
-      updateHeladoCantidad(datosPaCalc.id, nuevaCantidad); // Actualiza la cantidad en ListaHelados
       addToCart(item);
+      updateHeladoCantidad(datosPaCalc.id, cantQueda); // Actualiza la cantidad en ListaHelados no en DB
       
       datosPaCalc.closeCartModal();
-
-
-
-      
-      // datosPaCalc.closeCartModal(); // Cierra el modal si es necesario
 
     }else
       setActivMensaje(true);
       console.log('♥ Debes tener al menos 1 helado ');
   }
+
+  
 
   // useEffect(() => {
   //   fetchInfo();
@@ -100,24 +105,8 @@ export default function Calculadora({
         let queda = cantQueda + 1;
         setCantQueda(queda);
       }
-
-      
   }
 
-  // async function fetchInfo() {
-  //   const response = await fetch(
-  //     `http://192.168.1.11:8000/helados/shared_todos/${id}`,
-  //     {
-  //       headers: {
-  //         "x-api-key": "abcdef123456",
-  //       },
-  //       method: "GET",
-  //     }
-  //   );
-  //   const { author, shared_with } = await response.json();
-  //   setAuthor(author);
-  //   setSharedWith(shared_with);
-  // }
 
   return (
     <View style={styles.contentContainer}>
@@ -132,7 +121,7 @@ export default function Calculadora({
 
       <View style={styles.header}>
           { cantQueda == 0 ?  
-            (<View style={styles.contentProd}>
+            (<View style={styles.msj}>
               <Text> No quedan helados de {datosPaCalc.sabor}</Text>
             </View>
             ) : (
@@ -145,7 +134,7 @@ export default function Calculadora({
                 name="x-circle"
                 size={20}
                 color="#3800ff"
-            />
+        />
       </View>
       {/* <Text style={[styles.header, { marginBottom: 20 }]}>CALCULADORA</Text> */}
       
@@ -154,33 +143,40 @@ export default function Calculadora({
       
         <View style={styles.contentProd}>
             <View style={styles.disponible}>
-              <Text style={styles.title}>{cantQueda}</Text>
+              <Text style={styles.titleQueda}>{cantQueda}</Text>
+              {/* .......................................................Nombre de SABOR */}
               <Text style={styles.title}>{datosPaCalc.sabor}</Text>
-              <Text style={styles.title}> ${datosPaCalc.precio * cantCompra }</Text>
             </View>
+
             <View style={styles.producto}>
-              <Image
+              <View style={styles.contImagen} >
+                <Image
                     style={styles.iconImg}
                     source={{ uri: datosPaCalc.icon }}
                 />
-              <Text style={styles.title}>Precio ${datosPaCalc.precio}</Text>
-              <View style={styles.sumadora}>
-                  {/* <Pressable onPress={() => cantCompra > 1 ? setCantCompra(cantCompra - 1) : setCantCompra(1)} style={styles.sumaButton}> */}
-                  <Pressable style={styles.sumaButton} onPress={ () => cantComprar(-1) }>
-                      <Text style={{ color: "white", fontWeight: "bold" }}>-</Text>
-                  </Pressable>
-                  <Text style={styles.cantCompraText}> {cantCompra}</Text>
-                  {/* <Pressable onPress={() => setCantCompra(cantCompra + 1) } style={styles.sumaButton}> */}
-                  <Pressable style={styles.sumaButton} onPress={ () => cantComprar(1) }>
-                      <Text style={{ color: "white", fontWeight: "bold" }}>+</Text>
-                  </Pressable>
+                <Text style={styles.titlePrecio}>${(datosPaCalc.precio).toLocaleString('es-CO')}</Text>
+              </View>
+              
+              <View style={styles.contCalc}>
+                <Text style={styles.titleTotal}> ${(datosPaCalc.precio * cantCompra ).toLocaleString('es-CO')}</Text>
+                <View style={styles.sumadora}>
+                    {/* <Pressable onPress={() => cantCompra > 1 ? setCantCompra(cantCompra - 1) : setCantCompra(1)} style={styles.sumaButton}> */}
+                    <Pressable style={styles.sumaButton} onPress={ () => cantComprar(-1) }>
+                        <Text style={{ color: "white", fontWeight: "bold" }}>-</Text>
+                    </Pressable>
+                    <Text style={styles.cantCompraText}> {cantCompra}</Text>
+                    {/* <Pressable onPress={() => setCantCompra(cantCompra + 1) } style={styles.sumaButton}> */}
+                    <Pressable style={styles.sumaButton} onPress={ () => cantComprar(1) }>
+                        <Text style={{ color: "white", fontWeight: "bold" }}>+</Text>
+                    </Pressable>
+                </View>
               </View>
             </View>
           </View>
       
         
-        <View>
-              <Pressable  style={styles.button} onPress={() => handleAddToCart(item)} disabled={cantQueda < 0}>
+        <View style={styles.contButton}>
+              <Pressable style={styles.button} onPress={() => handleAddToCart(item)} disabled={cantQueda < 0}>
                   <Text style={{ color: "blue", fontWeight: "bold" }}>Adicionar</Text>
               </Pressable>
         </View>
@@ -222,14 +218,31 @@ export default function Calculadora({
 const styles = StyleSheet.create({
   contentContainer: {
     flex: 1,
-    alignItems: "center",
+    // flexDirection:"column",
+    // alignItems: "center",
     paddingHorizontal: 15,
+  },
+  contImagen:{
+    flex:2,
+    flexDirection:"column",
+    backgroundColor:"#85c1e9",
+    alignContent:"flex-start",
+    paddingHorizontal: 10,
+  },
+  contCalc:{
+    flex:5,
+    flexDirection:"column",
+    backgroundColor:"#aaa",
+    paddingHorizontal:10
   },
   title: {
     fontWeight: "900",
     letterSpacing: 0.5,
-    fontSize: 16,
+    fontSize: 20,
     textAlign: "center",
+  },
+  titlePrecio:{
+    fontSize: 15,
   },
   description: {
     color: "#56636F",
@@ -238,6 +251,26 @@ const styles = StyleSheet.create({
     color: "black",
   },
 
+  titleTotal:{
+    padding:15,
+    textAlign:"right",
+    fontWeight:"bold",
+    backgroundColor:"#ccc",
+    fontSize:24,
+    borderRadius: 15,
+  },
+  titleQueda:{
+    padding:5,
+    alignContent:"center",
+    textAlign:"center",
+    justifyContent:"center",
+    fontSize:20,
+    fontWeight:"bold",
+    borderRadius: 50,
+    backgroundColor:"#2ecc71",
+    width: 40,
+    height: 40,
+  },
 
   header: {
     flexDirection: "row",
@@ -270,14 +303,21 @@ const styles = StyleSheet.create({
     fontWeight: "900",
     color: "white",
   },
-  button: {
-    backgroundColor: "#E96E6E",
-    height: 62,
-    alignItems: "center",
-    justifyContent: "center",
-    borderRadius: 20,
-    marginTop: 20,
+  contButton:{
+    height:40,
   },
+  button: {
+    alignSelf: 'stretch',
+    // width: "80%",
+    height:40,
+    alignItems: 'center',
+    alignContent:'center',
+    justifyContent:"center",
+    color:"red",
+    backgroundColor:"pink",
+    borderRadius: 10,
+  },
+
 
   sumaButton: {
     width: 40,
@@ -285,52 +325,65 @@ const styles = StyleSheet.create({
     alignItems: "center",
     justifyContent: "center",
     backgroundColor: "#ef4444",
-    borderRadius: 10,
-},
-disponible:{
-  // flex: 1,
-    flexDirection: "row",
-    alignItems: "center",
-    justifyContent: "space-between",
-    paddingHorizontal:10,
-    width:"100%",
-},
-sumadora:{
-  // flex: 1,
-    flexDirection: "row",
-    alignItems: "center",
-    justifyContent: "space-between",
-    padding: 10,
-    borderRadius: 15,
-    marginBottom: 5,
-    width:"55%",
-    backgroundColor: "#ffff11",
-},
-contentProd:{
-    flexDirection: "column",
-    backgroundColor: "#ff1188",
-    borderRadius: 15,
-    marginBottom: 5,
-    width:"100%",
-    padding: 10,
-},
-  producto:{
-    // flex: 1,
-    flexDirection: "row",
-    alignItems: "center",
-    justifyContent: "space-between",
-    
-    borderColor:"#00ff00",
+    borderRadius: 30,
   },
+  disponible:{
+    // flex: 1,
+      flexDirection: "row",
+      alignItems: "center",
+      alignContent:"center",
+      justifyContent: "space-between",
+      paddingHorizontal:10,
+      width:"100%",
+      backgroundColor:"#d1f2eb",
+      marginBottom:10,
+      paddingVertical:5,
+  },
+  sumadora:{
+      flex: 1,
+      flexDirection: "row",
+      alignItems: "center",
+      justifyContent: "space-between",
+      padding: 10,
+      borderRadius: 15,
+      marginBottom: 5,
+      // width:"55%",
+      backgroundColor: "#ffff11",
+  },
+  contentProd:{
+      flexDirection: "column",
+      backgroundColor: "#ff1188",
+      borderRadius: 15,
+      marginBottom: 5,
+      width:"100%",
+      padding: 10,
+  },
+  msj:{
+    backgroundColor:"white",
+    color:"red",
+    borderWidth:2,
+    borderColor:"red",
+    borderRadius: 15,
+    marginBottom: 5,
+    padding: 10,
+  },
+    producto:{
+      flex: 1,
+      flexDirection: "row",
+      alignItems: "center",
+      justifyContent: "flex-start",
+      alignContent:"center",
+    },
   iconImg:{
-    width: 50,
-    height:50,
-},
-cantCompraText:{
-    fontWeight: "900",
-    fontSize: 24,
-    textAlign: "center",
-    padding:10,
-}
+    height:90,
+    resizeMode: "contain",
+    borderRadius: 20,
+  },
+  cantCompraText:{
+      fontWeight: "900",
+      fontSize: 24,
+      textAlign: "center",
+      padding:10,
+  }
 
 });
