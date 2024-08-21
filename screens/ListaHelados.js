@@ -32,7 +32,7 @@ export default function ListaHelados({deletItem=false, editItem=false}){
             mode: "cors",
             headers: {
                 // "x-api-key": "abcdef123456",
-                'Access-Control-Allow-Origin': '*',
+                // 'Access-Control-Allow-Origin': '*',
                 'Content-Type': 'application/json',
                 'Accept': 'application/json'
             },
@@ -151,7 +151,7 @@ const styles = StyleSheet.create({
         paddingHorizontal:10,
         // borderColor:"green",
         // borderWidth:2,
-        backgroundColor: "#eeeeee"
+        backgroundColor: "#f00"
     },
     
     title: {
