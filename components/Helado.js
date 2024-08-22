@@ -136,9 +136,17 @@ async function updateHelado() {
 // console.log(response.status);
 // }
 
+// const iconito = this.props.active
+//     ? require(icon)
+//     : require(icon)
+
+//const iconito = require(icon);
 
 return (
+    
     <GestureHandlerRootView>
+    
+
     <TouchableOpacity
         onLongPress={() => activaDelete()}// Activa el boton BORRAR Item
         onPress={() => setIsDeleteActive(false)}
@@ -146,15 +154,18 @@ return (
         style={cantidad === 0 ? [styles.container, styles.containerVacio, styles.shadowProp] : [styles.container, styles.shadowProp] }
             // & cantidad === 1 && [styles.containerCasiVacio] }
         >
-        {/* ............................................................................ Icono */}
+        
         <View style={styles.contImg}>
-            <Image
-             style={styles.iconImg}
-             source={require(icon)}
-                // source={require (uri: icon) }
+            {/* ............................................................................ Icono */}
+            <Image 
+                style={styles.iconImg}
+               // source={{ uri: icon }}// Para web
+                source={require('../assets/images/helados/oreo.png')}
+                // style={{ width: 100, height: 100 }}
+                //  source={iconito}
             />
-                         {/* .................................................................... Cantidad */}
-        <Text style={styles.textCantidad}>{cantidad}</Text>
+             {/* .................................................................... Cantidad */}
+            <Text style={styles.textCantidad}>{cantidad}</Text>
         </View>
 
         {/* ............................................................................ Nombre */}
@@ -244,22 +255,15 @@ container: {
     
 },
 containerDatos: {
-    flex: 11,
+    flex: 8,
     flexDirection: "colum",
     justifyContent: "center",
-    // padding: 5,
-    // paddingHorizontal: 5,
+    alignSelf: "flex-start",
     marginHorizontal: 8,
-    // backgroundColor: "green",
-    // width:"60%",
     alignItems:"stretch",
-    // borderBlockColor:"green",
-    // borderWidth:2,
 },
 contImg:{
-    flex:3,
-    // borderBlockColor:"red",
-    // borderWidth:2,
+    flex:4,
 },
 contBotMas:{
     flex:2,
@@ -320,8 +324,8 @@ textCantidad:{
     backgroundColor:"#00b0e4",
     borderRadius:20,
     position:"absolute",
-    top:-2,
-    right:42,
+    // top: 4,
+    // right:64,
     alignContent:"center",
     justifyContent:"center",
 
@@ -353,8 +357,8 @@ description: {
     // width: "100%",
 },
 iconImg:{
-    height: 60,
-    // width: 60,
+    height: 80,
+    width: 80,
     resizeMode: "contain",
     borderRadius: 15,
     borderColor:"#ccc",

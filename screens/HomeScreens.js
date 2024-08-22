@@ -1,8 +1,8 @@
 import { useNavigation } from '@react-navigation/native';
 import React, { useState } from 'react';
-import { Text, StyleSheet, View, TouchableOpacity, Alert, Button, TextInput } from 'react-native';
+import { Text, StyleSheet, View, TouchableOpacity, Alert, Button, TextInput, Image} from 'react-native';
 
-
+//import logo from '../assets/images/LogoQueen.png'
 const HomeScreen = () => {
     const navigation = useNavigation();
     // const [url, setUrl] = useState('/helados');
@@ -13,6 +13,7 @@ const HomeScreen = () => {
     return (
         
         <View  style={styles.container}>
+            <Image source={require('../assets/images/LogoQueen.png')} style={{ width: 200, height: 100, resizeMode: "contain", }} />
             <Text
                 style={{
                     fontSize:38,
