@@ -148,8 +148,10 @@ return (
         >
         {/* ............................................................................ Icono */}
         <View style={styles.contImg}>
-            <Image style={styles.iconImg}
-                source={{ uri: icon }}
+            <Image
+             style={styles.iconImg}
+             source={require(icon)}
+                // source={require (uri: icon) }
             />
                          {/* .................................................................... Cantidad */}
         <Text style={styles.textCantidad}>{cantidad}</Text>
@@ -171,10 +173,9 @@ return (
             {/* {shared_with_id !== null ? ( */}
             {editItem === false ? (  
                 <Feather
+                    style={styles.iconMas}
                     onPress={handleEditModal}
                     name="plus-circle"
-                    size={30}
-                    color="#fff"
                 />
                 ) : (
             
@@ -267,11 +268,21 @@ contBotMas:{
     backgroundColor:'#e91e63',
     // alignSelf:"stretch",
     borderRadius:30,
-    height:40,
+    // height:40,
+    // width:40,
     position:"relative"
     // borderBlockColor:"blue",
     // borderWidth:2,
 },
+iconMas:{
+    display:"flex",
+    size:40,
+    fontSize:40,
+    color:"#fff",
+    alignSelf:"stretch",
+    justifyContent:"center"
+},
+
 cantPrecio: {
     // flex: 1,
     flexDirection: "row",

@@ -151,7 +151,7 @@ const styles = StyleSheet.create({
         paddingHorizontal:10,
         // borderColor:"green",
         // borderWidth:2,
-        backgroundColor: "#f00"
+        backgroundColor: "#eeeeee"
     },
     
     title: {
