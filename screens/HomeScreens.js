@@ -21,7 +21,7 @@ const HomeScreen = () => {
                     marginTop: "20%"
                 }}
             > 
-                HOME Screen App 
+                Postre hecho, helado...
             </Text>
             <View  style={styles.menu}>
                 <TouchableOpacity

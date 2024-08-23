@@ -59,11 +59,8 @@ import { useState } from "react";
         }) 
     {
         const datosPaCalc = { id, sabor, cantidad, icon,precio, closeCartModal }
-
-        // const item = { id, sabor, cantCompra, icon, precio };
-        // console.log('♦♦ activaDeleteItem : ',activaDeleteItem, '  ☻☻ editItem♣○• : ',editItem)
-        // console.log("Id: ", id, "   sabor: ",sabor, '   icon: ',icon)
     const [isDeleteActive, setIsDeleteActive] = React.useState(false);
+    const [imageSource, setImageSource] = React.useState({ uri: icon });
 
     const bottomSheetModalRef = useRef(null);
     const addItemCardModalRef = useRef(null);
@@ -125,22 +122,9 @@ async function updateHelado() {
     console.log(response.status);
 }
 
-// async function selectHelado() {
-//     const response = await fetch(`http://192.168.1.11:8000/helados/${id}`, {
-//         headers: {
-//         "x-api-key": "abcdef123456",
-//         },
-//     method: "GET",
-// });
-// reloadListDB(id);
-// console.log(response.status);
-// }
-
-// const iconito = this.props.active
-//     ? require(icon)
-//     : require(icon)
-
-//const iconito = require(icon);
+    const handleImageError = () => {
+        setImageSource(require('../assets/images/productoDefault.png')); // Imagen por defecto
+    };
 
 return (
     
@@ -159,10 +143,8 @@ return (
             {/* ............................................................................ Icono */}
             <Image 
                 style={styles.iconImg}
-               // source={{ uri: icon }}// Para web
-                source={require('../assets/images/helados/oreo.png')}
-                // style={{ width: 100, height: 100 }}
-                //  source={iconito}
+                source={imageSource}
+                onError={handleImageError}
             />
              {/* .................................................................... Cantidad */}
             <Text style={styles.textCantidad}>{cantidad}</Text>
@@ -361,8 +343,8 @@ iconImg:{
     width: 80,
     resizeMode: "contain",
     borderRadius: 15,
-    borderColor:"#ccc",
-    borderWidth:2,
+    // borderColor:"#ccc",
+    // borderWidth:2,
 },
 
 elevation: {
