@@ -1,203 +1,108 @@
 import React, { useEffect, useState } from "react";
-import { Dimensions, Text, TextInput, StyleSheet, View, TouchableHighlight, KeyboardAvoidingView, Platform, Keyboard, Pressable, Alert,
-    Animated,// Anima la ventana modal
-} from "react-native";
-import { AntDesign, MaterialCommunityIcons } from "@expo/vector-icons";
-import { TouchableOpacity } from "react-native-gesture-handler";
+import * as ImagePicker from 'expo-image-picker';
+import { Dimensions, Text, TextInput, StyleSheet, View, TouchableHighlight, KeyboardAvoidingView, Platform, Keyboard, Alert, Animated, TouchableOpacity } from "react-native";
 
-
-// export default function InputHelado({ todos, setTodos }) {
-    export default function InputHelado() {
-    const [showEmojies, setShowEmojies] = useState(false);// Oculta emojis al mostrar u pcultar el keyboard
-    const [messageBody, setMessageBody] = useState("");// Campo input
-    const [sabor, setSabor] = useState("");// Campo input
-    const [precio, setPrecio] = useState("");// Campo input
-    const [cantidad, setCantidad] = useState("");// Campo input
-    const [foto, setFoto] = useState("../assets/images/helados/Icon_App.png");// Campo Uri Foto
-    const [fadeAnim] = useState(new Animated.Value(0.1));// Anima el modal
+export default function InputHelado() {
+    const [showEmojies, setShowEmojies] = useState(false);
+    const [messageBody, setMessageBody] = useState("");
+    const [sabor, setSabor] = useState("");
+    const [precio, setPrecio] = useState("");
+    const [cantidad, setCantidad] = useState("");
+    const [foto, setFoto] = useState(null);  // Inicializa con null
+    const [fadeAnim] = useState(new Animated.Value(0.1));
 
     useEffect(() => {
-       // const pruebaKeyB = Keyboard.addListener("keyboardDidShow", () => alert('keyboardDidShow'));
         const showSubscription = Keyboard.addListener("keyboardDidShow", () => {
-            alert('♥ Mostrando keyboardDidShow');
             setShowEmojies(true);
             Animated.timing(fadeAnim, {
                 toValue: 1,
                 duration: 500,
                 useNativeDriver: true,
             }).start();
-            console.log('♥ showEmojies:', showEmojies);
         });
 
-
         const hideSubscription = Keyboard.addListener("keyboardDidHide", () => {
-            alert('♦Teclado oculto');
             setShowEmojies(false);
             Animated.timing(fadeAnim, {
                 toValue: 0,
                 duration: 1000,
                 useNativeDriver: true,
             }).start();
-            console.log('♦ showEmojies:', showEmojies)
         });
 
-    return () => {
-        showSubscription.remove();
-        hideSubscription.remove();
-       // pruebaKeyB.remove();
-    };
+        return () => {
+            showSubscription.remove();
+            hideSubscription.remove();
+        };
     }, []);
 
-    // const handleSubmit = async () => {
-    //     if (sabor === "") {
-    //         return;
-    //     } else {
-    //         const response = await fetch("http://192.168.1.11:8000/helados", {
-    //             headers: {
-    //                 "x-api-key": "abcdef123456",
-    //                 "Content-Type": "application/json",
-    //             },
-    //             method: "POST",
-    //             body: JSON.stringify({
-    //             // user_id: 1,
-    //             // title: messageBody,
-    //             sabor:sabor,
-    //             precio:precio,
-    //             cantidad:cantidad,
-    //             foto:foto,
-    //             }),
-    //         });
-    //         console.log(response.data); // Aquí puedes manejar la respuesta como lo necesites
-    //         Alert.alert('Éxito', 'Helado guardado correctamente');
+    // Función para seleccionar la imagen
+    const openBrowserImage = async () => {
+        let result = await ImagePicker.launchImageLibraryAsync({
+            mediaTypes: ImagePicker.MediaTypeOptions.Images,
+            allowsEditing: true,
+            aspect: [4, 3],
+            quality: 1,
+        });
 
-    //     const newTodo = await response.json();
-    //     setTodos([...todos, { ...newTodo, shared_with_id: null }]);
-    //     Keyboard.dismiss();// Cierra el keyboard
-    //     setMessageBody("");// Limpia el input
-    //     setCantidad("");
-    //     setSabor("");
-    //     setPrecio("");
-    //     }
-    // };
-
-
-    // const guardarHelado = async () => {
-    //     console.log("voy a guardar: ",sabor," - ",precio," - ",cantidad,"-",foto)
-    //     try {
-    //       //const response = await axios.post('http://192.168.1.11:8000/helados', {
-    //         const response = await fetch("http://192.168.1.11:8000/helados", {
-    //             headers: {
-    //                 // "x-api-key": "abcdef123456",
-    //                 "Content-Type": "application/json",
-    //             },
-    //             method: "POST",
-    //             body: JSON.stringify({
-    //                     sabor:sabor,
-    //                     precio:precio,
-    //                     icon:"url foto",
-    //                     cantidad:cantidad
-    //                 }),
-    //         });
-    //             console.log("Los dato fetch a enviar: ",response.data); // Aquí puedes manejar la respuesta como lo necesites
-    //             Alert.alert('Éxito', 'Helado guardado correctamente');
-    //       // Aquí podrías limpiar los campos o hacer otra acción después de guardar
-    //     } catch (error) {
-    //       console.error('Error al guardar el helado:', error);
-    //       Alert.alert('Error', 'No se pudo guardar el helado');
-    //     }
-    //   };
-
+        if (!result.canceled) {
+            setFoto(result.assets[0].uri);  // Actualiza la URI de la foto seleccionada
+        }
+    };
 
     const guardarHelado = async () => {
         try {
-        //   const response = await fetch("http://192.168.1.11:8000/helados", {
-            const response = await fetch(`https://backend-de-prueba-delta.vercel.app/helados`, {
-            headers: {
-              "Content-Type": "application/json",
-              'Access-Control-Allow-Origin': '*',
-            },
-            method: "POST",
-            body: JSON.stringify({
-              sabor: sabor,
-              precio: precio,
-              icon: foto,
-              cantidad: cantidad,
-            }),
-          });
-      
-          if (!response.ok) {
-            const contentType = response.headers.get("content-type");
-            if (contentType && contentType.indexOf("application/json") !== -1) {
-              const errorData = await response.json();
-              if (errorData.error) {
-                throw new Error(errorData.error);
-              }
-            } else {
-              const errorText = await response.text();
-              throw new Error(`Error HTTP: ${response.status} - ${errorText}`);
-            }
-          }
-      
-          const data = await response.json();
-          console.log("Los datos enviados: ", data);
-          Alert.alert('Éxito', 'Helado guardado correctamente');
-        } catch (error) {
-          console.error('Error al guardar el helado:', error);
-          Alert.alert('Error', `No se pudo guardar el helado: ${error.message}`);
-        }
-      };
-      
-      
-      
+            const formData = new FormData();
+            formData.append('sabor', sabor);
+            formData.append('precio', precio);
+            formData.append('cantidad', cantidad);
 
-    const RenderEmoji = ({ emoji }) => {
-        return (
-            <TouchableHighlight
-                activeOpacity={1}
-                underlayColor={"transparent"}
-                onPress={() => {
-                setMessageBody(messageBody + emoji);
-            }}
-            >
-            {/* <Text>Esto es una prueba</Text> */}
-            <Text style={styles.emoji}>{emoji}</Text>
-            </TouchableHighlight>
-        );
+            if (foto) {
+                const filename = foto.split('/').pop();
+                const match = /\.(\w+)$/.exec(filename);
+                const type = match ? `image/${match[1]}` : `image`;
+
+                formData.append('icon', { uri: foto, name: filename, type });
+            }
+
+            const response = await fetch(`https://backend-de-prueba-delta.vercel.app/helados`, {
+                method: 'POST',
+                body: formData,
+                headers: {
+                    'Content-Type': 'multipart/form-data',
+                },
+            });
+
+            if (!response.ok) {
+                const contentType = response.headers.get("content-type");
+                if (contentType && contentType.indexOf("application/json") !== -1) {
+                    const errorData = await response.json();
+                    throw new Error(errorData.error || 'Error desconocido');
+                } else {
+                    const errorText = await response.text();
+                    throw new Error(`Error HTTP: ${response.status} - ${errorText}`);
+                }
+            }
+
+            const data = await response.json();
+            console.log("Los datos enviados: ", data);
+            Alert.alert('Éxito', 'Helado guardado correctamente');
+        } catch (error) {
+            console.error('Error al guardar el helado:', error);
+            Alert.alert('Error', `No se pudo guardar el helado: ${error.message}`);
+        }
     };
 
     return (
-        // El KeyboardAvoidingView muestra el KB debajo del input text
-        <KeyboardAvoidingView  
-            behavior={Platform.OS === "ios" ? "padding" : "height"}
-        >
+        <KeyboardAvoidingView behavior={Platform.OS === "ios" ? "padding" : "height"}>
             <View style={styles.container}>
                 {showEmojies && (
-                <Animated.View
-                    style={[
-                    styles.emojiesContainer,
-                    {
-                        opacity: fadeAnim,
-                    },
-                    ]}
-                    >
-                    {/* <RenderEmoji emoji="✅" />
-                    <RenderEmoji emoji="🚨" />
-                    <RenderEmoji emoji="📝" />
-                    <RenderEmoji emoji="🎁" />
-                    <RenderEmoji emoji="🛒" />
-                    <RenderEmoji emoji="🎉" />
-                    <RenderEmoji emoji="🏃🏻‍♂️" /> */}
-                </Animated.View>
+                    <Animated.View style={[styles.emojiesContainer, { opacity: fadeAnim }]}>
+                        {/* Emojis u otros componentes pueden ir aquí */}
+                    </Animated.View>
                 )}
 
-                <Animated.View
-                    style={[
-                    styles.fadingContainer,
-                    {
-                        // Bind opacity to animated value
-                        opacity: fadeAnim,
-                    },
-                    ]}>
+                <Animated.View style={[styles.fadingContainer, { opacity: fadeAnim }]}>
                     <Text style={styles.fadingText}>Fading View!</Text>
                 </Animated.View>
 
@@ -205,55 +110,34 @@ import { TouchableOpacity } from "react-native-gesture-handler";
                     <TextInput
                         style={styles.containerTextInput}
                         placeholder="Sabor"
-                        scrollEnabled={true}
                         onChangeText={setSabor}
                         defaultValue={sabor}
                     />
                     <TextInput
                         style={styles.containerTextInput}
                         placeholder="Precio"
-                        scrollEnabled={true}
                         onChangeText={setPrecio}
+                        keyboardType="numeric"
                         defaultValue={precio}
                     />
                     <TextInput
                         style={styles.containerTextInput}
-                        placeholder="cantidad"
-                        scrollEnabled={true}
+                        placeholder="Cantidad"
                         onChangeText={setCantidad}
+                        keyboardType="numeric"
                         defaultValue={cantidad}
                     />
                 </View>
 
-                <View>
-                    <MaterialCommunityIcons
-                        name="camera"
-                        size={40}
-                        color={messageBody ? "black" : "#00000050"}
-                        style={{ paddingLeft: 5 }}
-                        // onPress={handleSubmit}
-                    />
-                    <TouchableOpacity
-                        onPress={guardarHelado}
-                            style={{
-                                backgroundColor: "purple",
-                                padding:10,
-                                alignSelf:"center",
-                                borderRadius:10,
-                            }}
-                            >
-                        <Text
-                            style={{
-                                fontWeight: "800",
-                                fontSize: 15,
-                                textAlign:"center",
-                                color:"white"
-                            }}
-                        >
-                            Guardar
-                        </Text>
-                    </TouchableOpacity>
-                </View>
+                <TouchableOpacity onPress={openBrowserImage}>
+                    <Text style={{ fontWeight: "800", fontSize: 15, textAlign: "center", color: "white" }}>
+                        Cargar foto
+                    </Text>
+                </TouchableOpacity>
+
+                <TouchableOpacity onPress={guardarHelado} style={styles.saveButton}>
+                    <Text style={styles.saveButtonText}>Guardar</Text>
+                </TouchableOpacity>
             </View>
         </KeyboardAvoidingView>
     );
@@ -281,12 +165,6 @@ const styles = StyleSheet.create({
         alignItems: "center",
         justifyContent: "center",
     },
-    emoji: {
-        fontSize: 25,
-        paddingVertical: 5,
-        marginRight: 10,
-    },
-
     containerTextInput: {
         width: windowWidth - 100,
         borderWidth: 1,
@@ -301,4 +179,17 @@ const styles = StyleSheet.create({
         marginBottom: 5,
         fontWeight: "600",
     },
+    saveButton: {
+        backgroundColor: "purple",
+        padding: 10,
+        alignSelf: "center",
+        borderRadius: 10,
+    },
+    saveButtonText: {
+        fontWeight: "800",
+        fontSize: 15,
+        textAlign: "center",
+        color: "white",
+    },
 });
+

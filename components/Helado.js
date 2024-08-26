@@ -129,8 +129,6 @@ async function updateHelado() {
 return (
     
     <GestureHandlerRootView>
-    
-
     <TouchableOpacity
         onLongPress={() => activaDelete()}// Activa el boton BORRAR Item
         onPress={() => setIsDeleteActive(false)}
@@ -138,17 +136,19 @@ return (
         style={cantidad === 0 ? [styles.container, styles.containerVacio, styles.shadowProp] : [styles.container, styles.shadowProp] }
             // & cantidad === 1 && [styles.containerCasiVacio] }
         >
-        
-        <View style={styles.contImg}>
-            {/* ............................................................................ Icono */}
-            <Image 
-                style={styles.iconImg}
-                source={imageSource}
-                onError={handleImageError}
-            />
-             {/* .................................................................... Cantidad */}
-            <Text style={styles.textCantidad}>{cantidad}</Text>
+        <View style={styles.contImgAndCant}>
+            <View style={styles.contImg}>
+                {/* ............................................................................ Icono */}
+                <Image 
+                    style={styles.iconImg}
+                    source={imageSource}
+                    onError={handleImageError}
+                />
+                {/* .................................................................... Cantidad */}
+                <Text style={styles.textCantidad}>{cantidad}</Text>
+            </View>
         </View>
+        
 
         {/* ............................................................................ Nombre */}
         <View style={styles.containerDatos}>
@@ -226,9 +226,10 @@ container: {
     flexDirection: "row",
     justifyContent: "space-between",
     alignItems:"center",
+    height:60,
     padding: 5,
     borderRadius: 15,
-    marginBottom: 15,
+    marginBottom: 32,
     backgroundColor: "white",
 
     // borderBlockColor:"green",
@@ -243,9 +244,15 @@ containerDatos: {
     alignSelf: "flex-start",
     marginHorizontal: 8,
     alignItems:"stretch",
+    
 },
 contImg:{
+    position:"absolute",
+    top:-54,
+},
+contImgAndCant:{
     flex:4,
+    position:"relative",
 },
 contBotMas:{
     flex:2,
@@ -297,17 +304,17 @@ containerVacio:{
 },
 
 textCantidad:{
-    fontSize: 15,
+    fontSize: 16,
     fontWeight: "600",
     color: "#ffffff",
-    width:22,
-    height:22,
+    width:25,
+    height:25,
     textAlign: "center",
-    backgroundColor:"#00b0e4",
+    backgroundColor:"#6b00f6",
     borderRadius:20,
     position:"absolute",
-    // top: 4,
-    // right:64,
+    top: 20,
+    right:64,
     alignContent:"center",
     justifyContent:"center",
 

@@ -41,7 +41,7 @@ export const  CartProvider = ({children}) => {
         let totalItems = cartItems.reduce((total, item) => total + item.cantCompra, 0);
         setCartItemCount(totalItems);
 
-        let itemCero = cartItems.reduce((total, item) => totalItems === 0 && total + item.cantCompra, 0);
+        let itemCero = cartItems.reduce((total, item) => item.cantidad === 0 && total + item.cantCompra, 0);
         setCartItemCero(itemCero);
         console.log("                            .", cartItemCero)
         console.log("........☺ cart Items ☺..........", cartItemCero)
@@ -88,6 +88,7 @@ export const  CartProvider = ({children}) => {
     const clearCart = () => {
         setCarts([]);
         setTotalPrice(0);
+        setCartItemCount(0);
         //settoTalItemCompra(0);
     }
 
