@@ -130,10 +130,12 @@ export default function InputHelado() {
                 </View>
 
                 <TouchableOpacity onPress={openBrowserImage}>
-                    <Text style={{ fontWeight: "800", fontSize: 15, textAlign: "center", color: "white" }}>
+                    <Text style={styles.saveButtonText}>
                         Cargar foto
                     </Text>
                 </TouchableOpacity>
+
+                {image && <Image source={{ uri: image }} style={{ width: 100, height: 100 }} />}
 
                 <TouchableOpacity onPress={guardarHelado} style={styles.saveButton}>
                     <Text style={styles.saveButtonText}>Guardar</Text>
