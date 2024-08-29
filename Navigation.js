@@ -11,6 +11,7 @@ import HomeScreen from './screens/HomeScreens';
 import CreaHeladoScreen from './screens/CreaHeladoScreen';
 import StackEdit from './screens/StackEdit';
 import ListaHelados from './screens/ListaHelados';
+import GuardaFoto from './screens/GuardaFoto';
 import CartModalContent from './components/CartModalContent';
 import { CartContext, CartProvider } from './context/CartContext';
 
@@ -41,6 +42,10 @@ function MyStak() {
             <HomeStackNavigator.Screen 
                 name="ListaHelados"
                 component={ListaHelados}
+            />
+            <HomeStackNavigator.Screen 
+                name="GuardaFoto"
+                component={GuardaFoto}
             />
             <HomeStackNavigator.Screen 
                 name="CreateNew"

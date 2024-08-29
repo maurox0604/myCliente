@@ -11,7 +11,7 @@ npm add dotenv = 'Crea variables de entorno para pasar user y pass'
 npm add express  =  express
 npm add nodemon -d = al guardar se corre automaticamente la app  'el -d es para que quede como dependencia'
 
-npm run dev = corre el script que hay en package.json "npx nodemon app,js".. app.js porque es el archivo que a refrescar cada que guardemos
+npm run dev = corre el script que hay en package.json "npx nodemon app.js".. app.js porque es el archivo que a refrescar cada que guardemos
 
 
 

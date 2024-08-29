@@ -59,6 +59,24 @@ const HomeScreen = () => {
                     Edit helados
                 </Text>
             </TouchableOpacity>
+
+            <TouchableOpacity 
+                onPress={() => navigation.navigate("GuardaFoto")}
+                style={[styles.boton,{
+                    backgroundColor: "purple",
+                }]}
+                >
+                <Text
+                    style={{
+                        fontWeight: "800",
+                        fontSize: 15,
+                        textAlign:"center",
+                        color:"white"
+                    }}
+                >
+                    Guardar foto
+                </Text>
+            </TouchableOpacity>
             </View>
             
 
