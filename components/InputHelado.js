@@ -11,6 +11,7 @@ export default function InputHelado() {
     const [foto, setFoto] = useState(null);  // Inicializa con null
     const [fadeAnim] = useState(new Animated.Value(0.1));
     const [selectedImage, setSelectedImage] = useState(null);
+    // const [image, setImage] = useState<string | null>(null);
 
     useEffect(() => {
         const showSubscription = Keyboard.addListener("keyboardDidShow", () => {
@@ -64,28 +65,18 @@ export default function InputHelado() {
             formData.append('precio', precio);
             formData.append('cantidad', cantidad);
 
-           
-            //setSelectedImage({ localUri: result.assets[0].uri });
-            // if (setSelectedImage.localUri) {
-            //     const filename = foto.split('/').pop();
-            //     const match = /\.(\w+)$/.exec(filename);
-            //     const type = match ? `image/${match[1]}` : `image`;
-
-            //     formData.append('icon', { uri: foto, name: filename, type });
+            // if (foto) {
+            //     // Asumiendo que `selectedImage` es un objeto de tipo File (o Blob)
+            //     formData.append("icon", {
+            //         uri: foto.uri,
+            //         type: 'image/jpeg', // Ajusta según el tipo de tu imagen
+            //         name: 'imagen.jpg', // Nombre de la imagen
+            //     });
             // }
-
-            if (foto) {
-                // Asumiendo que `selectedImage` es un objeto de tipo File (o Blob)
-                formData.append("icon", {
-                    uri: foto.uri,
-                    type: 'image/jpeg', // Ajusta según el tipo de tu imagen
-                    name: 'imagen.jpg', // Nombre de la imagen
-                });
-            }
         
             try {
-          //  const response = await fetch(`https://backend-de-prueba-delta.vercel.app/helados`, {
-                const response = await fetch(`http://192.168.1.11:3001/helados`, {
+                const response = await fetch(`https://backend-de-prueba-delta.vercel.app/helados`, {
+                // const response = await fetch(`http://192.168.1.11:3001/helados`, {
                 method: 'POST',
                 body: formData,
                 headers: {
@@ -123,21 +114,30 @@ export default function InputHelado() {
             }
         }
 
+        
+
         // Abre la galería para seleccionar una imagen
         let result = await ImagePicker.launchImageLibraryAsync({
-            mediaTypes: ImagePicker.MediaTypeOptions.Images,
+            // let result = await ImagePicker.launchImageLibrary({
+            mediaTypes: ImagePicker.MediaTypeOptions.All,
             allowsEditing: true,
             aspect: [4, 3],
             quality: 1,
-        });
+          });
+      
+          console.log("++++++++++++      ++   : ",result);
+      
+          if (!result.canceled) {
+            setSelectedImage(result.assets[0].uri);
+          }
 
         if (!result.canceled) {
             // setSelectedImage(result.uri);
             console.log("1.enviando imagen: ", result)
-             console.log("2.enviando imagen result.uri: ", result.uri)
+             console.log("2.enviando imagen result.uri: ", result.assets[0].uri)
         }
         if (!result.canceled) {
-            setSelectedImage(result.assets[0]);
+           // setSelectedImage(result.assets[0]);
             console.log("3. enviando imagen: ", result.assets[0])
             console.log("4 .enviando imagen URI: ", result.assets[0].fileName)
         }
@@ -149,15 +149,33 @@ export default function InputHelado() {
             return;
         }
 
-        const formData = new FormData();
-        formData.append('image', {
-            uri: selectedImage,
-            name: 'image.jpg',
-            type: 'image/jpeg',
-        });
+        // const formData = new FormData();
+        // formData.append('image', {
+        //     uri: selectedImage,
+        //     name: 'image.jpg',
+        //     type: 'image/jpeg',
+        // });
 
+        const formData = new FormData();
+    // formData.append('sabor', sabor);
+    // formData.append('precio', precio);
+    // formData.append('cantidad', cantidad);
+
+    if (selectedImage) {
+        // const filename = selectedImage.uri.split('/').pop();
+        // const match = /\.(\w+)$/.exec(filename);
+        // const type = match ? `image/${match[1]}` : `image`;
+
+        formData.append('file', { 
+            uri: selectedImage.uri, 
+            name: selectedImage.fileName, 
+            type: selectedImage.type 
+        });
+    }
+
+    formData.append('array',JSON.stringify(Array));
         try {
-            const response = await fetch('https://backend-de-prueba-delta.vercel.app/upload', {
+            const response = await fetch('http://192.168.1.11:3001/upload', {
                 method: 'POST',
                 body: formData,
                 headers: {

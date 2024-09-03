@@ -27,9 +27,9 @@ export default function ListaHelados({deletItem=false, editItem=false}){
     async function fetchHelados() {
 
         console.log("Esta es fethcData")
-        // const response = await fetch(`https://backend-de-prueba-delta.vercel.app/helados`, {
-            const response = await fetch(`http://192.168.1.11:3001/helados`, {
-            
+        const response = await fetch(`https://backend-de-prueba-delta.vercel.app/helados`, {
+            // const response = await fetch(`http://192.168.1.11:3001/helados`, {
+            // 
             method: "GET",
             mode: "cors",
             headers: {
