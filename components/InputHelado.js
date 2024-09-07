@@ -1,6 +1,7 @@
 import React, { useEffect, useState } from "react";
 import * as ImagePicker from 'expo-image-picker';
 import { Dimensions, Text, Button, TextInput, StyleSheet, View, Image, KeyboardAvoidingView, Platform, Keyboard, Alert, Animated, TouchableOpacity } from "react-native";
+import { FontAwesome5 } from "@expo/vector-icons";
 
 export default function InputHelado() {
     const [showEmojies, setShowEmojies] = useState(false);
@@ -261,26 +262,35 @@ export default function InputHelado() {
                 </Animated.View>
 
                 <View style={styles.inputContainer}>
-                    <TextInput
-                        style={styles.containerTextInput}
-                        placeholder="Sabor"
-                        onChangeText={setSabor}
-                        defaultValue={sabor}
-                    />
-                    <TextInput
-                        style={styles.containerTextInput}
-                        placeholder="Precio"
-                        onChangeText={setPrecio}
-                        keyboardType="numeric"
-                        defaultValue={precio}
-                    />
-                    <TextInput
-                        style={styles.containerTextInput}
-                        placeholder="Cantidad"
-                        onChangeText={setCantidad}
-                        keyboardType="numeric"
-                        defaultValue={cantidad}
-                    />
+                    <View style={styles.campos}>
+                        <FontAwesome5 name="ice-cream" style={styles.iconos} />
+                        <TextInput
+                            style={styles.containerTextInput}
+                            placeholder="Sabor"
+                            onChangeText={setSabor}
+                            defaultValue={sabor}
+                        />
+                    </View>
+                    <View style={styles.campos}>
+                        <FontAwesome5 name="dollar-sign" style={styles.iconos} borderRadius={20} backgroundColor="red" />
+                        <TextInput
+                            style={styles.containerTextInput}
+                            placeholder="Precio"
+                            onChangeText={setPrecio}
+                            keyboardType="numeric"
+                            defaultValue={precio}
+                        />
+                    </View>
+                    <View style={styles.campos}>
+                        <FontAwesome5 name="calculator" style={styles.iconos} />
+                        <TextInput
+                            style={styles.containerTextInput}
+                            placeholder="Cantidad"
+                            onChangeText={setCantidad}
+                            keyboardType="numeric"
+                            defaultValue={cantidad}
+                        />
+                    </View>
                 </View>
 
                 <TouchableOpacity onPress={openBrowserImage}>
@@ -346,7 +356,7 @@ const styles = StyleSheet.create({
         justifyContent: "center",
     },
     containerTextInput: {
-        width: windowWidth - 100,
+        width: windowWidth - 10,
         borderWidth: 1,
         borderRadius: 30,
         minHeight: 45,
@@ -357,8 +367,35 @@ const styles = StyleSheet.create({
         borderColor: "lightgray",
         backgroundColor: "#fff",
         marginBottom: 5,
+        marginLeft:8,
         fontWeight: "600",
     },
+    campos:{
+        flex: 1,
+        flexDirection: "row",
+        justifyContent: "space-between",
+        alignItems:"center",
+        height:60,
+        padding: 10,
+        // borderRadius: 15,
+        marginBottom: 32,
+        backgroundColor: "white",
+        width:"100%",
+    },
+    iconos:{
+        display:"flex",
+        alignItems:"center",
+        justifyContent:"center",
+        color:"#01abea", 
+        borderWidth:1,
+        borderColor:"#01abea",
+        borderRadius:20,
+        padding:10,
+        width:"21%",
+        fontSize:24,
+
+  // backgroundColor="red" 
+},
     saveButton: {
         backgroundColor: "purple",
         padding: 10,

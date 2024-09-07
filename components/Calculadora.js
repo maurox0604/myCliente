@@ -1,7 +1,10 @@
 import { useContext, useEffect, useState, alert } from "react";
 import { View, Text, StyleSheet, Pressable, Image, Button, Alert } from "react-native";
 import { CartContext } from "../context/CartContext";
-import { Feather } from "@expo/vector-icons";
+import { Feather, MaterialCommunityIcons } from "@expo/vector-icons";
+import { SelectList } from 'react-native-dropdown-select-list';
+
+
 
 
 export default function Calculadora({
@@ -18,12 +21,18 @@ export default function Calculadora({
 }) {
   
   const { addToCart, existCart } = useContext(CartContext);
-  
-  
   const [activMensaje, setActivMensaje] = useState(false);
   const [cantCompra, setCantCompra] = useState(0);
   const [cantQueda, setCantQueda] = useState(datosPaCalc.cantidad);
-  const [ventaPorHelado, setVentaPorHelado] = useState(0);
+  const [precioObseqio, setPrecioObseqio] = useState(0);
+
+  const [selected, setSelected] = useState("");
+  
+  const data = [
+      {key:'1', value:'Obsequio'},
+      {key:'2', value:'Prueba'},
+      {key:'3', value:'Derretido'},
+  ]
 
   
 
@@ -85,7 +94,15 @@ export default function Calculadora({
       console.log('♥ Debes tener al menos 1 helado ');
   }
 
-  
+  const anulaPrecio = (sel) =>{
+    
+    setPrecioObseqio(sel);
+    datosPaCalc.precio = precioObseqio;
+    cantComprar();
+
+    // Alert.alert(sel);
+    console.log("sel", sel)
+  }
 
   // useEffect(() => {
   //   fetchInfo();
@@ -120,6 +137,31 @@ export default function Calculadora({
           }
 
       <View style={styles.header}>
+
+            <SelectList 
+              // dropdownStyles={{
+              //   backgroundColor: "white",
+              //   osition: "absolute",
+              //   top: 40,
+              //   width: "100%",
+              //   zIndex: 9999,
+              // }}
+                    placeholder={<MaterialCommunityIcons name="menu" size={30} color={'red'} /> }
+                    boxStyles={{ borderWidth:0}}
+                    setSelected={() => setSelected(0)} 
+                    onSelect={() => {anulaPrecio(0)}} 
+                    // onChange={(e) => anulaPrecio(e)}
+                    
+                    data={data} 
+                    save="value"
+                    search={false}
+                    label="Categories"
+                    // arrowicon={<MaterialCommunityIcons name="menu" size={18} color={'black'} />} 
+                    searchicon={<MaterialCommunityIcons name="search" size={12} color={'black'} />} 
+                    // onSelect?: () => void?
+                />
+                {/* SelectList.onSelect ? :  */}
+
           { cantQueda == 0 ?  
             (<View style={styles.msj}>
               <Text> No quedan helados de {datosPaCalc.sabor}</Text>
@@ -283,6 +325,7 @@ const styles = StyleSheet.create({
     flexDirection: "row",
     justifyContent: "space-between",
     fontSize: 12,
+    zIndex:10,
   },
 
   participant: {

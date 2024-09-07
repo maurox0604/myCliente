@@ -1,10 +1,10 @@
-import * as React from "react";
-import { View, Text, StyleSheet, Pressable, TouchableOpacity, useWindowDimensions, Image } from "react-native";
-import { Feather } from "@expo/vector-icons";
+// import * as React from "react";
+import React, { useRef, useEffect } from "react";
+import { Animated, View, Text, StyleSheet, Pressable, TouchableOpacity, useWindowDimensions, Image } from "react-native";
+import { Feather, MaterialCommunityIcons } from "@expo/vector-icons";
 import "react-native-gesture-handler";
 import { BottomSheetModal } from "@gorhom/bottom-sheet";
 import { GestureHandlerRootView } from 'react-native-gesture-handler';
-import { useRef } from "react";
 import Calculadora from "./Calculadora";
 import Editor from "./Editor";
 import EditModalContent from "./EditModalContent";
@@ -64,7 +64,7 @@ import { useState } from "react";
 
     const bottomSheetModalRef = useRef(null);
     const addItemCardModalRef = useRef(null);
-    const snapPointsEditar = ["25%", "50%", "100%"];
+    const snapPointsEditar = ["25%", "50%", "90%"];// el ultimo es la altura
     const snapPointsCalculadora = ["80%"];
 
     function handlePresentModal() {
@@ -90,6 +90,26 @@ import { useState } from "react";
             setIsDeleteActive(true);
         }
     }
+
+    const widthAnim = useRef(new Animated.Value(0)).current; // Valor inicial de ancho 0
+
+    // ........................Animar el boton borara que esta oculto
+    useEffect(() => {
+        if (isDeleteActive) {
+        Animated.timing(widthAnim, {
+            toValue: 50, // El valor final del ancho
+            duration: 500, // Duración de la animación (0.5 segundos)
+            useNativeDriver: false, // Se debe deshabilitar el uso del NativeDriver para animar width
+        }).start();
+        } else {
+        // Si se oculta el botón, animar de vuelta a 0
+        Animated.timing(widthAnim, {
+            toValue: 0,
+            duration: 500,
+            useNativeDriver: false,
+        }).start();
+        }
+    }, [isDeleteActive]);
 
     async function deleteTodo() {
         // const response = await fetch(`http://192.168.1.11:8000/helados/${id}`, {
@@ -133,7 +153,8 @@ return (
         onLongPress={() => activaDelete()}// Activa el boton BORRAR Item
         onPress={() => setIsDeleteActive(false)}
         activeOpacity={0.8}
-        style={cantidad === 0 ? [styles.container, styles.containerVacio, styles.shadowProp] : [styles.container, styles.shadowProp] }
+        style={cantidad === 0 ? [styles.container, styles.containerVacio, styles.shadowProp] : [styles.container, styles.shadowProp] 
+        }
             // & cantidad === 1 && [styles.containerCasiVacio] }
         >
         <View style={styles.contImgAndCant}>
@@ -173,11 +194,9 @@ return (
                 ) : (
             
                 <Feather
+                    style={styles.iconEdit}
                     onPress={handlePresentModal}
-                    name="book-open"
-                    size={20}
-                    color="#fff"
-
+                    name="edit"
                 />)
             }
         </View>
@@ -185,9 +204,16 @@ return (
         
         {/* // Opcion de BORRAR un item al dejar presionado sobre el item */}
         {isDeleteActive && (
-            <Pressable onPress={deleteTodo} style={styles.deleteButton}>
-                <Text style={{ color: "white", fontWeight: "bold" }}>x</Text>
-            </Pressable>
+            <Animated.View style={[styles.deleteButton, { width: widthAnim }]}>
+                <Pressable
+                    onPress={deleteTodo}
+                    onPressOut={() => setIsDeleteActive(false)}
+                    style={styles.innerButton}
+                >
+                <MaterialCommunityIcons name="trash-can-outline" size={24} color="white" />
+                    {/* <Text style={{ color: "white", fontWeight: "bold" }}>x</Text> */}
+                </Pressable>
+            </Animated.View>
         )}
 
             {/* 🛒 Modal Calcuadora  */}
@@ -275,6 +301,17 @@ iconMas:{
     alignSelf:"stretch",
     justifyContent:"center"
 },
+iconEdit:{
+    display:"flex",
+    size:40,
+    fontSize:25,
+    color:"#fff",
+    alignSelf:"stretch",
+    justifyContent:"center", 
+    backgroundColor:"#352dc9",
+    borderRadius:10,
+    padding:6,
+},
 
 cantPrecio: {
     // flex: 1,
@@ -322,16 +359,18 @@ textCantidad:{
 },
 
 deleteButton: {
-    position: "absolute",
-    right: 0,
-    top: -6,
-    width: 20,
-    height: 20,
-    alignItems: "center",
+    height: 40, // Altura fija de 80
+    backgroundColor: "red",
     justifyContent: "center",
-    backgroundColor: "#ef4444",
+    alignItems: "center",
     borderRadius: 10,
-},
+    marginLeft:10,
+    },
+    innerButton: {
+        flex: 1,
+        justifyContent: "center",
+        alignItems: "center",
+    },
 
 title: {
     fontWeight: "bold",

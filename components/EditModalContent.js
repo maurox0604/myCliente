@@ -1,5 +1,6 @@
+import { FontAwesome5 } from "@expo/vector-icons";
 import { useState } from "react";
-import { Keyboard, View, Text, StyleSheet, Button, Alert, Pressable, TouchableOpacity } from "react-native";
+import { Dimensions, Keyboard, View, Text, StyleSheet, Button, Alert, Pressable, TouchableOpacity } from "react-native";
 import { ScrollView, TextInput } from "react-native-gesture-handler";
 
 export default function EditModalContent({ id, _sabor, _precio, _cantidad, reloadListDB, closeModal }) {
@@ -81,41 +82,57 @@ export default function EditModalContent({ id, _sabor, _precio, _cantidad, reloa
     
       <ScrollView automaticallyAdjustKeyboardInsets={true}>
       {/* ..............................sabor */}
-      <TextInput
-        value={sabor}
-        onChangeText={setSabor}
-        onFocus={() => setFocus(true)}
-        onBlur={() => setFocus(false)}
-        style={[
-          styles.input,
-          focus && { borderWidth: 3, borderColor: "black" },
-        ]}
-        // placeholder={_sabor}
-      />
+      <View style={styles.inputContainer}>
+        <View style={styles.campos}>
+          <FontAwesome5 style={styles.iconos} name="ice-cream" />
+          <TextInput
+            value={sabor}
+            onChangeText={setSabor}
+            onFocus={() => setFocus(true)}
+            onBlur={() => setFocus(false)}
+           // style={styles.containerTextInput}
+            style={[
+              styles.containerTextInput,
+              focus && { borderWidth: 3, borderColor: "gray" },
+            ]}
+            // placeholder={_sabor}
+          />
+        </View>
 
-      <TextInput
-        value={""+precio}
-        onChangeText={setPrecio}
-        onFocus={() => setFocus(true)}
-        onBlur={()  => setFocus(false)}
-        style={[
-          styles.input,
-          focus && { borderWidth: 3, borderColor: "black" },
-        ]}
-        // placeholder={_precio}
-      />
+        {/* ..............................Precio */}
+        <View style={styles.campos}>
+          <FontAwesome5 style={styles.iconos} name="dollar-sign" />
+          <TextInput
+            value={""+precio}
+            onChangeText={setPrecio}
+            onFocus={() => setFocus(true)}
+            onBlur={()  => setFocus(false)}
+            style={[
+              styles.containerTextInput,
+              focus && { borderWidth: 3, borderColor: "black" },
+            ]}
+            // placeholder={_precio}
+          />
+        </View>
 
-      <TextInput
-        value={""+cantidad}
-        onChangeText={setCantidad}
-        onFocus={() => setFocus(true)}
-        onBlur={() => setFocus(false)}
-        style={[
-          styles.input,
-          focus && { borderWidth: 3, borderColor: "black" },
-        ]}
-        // placeholder={_cantidad}
-      />
+        {/* ..............................Cantidad */}
+        <View style={styles.campos}>
+          <FontAwesome5 style={styles.iconos} name="calculator" />
+          <TextInput
+            value={""+cantidad}
+            onChangeText={setCantidad}
+            onFocus={() => setFocus(true)}
+            onBlur={() => setFocus(false)}
+            style={[
+              styles.containerTextInput,
+              focus && { borderWidth: 3, borderColor: "black" },
+            ]}
+            // placeholder={_cantidad}
+          />
+        </View>
+      </View>
+        
+      
       {/* <TextInput
         value={email}
         onChangeText={(text) => setEmail(text.toLowerCase())}
@@ -133,11 +150,13 @@ export default function EditModalContent({ id, _sabor, _precio, _cantidad, reloa
         title="GUARDAR"
         disabled={sabor.length === 0}
       />
-
       </ScrollView>
     </View>
   );
 }
+
+
+const windowWidth = Dimensions.get("window").width;
 const styles = StyleSheet.create({
   contentContainer: {
     flex: 1,
@@ -150,7 +169,49 @@ const styles = StyleSheet.create({
     borderRadius: 15,
     marginVertical: 15,
   },
+  campos:{
+    flex: 1,
+    flexDirection: "row",
+    justifyContent: "space-between",
+    alignItems:"center",
+    height:60,
+    padding: 10,
+    // borderRadius: 15,
+    marginBottom: 32,
+    backgroundColor: "white",
+    width:"100%",
+},
 
+iconos:{
+  display:"flex",
+  alignItems:"center",
+  justifyContent:"center",
+  color:"#e91e63", 
+  borderWidth:1,
+  borderColor:"#e91e63",
+  borderRadius:20,
+  padding:10,
+  width:"21%",
+  fontSize:24,
+
+  // backgroundColor="red" 
+},
+
+containerTextInput: {
+  width: windowWidth - 10,
+  borderWidth: 1,
+  borderRadius: 30,
+  minHeight: 45,
+  paddingHorizontal: 15,
+  paddingTop: 8,
+  fontSize: 16,
+  paddingVertical: 5,
+  borderColor: "lightgray",
+  backgroundColor: "#fff",
+  marginBottom: 5,
+  marginLeft:8,
+  fontWeight: "600",
+},
 
   header: {
     justifyContent: 'center',
