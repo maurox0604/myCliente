@@ -11,18 +11,6 @@ const CreaHeladoScreen = () => {
         <View>
         <Text>Este es settings</Text>
             <SafeAreaView style={styles.container}> 
-                {/* <FlatList
-                    data={todos}
-                    keyExtractor={(todo) => todo.id}
-                    renderItem={({ item }) => (
-                        <Helado {...item}  clearTodo={clearTodo} />
-                        )}
-                        
-                    ListHeaderComponent={() => <Text style={styles.title}>Queen - Hoy xxxxxx xxxxxxxxxxx</Text>}
-                    contentContainerStyle={styles.contentContainerStyle}
-                /> */}
-
-                {/* <InputHelado todos={todos} setTodos={setTodos} /> */}
                 <InputHelado />
             </SafeAreaView>
         </View>

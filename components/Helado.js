@@ -68,6 +68,7 @@ import { useState } from "react";
     const snapPointsCalculadora = ["80%"];
 
     function handlePresentModal() {
+        console.log("Vamos a editarrrrrrr")
         bottomSheetModalRef.current?.present();
     }
 
@@ -112,6 +113,7 @@ import { useState } from "react";
     }, [isDeleteActive]);
 
     async function deleteTodo() {
+        console.log("Borrando un heloadoooo")
         // const response = await fetch(`http://192.168.1.11:8000/helados/${id}`, {
             const response = await fetch(`https://backend-de-prueba-delta.vercel.app/helados/${id}`, {
             headers: {
@@ -165,13 +167,13 @@ return (
                     source={imageSource}
                     onError={handleImageError}
                 />
-                {/* .................................................................... Cantidad */}
+                {/* ........................................................................... Cantidad */}
                 <Text style={styles.textCantidad}>{cantidad}</Text>
             </View>
         </View>
         
 
-        {/* ............................................................................ Nombre */}
+        {/* .................................................................................... Nombre */}
         <View style={styles.containerDatos}>
             {/* <CheckMark id={id} completed={completed} toggleTodo={toggleTodo} /> */}
             <Text style={styles.title}>{sabor}</Text>
@@ -187,6 +189,7 @@ return (
             {/* {shared_with_id !== null ? ( */}
             {editItem === false ? (  
                 <Feather
+                // .............................................boton MAS +
                     style={styles.iconMas}
                     onPress={handleEditModal}
                     name="plus-circle"
@@ -194,6 +197,7 @@ return (
                 ) : (
             
                 <Feather
+                //............................................boton EDIT
                     style={styles.iconEdit}
                     onPress={handlePresentModal}
                     name="edit"
@@ -207,7 +211,7 @@ return (
             <Animated.View style={[styles.deleteButton, { width: widthAnim }]}>
                 <Pressable
                     onPress={deleteTodo}
-                    onPressOut={() => setIsDeleteActive(false)}
+                    // onPressOut={() => setIsDeleteActive(false)}
                     style={styles.innerButton}
                 >
                 <MaterialCommunityIcons name="trash-can-outline" size={24} color="white" />
@@ -365,6 +369,7 @@ deleteButton: {
     alignItems: "center",
     borderRadius: 10,
     marginLeft:10,
+    overflow: "hidden", // Para asegurar que el botón mantenga su forma
     },
     innerButton: {
         flex: 1,

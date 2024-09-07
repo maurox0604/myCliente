@@ -4,7 +4,6 @@ import { Dimensions, Keyboard, View, Text, StyleSheet, Button, Alert, Pressable,
 import { ScrollView, TextInput } from "react-native-gesture-handler";
 
 export default function EditModalContent({ id, _sabor, _precio, _cantidad, reloadListDB, closeModal }) {
-  const [email, setEmail] = useState("");
   const [focus, setFocus] = useState(false);
   const [sabor, setSabor] = useState(_sabor);// Campo input
   const [precio, setPrecio] = useState(_precio);// Campo input

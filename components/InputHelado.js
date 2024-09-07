@@ -3,7 +3,7 @@ import * as ImagePicker from 'expo-image-picker';
 import { Dimensions, Text, Button, TextInput, StyleSheet, View, Image, KeyboardAvoidingView, Platform, Keyboard, Alert, Animated, TouchableOpacity } from "react-native";
 import { FontAwesome5 } from "@expo/vector-icons";
 
-export default function InputHelado() {
+export default function InputHelado(reloadListDB) {
     const [showEmojies, setShowEmojies] = useState(false);
     const [messageBody, setMessageBody] = useState("");
     const [sabor, setSabor] = useState("");
@@ -99,6 +99,7 @@ export default function InputHelado() {
             const data = await response.json();
             console.log("Los datos enviados: ", data);
             Alert.alert('Éxito', 'Helado guardado correctamente');
+            reloadListDB(id); // Si reloadListDB se encarga de limpiar o recargar datos
         } catch (error) {
             console.error('Error al guardar el helado:', error);
             Alert.alert('Error', `No se pudo guardar el helado: ${error.message}`);
