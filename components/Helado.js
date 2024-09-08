@@ -113,6 +113,7 @@ import { useState } from "react";
     }, [isDeleteActive]);
 
     async function deleteTodo() {
+        alert("hello","Borrando un heloadoooo")
         console.log("Borrando un heloadoooo")
         // const response = await fetch(`http://192.168.1.11:8000/helados/${id}`, {
             const response = await fetch(`https://backend-de-prueba-delta.vercel.app/helados/${id}`, {
@@ -221,7 +222,7 @@ return (
 
                     <TouchableOpacity
   style={styles.pressableButton}
-  onPressIn={deleteTodo}
+  onPressIn={deleteTodo }
 //   onPressOut={() => setIsDeleteActive(false)}
 
   delayPressIn={100}  // Añadir un pequeño retraso al toque
@@ -389,8 +390,8 @@ textCantidad:{
 },
 
 deleteButton: {
-    height: 40, // Altura fija de 80
-    flex: 1, 
+    height: 80, // Altura fija de 80
+    // flex: 1, 
     backgroundColor: "red",
     flexDirection:"row",
     justifyContent: "center",
