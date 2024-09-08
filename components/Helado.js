@@ -98,7 +98,7 @@ import { useState } from "react";
     useEffect(() => {
         if (isDeleteActive) {
         Animated.timing(widthAnim, {
-            toValue: 50, // El valor final del ancho
+            toValue: 150, // El valor final del ancho
             duration: 500, // Duración de la animación (0.5 segundos)
             useNativeDriver: false, // Se debe deshabilitar el uso del NativeDriver para animar width
         }).start();
@@ -218,6 +218,19 @@ return (
                         <MaterialCommunityIcons name="trash-can-outline" size={24} color="white" />
                         {/* <Text style={{ color: "white", fontWeight: "bold" }}>x</Text> */}
                     </Pressable>
+
+                    <TouchableOpacity
+  style={styles.pressableButton}
+  onPressIn={deleteTodo}
+//   onPressOut={() => setIsDeleteActive(false)}
+
+  delayPressIn={100}  // Añadir un pequeño retraso al toque
+            hitSlop={20}  // Ajustar el área de toque
+            pointerEvents="auto"  // Asegurar que el botón reciba eventos táctiles
+>
+  <MaterialCommunityIcons name="trash-can-outline" size={24} color="#0ff" />
+  {/* <Text style={{width:50, height:60 }}>borrar</Text> */}
+</TouchableOpacity>
                 </Animated.View>
             </View>
             
@@ -377,7 +390,9 @@ textCantidad:{
 
 deleteButton: {
     height: 40, // Altura fija de 80
+    flex: 1, 
     backgroundColor: "red",
+    flexDirection:"row",
     justifyContent: "center",
     alignItems: "center",
     borderRadius: 10,

@@ -1,4 +1,4 @@
-import { createContext, useState } from "react";
+import { createContext, useState, useEffect } from "react";
 import ListaHelados from "../screens/ListaHelados";
 
 export const CartContext = createContext();
@@ -92,6 +92,44 @@ export const  CartProvider = ({children}) => {
         //settoTalItemCompra(0);
     }
 
+    
+
+
+    // useEffect(() => {
+    //     // fetchData();
+    //     fetchHelados();
+    // },  
+    // [] );
+
+
+
+   // async function fetchHelados() {
+        const fetchHelados = async () => {
+
+        console.log("Esta es fethcData")
+        const response = await fetch(`https://backend-de-prueba-delta.vercel.app/helados`, {
+            // const response = await fetch(`http://192.168.1.11:3001/helados`, {
+            // 
+            method: "GET",
+            mode: "cors",
+            headers: {
+                // "x-api-key": "abcdef123456",
+                // 'Access-Control-Allow-Origin': '*',
+                'Content-Type': 'application/json',
+                'Accept': 'application/json'
+            },
+        });
+        const data = await response.json();
+        // console.log("Los datos:  ", data)
+        // console.log("//Los datos:  ", data[0].sabor)
+
+        // const lowQuantityCount = data.filter(helado => helado.cantidad === 1).length;
+        //     setBadgeCount(lowQuantityCount);
+        //     setHelados(data);
+        // console.log('LOS DATOS: '+helados.length);
+    }
+
+
     const value = {
         carts,
         addToCart,
@@ -103,8 +141,8 @@ export const  CartProvider = ({children}) => {
         cartItemCount,
         updateHeladoCantidadContext,
         cartItemCero,
+        fetchHelados,
     };
-
     return <CartContext.Provider value={value}>
                 {children}
             </CartContext.Provider>;

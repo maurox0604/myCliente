@@ -1,7 +1,8 @@
-import React, { useEffect, useState } from "react";
+import { useContext, useEffect, useState } from "react";
 import * as ImagePicker from 'expo-image-picker';
 import { Dimensions, Text, Button, TextInput, StyleSheet, View, Image, KeyboardAvoidingView, Platform, Keyboard, Alert, Animated, TouchableOpacity } from "react-native";
 import { FontAwesome5 } from "@expo/vector-icons";
+import { CartContext } from '../context/CartContext';
 
 export default function InputHelado(reloadListDB) {
     const [showEmojies, setShowEmojies] = useState(false);
@@ -12,6 +13,8 @@ export default function InputHelado(reloadListDB) {
     const [foto, setFoto] = useState(null);  // Inicializa con null
     const [fadeAnim] = useState(new Animated.Value(0.1));
     const [selectedImage, setSelectedImage] = useState(null);
+    // const [fetchHelados] = useContext(CartContext);
+    const {fetchHelados} = useContext(CartContext);
     // const [image, setImage] = useState<string | null>(null);
 
     useEffect(() => {
@@ -100,6 +103,7 @@ export default function InputHelado(reloadListDB) {
             console.log("Los datos enviados: ", data);
             Alert.alert('Éxito', 'Helado guardado correctamente');
             reloadListDB(id); // Si reloadListDB se encarga de limpiar o recargar datos
+            fetchHelados();
         } catch (error) {
             console.error('Error al guardar el helado:', error);
             Alert.alert('Error', `No se pudo guardar el helado: ${error.message}`);

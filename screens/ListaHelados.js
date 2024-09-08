@@ -88,7 +88,7 @@ export default function ListaHelados({deletItem=false, editItem=false}){
     }
 
     return(
-        
+
         // todo el contenido se debe encerrar dentro de <GestureHandlerRootView> para que funcione la ventana modal
     <GestureHandlerRootView style={{flex: 1}}>
         <BottomSheetModalProvider>

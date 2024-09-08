@@ -10,6 +10,7 @@ const StackEdit = () => {
     const sharedBottomSheetRef = useRef(null);
     const snapPoints = ["25%", "48%", "75%"];
     const snapPointsShared = ["90%"];
+    
 
     function handlePresentModal() {
         bottomSheetModalRef.current?.present();
