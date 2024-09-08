@@ -210,11 +210,10 @@ return (
         {isDeleteActive && (
             <Animated.View style={[styles.deleteButton, { width: widthAnim }]}>
                 <Pressable
+                    style={styles.pressableButton} // Aseguramos el área de toque
                     onPress={deleteTodo}
-                    // onPressOut={() => setIsDeleteActive(false)}
-                    style={styles.innerButton}
                 >
-                <MaterialCommunityIcons name="trash-can-outline" size={24} color="white" />
+                    <MaterialCommunityIcons name="trash-can-outline" size={24} color="white" />
                     {/* <Text style={{ color: "white", fontWeight: "bold" }}>x</Text> */}
                 </Pressable>
             </Animated.View>
@@ -362,17 +361,17 @@ textCantidad:{
     // textAlign: "right",
 },
 
-deleteButton: {
-    height: 40, // Altura fija de 80
-    backgroundColor: "red",
-    justifyContent: "center",
-    alignItems: "center",
-    borderRadius: 10,
-    marginLeft:10,
-    overflow: "hidden", // Para asegurar que el botón mantenga su forma
+    deleteButton: {
+        height: 40, // Altura fija de 80
+        backgroundColor: "red",
+        justifyContent: "center",
+        alignItems: "center",
+        borderRadius: 10,
+        marginLeft:10,
+        overflow: "hidden", // Para asegurar que el botón mantenga su forma
     },
-    innerButton: {
-        flex: 1,
+    pressableButton: {
+        flex: 1, // Ocupa todo el espacio del botón
         justifyContent: "center",
         alignItems: "center",
     },
