@@ -213,10 +213,18 @@ return (
                     <Pressable
                         style={styles.pressableButton} // Aseguramos el área de toque
                         onPressIn={deleteTodo}
+                        hitSlop={60}
                     >
                         <MaterialCommunityIcons name="trash-can-outline" size={24} color="white" />
                         {/* <Text style={{ color: "white", fontWeight: "bold" }}>x</Text> */}
                     </Pressable>
+
+                    <TouchableOpacity onPress={deleteTodo}>
+                        <View style={styles.pressableButton}>
+                        <MaterialCommunityIcons name="trash-can-outline" size={24} color="white" />
+                            <Text style={styles.buttonText}>Press me!</Text>
+                        </View>
+                    </TouchableOpacity>
                 </Animated.View>
             </View>
             
