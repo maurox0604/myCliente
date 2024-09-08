@@ -208,12 +208,12 @@ return (
         
         {/* // Opcion de BORRAR un item al dejar presionado sobre el item */}
         {isDeleteActive && (
-            <View pointerEvents="box-none" style={styles.contBorrar}>
+            <View style={styles.contBorrar}>
                 <Animated.View style={[styles.deleteButton, { width: widthAnim }]}>
                     <Pressable
                         style={styles.pressableButton} // Aseguramos el área de toque
                         onPressIn={deleteTodo}
-                        hitSlop={60}
+                        hitSlop={20}
                     >
                         <MaterialCommunityIcons name="trash-can-outline" size={24} color="white" />
                         {/* <Text style={{ color: "white", fontWeight: "bold" }}>x</Text> */}
@@ -316,6 +316,7 @@ contBorrar: {
     bottom: 0,
     justifyContent: "center",
     alignItems: "center",
+    zIndex: 999, // Asegúrate de que el botón esté al frente
 },
 iconEdit:{
     display:"flex",
@@ -382,6 +383,7 @@ deleteButton: {
     borderRadius: 10,
     marginLeft:10,
     overflow: "hidden", // Para asegurar que el botón mantenga su forma
+    zIndex: 1000, // Asegúrate de que el botón esté al frente
 },
 pressableButton: {
     flex: 1, // Ocupa todo el espacio del botón
