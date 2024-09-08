@@ -208,15 +208,18 @@ return (
         
         {/* // Opcion de BORRAR un item al dejar presionado sobre el item */}
         {isDeleteActive && (
-            <Animated.View style={[styles.deleteButton, { width: widthAnim }]}>
-                <Pressable
-                    style={styles.pressableButton} // Aseguramos el área de toque
-                    onPress={deleteTodo}
-                >
-                    <MaterialCommunityIcons name="trash-can-outline" size={24} color="white" />
-                    {/* <Text style={{ color: "white", fontWeight: "bold" }}>x</Text> */}
-                </Pressable>
-            </Animated.View>
+            <View pointerEvents="box-none" style={styles.contBorrar}>
+                <Animated.View style={[styles.deleteButton, { width: widthAnim }]}>
+                    <Pressable
+                        style={styles.pressableButton} // Aseguramos el área de toque
+                        onPressIn={deleteTodo}
+                    >
+                        <MaterialCommunityIcons name="trash-can-outline" size={24} color="white" />
+                        {/* <Text style={{ color: "white", fontWeight: "bold" }}>x</Text> */}
+                    </Pressable>
+                </Animated.View>
+            </View>
+            
         )}
 
             {/* 🛒 Modal Calcuadora  */}
@@ -304,6 +307,15 @@ iconMas:{
     alignSelf:"stretch",
     justifyContent:"center"
 },
+contBorrar: {
+    position: 'absolute',
+    top: 0,
+    left: 0,
+    right: 0,
+    bottom: 0,
+    justifyContent: "center",
+    alignItems: "center",
+},
 iconEdit:{
     display:"flex",
     size:40,
@@ -361,20 +373,20 @@ textCantidad:{
     // textAlign: "right",
 },
 
-    deleteButton: {
-        height: 40, // Altura fija de 80
-        backgroundColor: "red",
-        justifyContent: "center",
-        alignItems: "center",
-        borderRadius: 10,
-        marginLeft:10,
-        overflow: "hidden", // Para asegurar que el botón mantenga su forma
-    },
-    pressableButton: {
-        flex: 1, // Ocupa todo el espacio del botón
-        justifyContent: "center",
-        alignItems: "center",
-    },
+deleteButton: {
+    height: 40, // Altura fija de 80
+    backgroundColor: "red",
+    justifyContent: "center",
+    alignItems: "center",
+    borderRadius: 10,
+    marginLeft:10,
+    overflow: "hidden", // Para asegurar que el botón mantenga su forma
+},
+pressableButton: {
+    flex: 1, // Ocupa todo el espacio del botón
+    justifyContent: "center",
+    alignItems: "center",
+},
 
 title: {
     fontWeight: "bold",
