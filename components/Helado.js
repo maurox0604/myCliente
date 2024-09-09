@@ -1,6 +1,6 @@
 // import * as React from "react";
 import React, { useRef, useEffect } from "react";
-import { Animated, View, Text, StyleSheet, Pressable, TouchableOpacity, useWindowDimensions, Image } from "react-native";
+import { Animated, View, Text, StyleSheet, Pressable, TouchableOpacity, useWindowDimensions, Image, Alert } from "react-native";
 import { Feather, MaterialCommunityIcons } from "@expo/vector-icons";
 import "react-native-gesture-handler";
 import { BottomSheetModal } from "@gorhom/bottom-sheet";
@@ -11,6 +11,7 @@ import EditModalContent from "./EditModalContent";
 import { useContext } from "react";
 import { CartContext } from "../context/CartContext";
 import { useState } from "react";
+import { Alertas }from "./Alertas"
 
 
 
@@ -112,19 +113,34 @@ import { useState } from "react";
         }
     }, [isDeleteActive]);
 
+    
     async function deleteTodo() {
-        alert("hello","Borrando un heloadoooo")
-        console.log("Borrando un heloadoooo")
-        // const response = await fetch(`http://192.168.1.11:8000/helados/${id}`, {
-            const response = await fetch(`https://backend-de-prueba-delta.vercel.app/helados/${id}`, {
-            headers: {
-            "x-api-key": "abcdef123456",
-            'Access-Control-Allow-Origin': '*',
-            },
-            method: "DELETE",
-        });
-        reloadListDB(id);
-        console.log(response.status);
+        try{
+            console.log("Borrando un heloadoooo")
+            // const response = await fetch(`http://192.168.1.11:8000/helados/${id}`, {
+                const response = await fetch(`https://backend-de-prueba-delta.vercel.app/helados/${id}`, {
+                headers: {
+                "x-api-key": "abcdef123456",
+                'Access-Control-Allow-Origin': '*',
+                },
+                method: "DELETE",
+            });
+
+            if (!response.ok) {
+                const errorText = await response.text();
+                throw new Error(`Error HTTP: ${response.status} - ${errorText}`);
+            }
+    
+            const data = await response.json();
+            Alert.alert('Éxito', 'Helado Borrado correctamente');
+
+        }catch (error) {
+            Alert.alert('Error', `No se pudo Borrar el helado: ${error.message}` + id);
+        }
+        //alert("hello ID: "+id)
+        
+        // reloadListDB(id);
+        // console.log(response.status);
 }
 
 async function updateHelado() {
