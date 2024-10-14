@@ -5,6 +5,7 @@ import Helado from '../components/Helado'
 import { BottomSheetModalProvider } from '@gorhom/bottom-sheet';
 import { GestureHandlerRootView } from 'react-native-gesture-handler';
 import { CartContext } from '../context/CartContext';
+import { DbaseContext } from '../context/DbaseContext';
 
 
 // import Navigation from '../Navigation';
@@ -13,7 +14,13 @@ import { CartContext } from '../context/CartContext';
 export default function ListaHelados({deletItem=false, editItem=false}){
     const [helados, setHelados] = useState([]);
     const { updateHeladoCantidadContext } = useContext(CartContext); // Obtener la función del contexto
+    const {cambios, regCambios} = useContext(DbaseContext);
     const [activaDeleteItem, setActivaDeleteItem] = useState(false);
+
+        if (cambios) {
+            fetchHelados();
+            
+        }
 
 
     useEffect(() => {
@@ -47,6 +54,7 @@ export default function ListaHelados({deletItem=false, editItem=false}){
         //     setBadgeCount(lowQuantityCount);
             setHelados(data);
         console.log('LOS DATOS: '+helados.length);
+        regCambios(false);//... pone en false el contextDB para que no se actualice mas
     }
 
     function reloadListDB(id){
@@ -58,6 +66,7 @@ export default function ListaHelados({deletItem=false, editItem=false}){
        // setSelectedHelado(null);
     }
 
+    
     // function updateHeladoCantidad(id, nuevaCantidad) {
     //     setHelados(prevHelados =>
     //         prevHelados.map(helado =>
@@ -162,3 +171,4 @@ const styles = StyleSheet.create({
         marginBottom: 15,
     },
 });
+

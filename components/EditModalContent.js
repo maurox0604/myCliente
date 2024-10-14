@@ -3,12 +3,13 @@ import { useState } from "react";
 import { Dimensions, Keyboard, View, Text, StyleSheet, Button, Alert, Pressable, TouchableOpacity } from "react-native";
 import { ScrollView, TextInput } from "react-native-gesture-handler";
 
-export default function EditModalContent({ id, _sabor, _precio, _cantidad, reloadListDB, closeModal }) {
+export default function EditModalContent({ id, _icon, _sabor, _precio, _cantidad, reloadListDB, closeModal }) {
   const [focus, setFocus] = useState(false);
   const [sabor, setSabor] = useState(_sabor);// Campo input
   const [precio, setPrecio] = useState(_precio);// Campo input
   const [cantidad, setCantidad] = useState(_cantidad);// Campo input
-  const [foto, setFoto] = useState("../assets/images/helados/Icon_App.png");// Campo Uri Foto
+  // const [foto, setFoto] = useState("../assets/images/helados/Icon_App.png");// Campo Uri Foto
+  const [foto, setFoto] = useState(_icon);// Campo Uri Foto
 
   // const handleSubmit = async () => {
   //   const response = await fetch("http://192.168.1.11:8000/todos/shared_todos", {
@@ -38,34 +39,34 @@ export default function EditModalContent({ id, _sabor, _precio, _cantidad, reloa
   const actualizarHelado = async () => {
     console.log("☻ sabor: ",sabor, "- precio: ",precio)
     try {
-      // const response = await fetch(`http://192.168.1.11:8000/helados/${id}`, {
+        // const response = await fetch(`http://192.168.1.11:8000/helados/${id}`, {
         const response = await fetch(`https://backend-de-prueba-delta.vercel.app/helados/${id}`, {
-        headers: {
-          "Content-Type": "application/json",
-          'Access-Control-Allow-Origin': '*',
-        },
-        method: "PUT",
-        body: JSON.stringify({
-          sabor: sabor,
-          precio: precio,
-          icon: foto,
-          cantidad: cantidad,
-        }),
-      });
+          headers: {
+            "Content-Type": "application/json",
+            'Access-Control-Allow-Origin': '*',
+          },
+          method: "PUT",
+          body: JSON.stringify({
+            sabor: sabor,
+            precio: precio,
+            icon: foto,
+            cantidad: cantidad,
+          }),
+        });
 
-      if (!response.ok) {
-        const errorText = await response.text();
-        throw new Error(`Error HTTP: ${response.status} - ${errorText}`);
-      }
+        if (!response.ok) {
+          const errorText = await response.text();
+          throw new Error(`Error HTTP: ${response.status} - ${errorText}`);
+        }
 
       const data = await response.json();
       console.log("Datos actualizados: ", data);
-      Alert.alert('Éxito', 'Helado actualizado correctamente');
+      alert('Éxito', 'Helado actualizado correctamente');
       reloadListDB(id); // Si reloadListDB se encarga de limpiar o recargar datos
       closeModal(); // Cerrar el modal después de la actualización exitosa
     } catch (error) {
       console.error('Error al actualizar el helado:', error);
-      Alert.alert('Error', `No se pudo actualizar el helado: ${error.message}`);
+      alert('Error', `No se pudo actualizar el helado: ${error.message}`);
     }
   }
 

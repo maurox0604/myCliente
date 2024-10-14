@@ -104,12 +104,6 @@ function MyTabs({ openCartModal }) {
                     tabBarLabel: 'CARRITO',
                     tabBarIcon: ({ color, size }) => {
                     const {carts} = useContext(CartContext);
-                    // console.log("♠♠ cart: ", carts);
-                    // console.log("♠♠ cart: ", carts[0]);
-                    // console.log("♠♠ cart: ", carts.title);
-                    //console.log("♠♠ cart: ", carts[0].title)
-                    console.log("cart: ", carts?.length);
-                        
                         return(
                             <View style={{top: -15 }}>
                                 <View onPress={openCartModal} style={[styles.cartButton, styles.shadowProp]} >

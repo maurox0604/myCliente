@@ -1,6 +1,7 @@
 import * as ImagePicker from 'expo-image-picker';
 import React, { useState } from 'react';
 import { Button, Image, View } from 'react-native';
+import axios from 'axios';
 
 const ImageUpload = () => {
     const [image, setImage] = useState(null);
@@ -21,22 +22,25 @@ const ImageUpload = () => {
     };
 
     const uploadImage = async () => {
-        let localUri = image;
-        let filename = localUri.split('/').pop();
-        let match = /\.(\w+)$/.exec(filename);
-        let type = match ? `image/${match[1]}` : `image`;
+    let formData = new FormData();
+    formData.append('image', {
+        uri: image,  // Asegúrate de que sea la URI correcta de la imagen
+        type: 'image/jpeg',  // Cambia a 'image/png' si es necesario
+        name: 'upload.jpg',  // Nombre del archivo
+    });
 
-        let formData = new FormData();
-        formData.append('image', { uri: localUri, name: filename, type });
-
-        await fetch('http://192.168.1.11:3001/upload', {
-        method: 'POST',
-        body: formData,
-        headers: {
-            'content-type': 'multipart/form-data',
-        },
+    try {
+        await axios.post('http://localhost:3001/upload', formData, {
+            headers: {
+                'Content-Type': 'multipart/form-data',
+            },
         });
-    };
+        alert('Imagen subida con éxito');
+    } catch (error) {
+        console.error('Error al subir la imagen:', error);
+    }
+};
+
 
     return (
         <View>

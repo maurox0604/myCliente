@@ -1,8 +1,9 @@
-import React, { useRef, useState } from 'react';
+import { useContext, useRef, useState } from 'react';
 import { Text, StyleSheet, View, TouchableOpacity, SafeAreaView } from 'react-native';
 import ListaHelados from './ListaHelados';
 import { BottomSheetModal, BottomSheetModalProvider } from '@gorhom/bottom-sheet';
 import Editor from '../components/Editor';
+import { DbaseContext } from '../context/DbaseContext'
 
 const StackEdit = () => {
     const [editItem, setEditItem] =useState(true)
@@ -10,6 +11,15 @@ const StackEdit = () => {
     const sharedBottomSheetRef = useRef(null);
     const snapPoints = ["25%", "48%", "75%"];
     const snapPointsShared = ["90%"];
+    const {cambios} = useContext(DbaseContext);
+    const [elCambio, setElCambio] = useState();
+
+    // 
+    // console.log("El Cambio es: ", elCambio)
+    console.log("El Cambiossses: ", cambios)
+    // if (cambios) {
+    //     setElCambio(cambios);
+    // }
     
 
     function handlePresentModal() {
@@ -34,6 +44,7 @@ const StackEdit = () => {
                     > EDITAR helados </Text>
 
                     <ListaHelados deletItem={true} editItem></ListaHelados>
+                    {/* cambios ? <ListaHelados deletItem={true} editItem></ListaHelados> : null */}
 
                     {/* <BottomSheetModal
                         ref={sharedBottomSheetRef}

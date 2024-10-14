@@ -1,8 +1,10 @@
 import React from 'react';
 // import { Text, StyleSheet, View, TouchableOpacity } from 'react-native';
+import { useContext, useState } from 'react';
 import { StyleSheet, Text, View, FlatList, SafeAreaView } from "react-native"; 
 import InputHelado from '../components/InputHelado';
 import * as ImagePicker from 'expo-image-picker';
+// import { DbaseContext } from '../context/DbaseContext'
 
 
 

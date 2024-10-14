@@ -84,7 +84,6 @@ export const  CartProvider = ({children}) => {
         setUpdateHeladoCantidadFunc(() => func);
     }
 
-
     const clearCart = () => {
         setCarts([]);
         setTotalPrice(0);

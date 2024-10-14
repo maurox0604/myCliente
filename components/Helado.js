@@ -1,5 +1,5 @@
 // import * as React from "react";
-import React, { useRef, useEffect } from "react";
+import { useRef, useEffect, useContext, useState } from "react";
 import { Animated, View, Text, StyleSheet, Pressable, TouchableOpacity, useWindowDimensions, Image, Alert } from "react-native";
 import { Feather, MaterialCommunityIcons } from "@expo/vector-icons";
 import "react-native-gesture-handler";
@@ -8,10 +8,13 @@ import { GestureHandlerRootView } from 'react-native-gesture-handler';
 import Calculadora from "./Calculadora";
 import Editor from "./Editor";
 import EditModalContent from "./EditModalContent";
-import { useContext } from "react";
 import { CartContext } from "../context/CartContext";
-import { useState } from "react";
 import { Alertas }from "./Alertas"
+import { DbaseContext } from '../context/DbaseContext'
+
+//const {regCambios} = useContext(DbaseContext);
+
+
 
 
 
@@ -60,8 +63,8 @@ import { Alertas }from "./Alertas"
         }) 
     {
         const datosPaCalc = { id, sabor, cantidad, icon,precio, closeCartModal }
-    const [isDeleteActive, setIsDeleteActive] = React.useState(false);
-    const [imageSource, setImageSource] = React.useState({ uri: icon });
+    const [isDeleteActive, setIsDeleteActive] = useState(false);
+    const [imageSource, setImageSource] = useState({ uri: icon });
 
     const bottomSheetModalRef = useRef(null);
     const addItemCardModalRef = useRef(null);
@@ -127,38 +130,28 @@ import { Alertas }from "./Alertas"
             });
 
             if (!response.ok) {
-                const errorText = await response.text();
-                throw new Error(`Error HTTP: ${response.status} - ${errorText}`);
+                const contentType = response.headers.get("content-type");
+                if (contentType && contentType.indexOf("application/json") !== -1) {
+                    const errorData = await response.json();
+                    throw new Error(errorData.error || 'Error desconocido');
+                } else {
+                    const errorText = await response.text();
+                    throw new Error(`Error HTTP: ${response.status} - ${errorText}`);
+                }
             }
     
             const data = await response.json();
-            Alert.alert('Éxito', 'Helado Borrado correctamente');
+            alert('Éxito'+ '...Helado Borrado correctamente');
+          //  regCambios(true); //... Avisa a DbaseContext que se cambio algo en la DB 
+            //regCambios(true); // Registra que se hizo un cambio en la DB
 
         }catch (error) {
-            Alert.alert('Error', `No se pudo Borrar el helado: ${error.message}` + id);
+            alert('Error', `No se pudo Borrar el helado: ${error.message}` + id);
         }
         //alert("hello ID: "+id)
         
-        // reloadListDB(id);
+        reloadListDB(id);
         // console.log(response.status);
-}
-
-async function updateHelado() {
-    // const response = await fetch(`http://192.168.1.11:8000/helados/${id}`, {
-        const response = await fetch(`https://backend-de-prueba-delta.vercel.app/helados/${id}`, {
-        headers: {
-        "x-api-key": "abcdef123456",
-        },
-        method: "PUT",
-        body: JSON.stringify({
-            sabor: sabor,
-            precio: precio,
-            icon: foto,
-            cantidad: cantidad,
-        }),
-    });
-    reloadListDB(id);
-    console.log(response.status);
 }
 
     const handleImageError = () => {
@@ -275,7 +268,7 @@ return (
                 snapPoints={snapPointsEditar}
                 backgroundStyle={{ borderRadius: 30, borderWidth: 4 }}
                 >
-                <EditModalContent id={id} _sabor={sabor} _precio={precio} _cantidad={cantidad} reloadListDB={reloadListDB} closeModal={closeModal}/>
+                <EditModalContent id={id} _icon={icon} _sabor={sabor} _precio={precio} _cantidad={cantidad} reloadListDB={reloadListDB} closeModal={closeModal}/>
             </BottomSheetModal>
     </TouchableOpacity>
     </GestureHandlerRootView>

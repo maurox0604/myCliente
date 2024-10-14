@@ -3,6 +3,8 @@ import * as ImagePicker from 'expo-image-picker';
 import { Dimensions, Text, Button, TextInput, StyleSheet, View, Image, KeyboardAvoidingView, Platform, Keyboard, Alert, Animated, TouchableOpacity } from "react-native";
 import { FontAwesome5 } from "@expo/vector-icons";
 import { CartContext } from '../context/CartContext';
+import { DbaseContext } from '../context/DbaseContext'
+
 
 export default function InputHelado(reloadListDB) {
     const [showEmojies, setShowEmojies] = useState(false);
@@ -15,6 +17,7 @@ export default function InputHelado(reloadListDB) {
     const [selectedImage, setSelectedImage] = useState(null);
     // const [fetchHelados] = useContext(CartContext);
     const {fetchHelados} = useContext(CartContext);
+    const {regCambios} = useContext(DbaseContext);
     // const [image, setImage] = useState<string | null>(null);
 
     useEffect(() => {
@@ -100,6 +103,7 @@ export default function InputHelado(reloadListDB) {
             }
 
             const data = await response.json();
+            regCambios(true); // Registra que se hizo un cambio en la DB
             console.log("Los datos enviados: ", data);
             Alert.alert('Éxito', 'Helado guardado correctamente');
             reloadListDB(id); // Si reloadListDB se encarga de limpiar o recargar datos

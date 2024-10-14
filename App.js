@@ -3,6 +3,7 @@ import { StyleSheet, Text, View, FlatList, SafeAreaView } from "react-native";
 import React from "react";
 import Navigation from "./Navigation";
 import { CartModalProvider } from "./context/CartModalContext";
+import { DbaseProvider } from "./context/DbaseContext";
 
 import {LogBox} from 'react-native';
 import { GestureHandlerRootView } from "react-native-gesture-handler";
@@ -27,9 +28,12 @@ export default function App(){
 
     return(
         <GestureHandlerRootView style={{ flex: 1 }}>
-        <CartModalProvider>
-            <Navigation />
-        </CartModalProvider>
+        <DbaseProvider>
+            <CartModalProvider>
+                <Navigation />
+            </CartModalProvider>
+        </DbaseProvider>
+        
         </GestureHandlerRootView>
     )
 }
