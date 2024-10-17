@@ -59,7 +59,8 @@ import { DbaseContext } from '../context/DbaseContext'
         reloadListDB,
         toggleTodo,
         activaDeleteItem,
-        updateHeladoCantidad 
+        updateHeladoCantidad, 
+        columnas,
         }) 
     {
         const datosPaCalc = { id, sabor, cantidad, icon,precio, closeCartModal }
@@ -124,9 +125,9 @@ import { DbaseContext } from '../context/DbaseContext'
                 const response = await fetch(`https://backend-de-prueba-delta.vercel.app/helados/${id}`, {
                 headers: {
                 "x-api-key": "abcdef123456",
-                'Access-Control-Allow-Origin': '*',
                 },
-                method: "DELETE",
+                    method: "PUT",
+                //mode: "no cors",
             });
 
             if (!response.ok) {
@@ -166,11 +167,12 @@ return (
         onPress={() => setIsDeleteActive(false)}
         activeOpacity={0.8}
         style={cantidad === 0 ? [styles.container, styles.containerVacio, styles.shadowProp] : [styles.container, styles.shadowProp] 
-        }
+            && columnas === true ? [styles.containerCol] : [styles.container]
+        } 
             // & cantidad === 1 && [styles.containerCasiVacio] }
         >
         <View style={styles.contImgAndCant}>
-            <View style={styles.contImg}>
+            <View style={columnas === true ? [styles.contImgCol] : [styles.contImg]}>
                 {/* ............................................................................ Icono */}
                 <Image 
                     style={styles.iconImg}
@@ -194,7 +196,8 @@ return (
         </View>
 
         {/* ......................... EDITAR Items o CALCULADORA en MODAL  <Feather> is a collection of simply beautiful open source icons for React Nativ*/}
-        <View style={styles.contBotMas}>
+            <View
+                style={ columnas === true ?  [styles.contBotMasCol] : [styles.contBotMas] }>
         
             {/* {shared_with_id !== null ? ( */}
             {editItem === false ? (  
@@ -230,17 +233,17 @@ return (
                     </Pressable>
 
                     <TouchableOpacity
-  style={styles.pressableButton}
-  onPressIn={deleteTodo }
-//   onPressOut={() => setIsDeleteActive(false)}
+                        style={styles.pressableButton}
+                        onPressIn={deleteTodo }
+                        //   onPressOut={() => setIsDeleteActive(false)}
 
-  delayPressIn={100}  // Añadir un pequeño retraso al toque
-            hitSlop={20}  // Ajustar el área de toque
-            pointerEvents="auto"  // Asegurar que el botón reciba eventos táctiles
->
-  <MaterialCommunityIcons name="trash-can-outline" size={24} color="#0ff" />
-  {/* <Text style={{width:50, height:60 }}>borrar</Text> */}
-</TouchableOpacity>
+                        delayPressIn={100}  // Añadir un pequeño retraso al toque
+                                    hitSlop={20}  // Ajustar el área de toque
+                                    pointerEvents="auto"  // Asegurar que el botón reciba eventos táctiles
+                        >
+                        <MaterialCommunityIcons name="trash-can-outline" size={24} color="#0ff" />
+                        {/* <Text style={{width:50, height:60 }}>borrar</Text> */}
+                    </TouchableOpacity>
                 </Animated.View>
             </View>
             
@@ -292,6 +295,25 @@ container: {
     // borderWidth:2,
     width:"100%",
     
+    },
+    containerCol: {
+    flex: 1,
+        flexDirection: "column",
+        minHeight: 100,
+        //position: "relative", 
+        gap: 8,
+        marginRight:10,
+    
+        justifyContent: "space-between",
+    alignItems:"center",
+    padding: 5,
+    borderRadius: 15,
+    marginBottom: 32,
+    backgroundColor: "green",
+
+    // borderBlockColor:"green",
+    // borderWidth:2,
+    width:"100%",
 },
 containerDatos: {
     flex: 8,
@@ -305,6 +327,11 @@ containerDatos: {
 contImg:{
     position:"absolute",
     top:-54,
+    },
+contImgCol:{
+    position:"absolute",
+    top: -25,
+    right: 6,
 },
 contImgAndCant:{
     flex:4,
@@ -322,7 +349,14 @@ contBotMas:{
     position:"relative"
     // borderBlockColor:"blue",
     // borderWidth:2,
-},
+    },
+
+    contBotMasCol: {
+        position: "absolute",
+        top: 2,
+        right: 3,
+    },
+
 iconMas:{
     display:"flex",
     size:40,
@@ -420,6 +454,8 @@ title: {
     fontWeight: "bold",
     letterSpacing: 0.5,
     fontSize: 20,
+    lineHeight: 14,
+    marginTop: 30,
     // width: "100%",
 },
 description: {
