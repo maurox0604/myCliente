@@ -12,7 +12,7 @@ export default function InputHelado(reloadListDB) {
     const [sabor, setSabor] = useState("");
     const [precio, setPrecio] = useState("");
     const [cantidad, setCantidad] = useState("");
-    const [foto, setFoto] = useState(null);  // Inicializa con null
+    const [foto, setFoto] = useState("");  // Inicializa sin ruta
     const [fadeAnim] = useState(new Animated.Value(0.1));
     const [selectedImage, setSelectedImage] = useState(null);
     // const [fetchHelados] = useContext(CartContext);
@@ -62,35 +62,59 @@ export default function InputHelado(reloadListDB) {
             console.log("Foto: ", foto, "      selectedImage: ", selectedImage)
         }
     };
-
-    const guardarHelado = async () => {
-            console.log("................Foto: ", foto);
-            console.log("................setSelectedImage: ", setSelectedImage.localUri);
-
-            const formData = new FormData();
-            formData.append('sabor', sabor);
-            formData.append('precio', precio);
-            formData.append('cantidad', cantidad);
-
-            // if (foto) {
-            //     // Asumiendo que `selectedImage` es un objeto de tipo File (o Blob)
-            //     formData.append("icon", {
-            //         uri: foto.uri,
-            //         type: 'image/jpeg', // Ajusta según el tipo de tu imagen
-            //         name: 'imagen.jpg', // Nombre de la imagen
-            //     });
-            // }
-        
-            try {
-                const response = await fetch(`https://backend-de-prueba-delta.vercel.app/helados`, {
-                // const response = await fetch(`http://192.168.1.11:3001/helados`, {
+    const guardarHelado = async () => { 
+        try {
+            const response = await fetch(`https://backend-de-prueba-delta.vercel.app/createHelados`, {
                 method: 'POST',
-                body: formData,
                 headers: {
-                    // 'Content-Type': 'multipart/form-data',
+                    'Content-Type': 'application/json',
                 },
+                body: JSON.stringify({
+                    sabor: sabor,
+                    precio: precio,
+                    icon: foto,
+                    cantidad: cantidad,
+                    user: "ID usuario",
+                }),
             });
 
+            const data = await response.json();
+            regCambios(true); // Registra que se hizo un cambio en la DB
+            console.log("Los datos enviados: ", data);
+            alert('Éxito ehelado' + 'Helado guardado correctamente');
+            reloadListDB(id); // Si reloadListDB se encarga de limpiar o recargar datos
+            fetchHelados();
+        } catch (error) {
+            console.error('Error al guardar el helado:', error);
+            alert('Error frio' + `No se pudo guardar el helado: ${error.message}`);
+        }
+    }
+    
+
+    const guardarHeladoxxxx = async () => {
+            // console.log("................Foto: ", foto);
+            // console.log("................setSelectedImage: ", setSelectedImage.localUri);
+
+            // const formData = new FormData();
+            // formData.append('sabor', sabor);
+            // formData.append('precio', precio);
+            // formData.append('cantidad', cantidad);
+            try {
+                const response = await fetch(`https://backend-de-prueba-delta.vercel.app/helados`, {
+                // const response = await fetch(`http://192.168.1.11:3001/createHelados`, {
+                method: 'POST',
+                headers: {
+                    'Content-Type': 'application/json',
+                },
+                body: JSON.stringify({
+                    sabor: sabor,
+                    precio: precio,
+                    icon: foto,
+                    cantidad: cantidad,
+                }),
+                });
+                
+            console.log("response: ", response)
             if (!response.ok) {
                 const contentType = response.headers.get("content-type");
                 if (contentType && contentType.indexOf("application/json") !== -1) {
@@ -101,6 +125,7 @@ export default function InputHelado(reloadListDB) {
                     throw new Error(`Error HTTP: ${response.status} - ${errorText}`);
                 }
             }
+                
 
             const data = await response.json();
             regCambios(true); // Registra que se hizo un cambio en la DB
@@ -110,7 +135,7 @@ export default function InputHelado(reloadListDB) {
             fetchHelados();
         } catch (error) {
             console.error('Error al guardar el helado:', error);
-            Alert.alert('Error', `No se pudo guardar el helado: ${error.message}`);
+            alert('Error', `No se pudo guardar el helado: ${error.message}`);
         }
     };
 

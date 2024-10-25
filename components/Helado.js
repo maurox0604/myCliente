@@ -99,7 +99,7 @@ import { DbaseContext } from '../context/DbaseContext'
 
     const widthAnim = useRef(new Animated.Value(0)).current; // Valor inicial de ancho 0
 
-    // ........................Animar el boton borara que esta oculto
+    // ........................Animar el boton borar que esta oculto
     useEffect(() => {
         if (isDeleteActive) {
         Animated.timing(widthAnim, {
@@ -121,8 +121,8 @@ import { DbaseContext } from '../context/DbaseContext'
     async function deleteTodo() {
         try{
             console.log("Borrando un heloadoooo")
-            // const response = await fetch(`http://192.168.1.11:8000/helados/${id}`, {
-                const response = await fetch(`https://backend-de-prueba-delta.vercel.app/helados/${id}`, {
+            // const response = await fetch(`http://192.168.1.11:8000/desactivar/${id}`, {
+                const response = await fetch(`https://backend-de-prueba-delta.vercel.app/desactivar/${id}`, {
                 headers: {
                 "x-api-key": "abcdef123456",
                 },
@@ -175,7 +175,7 @@ return (
             <View style={columnas === true ? [styles.contImgCol] : [styles.contImg]}>
                 {/* ............................................................................ Icono */}
                 <Image 
-                    style={styles.iconImg}
+                    style= {columnas === true ? [styles.iconImgCol] : styles.iconImg} 
                     source={imageSource}
                     onError={handleImageError}
                 />
@@ -186,7 +186,7 @@ return (
         
 
         {/* .................................................................................... Nombre */}
-        <View style={styles.containerDatos}>
+        <View style={columnas === true ? [styles.containerDatosCol] : [styles.containerDatos]}>
             {/* <CheckMark id={id} completed={completed} toggleTodo={toggleTodo} /> */}
             <Text style={styles.title}>{sabor}</Text>
             <View style={styles.cantPrecio}>
@@ -196,7 +196,7 @@ return (
         </View>
 
         {/* ......................... EDITAR Items o CALCULADORA en MODAL  <Feather> is a collection of simply beautiful open source icons for React Nativ*/}
-            <View
+        <View
                 style={ columnas === true ?  [styles.contBotMasCol] : [styles.contBotMas] }>
         
             {/* {shared_with_id !== null ? ( */}
@@ -296,23 +296,17 @@ container: {
     width:"100%",
     
     },
-    containerCol: {
+containerCol: {//    .......................en caso de COLUNMAS
     flex: 1,
-        flexDirection: "column",
-        minHeight: 100,
-        //position: "relative", 
-        gap: 8,
-        marginRight:10,
-    
-        justifyContent: "space-between",
-    alignItems:"center",
+    flexDirection: "column",
+    minHeight: 100,
+
+    justifyContent: "space-between",
+    // alignItems:"center",
     padding: 5,
     borderRadius: 15,
     marginBottom: 32,
     backgroundColor: "green",
-
-    // borderBlockColor:"green",
-    // borderWidth:2,
     width:"100%",
 },
 containerDatos: {
@@ -322,16 +316,22 @@ containerDatos: {
     alignSelf: "flex-start",
     marginHorizontal: 8,
     alignItems:"stretch",
-    
+},
+containerDatosCol: { //.......................en caso de COLUNMAS
+    flex: 4,
+    display: "flex",
+    // width: "50%",
+    alignSelf: "end",
 },
 contImg:{
     position:"absolute",
     top:-54,
     },
-contImgCol:{
+contImgCol:{// ......................en caso de COLUNMAS
     position:"absolute",
-    top: -25,
-    right: 6,
+    top: -40,
+    left: -36,
+    // right: 6,
 },
 contImgAndCant:{
     flex:4,
@@ -339,32 +339,32 @@ contImgAndCant:{
 },
 contBotMas:{
     flex:2,
-    alignItems:"center",
-    justifyContent:"center",
-    backgroundColor:'#e91e63',
-    // alignSelf:"stretch",
-    borderRadius:30,
-    // height:40,
-    // width:40,
+    flexDirection:"row",
+    justifyContent:"flex-end",
     position:"relative"
-    // borderBlockColor:"blue",
-    // borderWidth:2,
-    },
+},
 
-    contBotMasCol: {
-        position: "absolute",
-        top: 2,
-        right: 3,
-    },
+contBotMasCol: {// .........................en caso de COLUNMAS
+    position: "absolute",
+    top: 2,
+    right: 3,
+},
 
 iconMas:{
-    display:"flex",
+    display: "flex",
+    alignItems: "right",
     size:40,
     fontSize:40,
     color:"#fff",
     alignSelf:"stretch",
-    justifyContent:"center"
+    justifyContent: "center",
+    backgroundColor: '#e91e63',
+    width: 45,
+    height: 45,
+    maxWidth: 45,
+    borderRadius:30,
 },
+
 contBorrar: {
     position: 'absolute',
     top: 0,
@@ -402,7 +402,7 @@ cantPrecio: {
 
 containerCasiVacio:{
     backgroundColor: "#aaf",
-    borderColor:"#cc2",
+    // borderColor:"#cc2",
     borderWidth:2,
     // color:"#ff0000"
 },
@@ -411,7 +411,9 @@ containerVacio:{
     backgroundColor: "#fee",
     borderColor:"red",
     borderWidth:2,
-    color:"#ff0000"
+    color: "#ff0000",
+    minHeight: 100,
+    // marginLeft:10,
 },
 
 textCantidad:{
@@ -428,8 +430,10 @@ textCantidad:{
     right:64,
     alignContent:"center",
     justifyContent:"center",
-
-    // textAlign: "right",
+},
+textCantidadCol:{
+    top: 24,
+    left: 24,
 },
 
 deleteButton: {
@@ -455,7 +459,7 @@ title: {
     letterSpacing: 0.5,
     fontSize: 20,
     lineHeight: 14,
-    marginTop: 30,
+    marginTop: 9,
     // width: "100%",
 },
 description: {
@@ -465,8 +469,16 @@ description: {
     // width: "100%",
 },
 iconImg:{
-    height: 80,
-    width: 80,
+    height: 90,
+    width: 90,
+    resizeMode: "contain",
+    borderRadius: 15,
+    // borderColor:"#ccc",
+    // borderWidth:2,
+    },
+iconImgCol:{
+    height: 135,
+    width: 140,
     resizeMode: "contain",
     borderRadius: 15,
     // borderColor:"#ccc",

@@ -12,6 +12,7 @@ import CreaHeladoScreen from './screens/CreaHeladoScreen';
 import StackEdit from './screens/StackEdit';
 import ListaHelados from './screens/ListaHelados';
 import GuardaFoto from './screens/GuardaFoto';
+import VentasScreen from './screens/VentasScreen';
 import CartModalContent from './components/CartModalContent';
 import { CartContext, CartProvider } from './context/CartContext';
 
@@ -50,6 +51,11 @@ function MyStak() {
             <HomeStackNavigator.Screen 
                 name="CreateNew"
                 component={CreateNew}
+                options={{animation:true}}
+            />
+            <HomeStackNavigator.Screen 
+                name="VentasScreen"
+                component={VentasScreen}
                 options={{animation:true}}
             />
         </HomeStackNavigator.Navigator>
@@ -169,6 +175,17 @@ function MyTabs({ openCartModal }) {
                 }}
             />
 
+            <Tab.Screen 
+                name="Ventas" // Titulo de la pestaña
+                component={VentasScreen}
+                options={{
+                    tabBarLabel: 'VENTAS', // Label del icono
+                    tabBarIcon: ({ color, size }) => (
+                        <MaterialCommunityIcons name="flip-vertical" color={color} size={size} />
+                    ),
+                }}
+            />
+
         
         </Tab.Navigator>
         
@@ -193,26 +210,23 @@ export default function Navigation() {
     return (
         <CartProvider>
             <BottomSheetModalProvider>
-            <NavigationContainer>
-                
-                <MyTabs openCartModal={openCartModal} />
-                    <BottomSheetModal 
-                        ref={cartModalRef} 
-                        snapPoints={['80%']}
-                        onDismiss={() => console.log("Cart Modal Dismissed")}
-                        handleComponent={null}
-                        // enabledGestureInteraction={false}
-                        // enableHeaderGestures={false}
-                        // enableContentGestures={false}
-                        enableContentPanningGesture={false}
-                        
-                        >
-                        <CartModalContent closeModal={closeCartModal } />
-                    </BottomSheetModal>
-            </NavigationContainer>
-        </BottomSheetModalProvider>
+                <NavigationContainer>
+                    <MyTabs openCartModal={openCartModal} />
+                        <BottomSheetModal 
+                            ref={cartModalRef} 
+                            snapPoints={['80%']}
+                            onDismiss={() => console.log("Cart Modal Dismissed")}
+                            handleComponent={null}
+                            // enabledGestureInteraction={false}
+                            // enableHeaderGestures={false}
+                            // enableContentGestures={false}
+                            enableContentPanningGesture={false}
+                            >
+                            <CartModalContent closeModal={closeCartModal } />
+                        </BottomSheetModal>
+                </NavigationContainer>
+            </BottomSheetModalProvider>
         </CartProvider>
-        
     );
 }
 

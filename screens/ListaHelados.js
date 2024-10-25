@@ -113,7 +113,7 @@ export default function ListaHelados({deletItem=false, editItem=false}){
         setFilteredHelados(listaOrdenada);
     };
 
-     const toggleColumns = () => {
+    const toggleColumns = () => {
         setIsThreeColumns(prev => !prev);
     };
 
@@ -152,26 +152,33 @@ const handleSearch = (text) => {
                             onPress={ordenarPorNombre} 
                         </Pressable>
                      */}
-                    <Pressable style={styles.button} onPress={ordenarPorNombre}>
+                        <Pressable style={styles.botOrder} onPress={ordenarPorNombre}>
                             <MaterialCommunityIcons name="order-alphabetical-ascending" size={24} color="black" />
-                            <Text style={styles.text}>ordenar</Text>
                         </Pressable>
-                        <Button style={styles.botOrder} title=<MaterialCommunityIcons name="order-numeric-descending" size={24} color="black" />
-                            onPress={ordenarPorCantidad} />
-                        <Button style={styles.botOrder} title={isThreeColumns ?
+                        
+                        <Pressable style={styles.botOrder} onPress={ordenarPorCantidad}>
+                            <MaterialCommunityIcons name="order-numeric-descending" size={24} color="black" />
+                        </Pressable>
+                        
+                        <Pressable style={styles.botOrder} onPress={toggleColumns}>
+                            {isThreeColumns ?
+                            <MaterialCommunityIcons name="drag-horizontal-variant" size={24} color="black" />
+                            : <MaterialCommunityIcons name="view-split-vertical" size={24} color="black" />}
+                        </Pressable>
+                        
+                        {/* <Button style={styles.botOrder} title={isThreeColumns ?
                             <MaterialCommunityIcons name="drag-horizontal-variant" size={24} color="black" />
                             : <MaterialCommunityIcons name="view-split-vertical" size={24} color="black" />}
                             onPress={toggleColumns} 
-                            />
+                            /> */}
                     </View>
                     
                     <FlatList 
-                        style={isThreeColumns === true ?[ styles.contFlatListCol] : [styles.contFlatList]}
+                        style={isThreeColumns === true ? styles.contFlatListCol : styles.contFlatList}
                         data={filteredHelados} // Usar la lista filtrada
                         keyExtractor={(todo) => todo.id}
                         key={isThreeColumns ? 'two-columns' : 'one-column'} // Cambia el valor de la key
                         renderItem={({ item }) => (
-                            
                             <Helado 
                                 {...item}  
                                 reloadListDB={reloadListDB} // Recarga los datos de la base de datos
@@ -180,16 +187,16 @@ const handleSearch = (text) => {
                                 editItem={editItem}
                                 updateHeladoCantidad={updateHeladoCantidad}  // Actualiza los datos "cantidad" de la lista
                                 columnas={isThreeColumns}
-
                             />
                         )}
                         showsVerticalScrollIndicator={false}
                         ListHeaderComponent={() => <Text style={styles.title}>Ice Queen</Text>}
                         contentContainerStyle={styles.contentContainerStyle}
                         numColumns={isThreeColumns ? 2 : 1} // Cambia el número de columnas aquí
-                        // numColumns={3}
-
+                        columnWrapperStyle={isThreeColumns ? { gap: 10 } : null} // Solo aplica `columnWrapperStyle` para múltiples columnas
+                        horizontal={false} // Asegúrate de que la lista sea siempre vertical
                     />
+
                     {/* <InputHelado helados={helados} setHelados={setHelados} /> */}
                 </SafeAreaView>
 
@@ -230,10 +237,11 @@ const styles = StyleSheet.create({
     },
     botOrder: {
         margin: 10,
-        backgroundColor: "rose",
+        backgroundColor: "lightgray",
         borderRadius: 5,
         padding: 5,
         paddingHorizontal: 10,
+        borderBlockColor: "blue",
     },
     searchInput: {
         width: "90%",
@@ -250,13 +258,19 @@ const styles = StyleSheet.create({
         // borderWidth:2,
         width: "100%", // define el ancho de la fila
     },
-    contFlatListCol:{
-        flex:1,
-        gap: 10,
-        marginRight:10,
-        borderBlockColor: "blue",
-        backgroundColor: "yellow",
+    contFlatListCol:{ // para 3 columnas
+        flex:1/2,
+        // gap: 10,
+        // paddingLeft: 15,
+        // marginRight: 10,
+        // margin: 10,
+        // borderStyle: "solid",
+        borderWidth: 2,
+        // borderBlockColor: "blue",
+        // backgroundColor: "yellow",
         width: "100%", // define el ancho de la fila
+        // display: "flex",
+        // justifyContent: "space-between",
     },
     contentContainerStyle: {
         paddingHorizontal:10,
