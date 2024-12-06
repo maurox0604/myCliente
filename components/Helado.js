@@ -261,17 +261,19 @@ return (
                     datosPaCalc = {datosPaCalc}
                     reloadListDB={reloadListDB}
                     updateHeladoCantidad={updateHeladoCantidad}
+                    addItemCardModalRef={addItemCardModalRef}
                 />
             </BottomSheetModal> 
 
             {/* ✏️ Modal Editar helados  */}
             <BottomSheetModal
                 ref={bottomSheetModalRef}
+                enableDismissOnClose={true}
                 index={2}
                 snapPoints={snapPointsEditar}
                 backgroundStyle={{ borderRadius: 30, borderWidth: 4 }}
                 >
-                <EditModalContent id={id} _icon={icon} _sabor={sabor} _precio={precio} _cantidad={cantidad} reloadListDB={reloadListDB} closeModal={closeModal}/>
+                <EditModalContent id={id} _icon={icon} _sabor={sabor} _precio={precio} _cantidad={cantidad} reloadListDB={reloadListDB} closeModal={closeModal} bottomSheetModalRef={bottomSheetModalRef}/>
             </BottomSheetModal>
     </TouchableOpacity>
     </GestureHandlerRootView>

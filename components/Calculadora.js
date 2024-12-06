@@ -1,8 +1,9 @@
-import { useContext, useEffect, useState, alert } from "react";
+import { useContext, useEffect, useState, alert, useCallback } from "react";
 import { View, Text, StyleSheet, Pressable, Image, Button, Alert } from "react-native";
 import { CartContext } from "../context/CartContext";
 import { Feather, MaterialCommunityIcons } from "@expo/vector-icons";
 import { SelectList } from 'react-native-dropdown-select-list';
+import { useFocusEffect } from "@react-navigation/native";
 
 
 
@@ -17,7 +18,8 @@ export default function Calculadora({
   completed,
   // closeCartModal,
   datosPaCalc,
-  updateHeladoCantidad
+  updateHeladoCantidad,
+  addItemCardModalRef,
 }) {
   
   const { addToCart, existCart } = useContext(CartContext);
@@ -123,6 +125,24 @@ export default function Calculadora({
         setCantQueda(queda);
       }
   }
+
+
+  useFocusEffect(
+  useCallback(() => {
+    const timeout = setTimeout(() => {
+      if (addItemCardModalRef.current) {
+        addItemCardModalRef.current.dismiss();
+      } else {
+        console.log("addItemCardModalRef no está disponible aún.");
+      }
+    }, 100); // Retraso de 100ms, ajusta según sea necesario
+
+    return () => {
+      clearTimeout(timeout);
+    };
+  }, [])
+);
+
 
 
   return (

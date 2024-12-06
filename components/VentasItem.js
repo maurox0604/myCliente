@@ -1,36 +1,30 @@
-// import { useTasks } from "../context/TaskContext";
-// import { useNavigate } from "react-router-dom";
-// import{useNavigate} from "react-router-dom";
-// import { useVentas } from "../context/VentasContext";
+import { View, Text, StyleSheet } from "react-native";
 
-/* eslint-disable react/prop-types */
-
-
-function VentasItem({venta}) {
-
-    // const { deleteTask, toggleTaskDone } = useTasks();
-    // const navigate = useNavigate();
-    
-    // const handleDone = async () => {
-    //     await toggleTaskDone(venta.id);
-    // };
-
+function VentasItem({ venta }) {
     return (
-        <div >
-            <header >
-                <h2 >{venta.sabor}</h2>
-                {/* <span>{venta.done === 1 || venta.done === true ? "👌" : "❌"}</span> */}
-            </header>
-
-            <p >{venta.venta_helado}</p>
-            <span >{venta.fecha}</span>
-{/* 
-            <div >
-                <button  onClick={() => deleteTask(venta.id)}>Delete</button>
-                <button  onClick={() => navigate(`/edit/${venta.id}`)}>Edit</button>
-                <button  onClick={() => handleDone(venta.done)}>Toggle venta</button>
-            </div> */}
-        </div>
-    )
+        <View style={styles.itemContainer}>
+            <Text style={styles.column}>Producto: {venta.sabor}</Text>
+            <Text style={styles.column}>Precio: ${venta.precio_helado}</Text>
+            <Text style={styles.column}>Unidades: {venta.cantidad}</Text>
+            <Text style={styles.column}>Total: ${venta.venta_helado}</Text>
+            <Text style={styles.column}>Fecha: {venta.fecha}</Text>
+            {/* <Text style={styles.column}>Vendedor: {venta.vendedor}</Text> */}
+            <Text style={styles.column}>Vendedor: {venta.email}</Text>
+        </View>
+    );
 }
-export default VentasItem
+
+const styles = StyleSheet.create({
+    itemContainer: {
+        padding: 10,
+        borderBottomWidth: 1,
+        borderBottomColor: "#ccc",
+    },
+    column: {
+        fontSize: 16,
+        marginBottom: 5,
+    },
+});
+
+export default VentasItem;
+

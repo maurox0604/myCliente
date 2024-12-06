@@ -1,9 +1,12 @@
-import { useContext, useRef, useState } from 'react';
+import { useContext, useRef, useState, useCallback, useEffect  } from 'react';
 import { Text, StyleSheet, View, TouchableOpacity, SafeAreaView } from 'react-native';
 import ListaHelados from './ListaHelados';
 import { BottomSheetModal, BottomSheetModalProvider } from '@gorhom/bottom-sheet';
 import Editor from '../components/Editor';
 import { DbaseContext } from '../context/DbaseContext'
+import { useFocusEffect } from '@react-navigation/native';
+import { useNavigation } from '@react-navigation/native';
+
 
 const StackEdit = () => {
     const [editItem, setEditItem] =useState(true)
@@ -13,6 +16,7 @@ const StackEdit = () => {
     const snapPointsShared = ["90%"];
     const {cambios} = useContext(DbaseContext);
     const [elCambio, setElCambio] = useState();
+    const navigation = useNavigation();
 
     // 
     // console.log("El Cambio es: ", elCambio)
@@ -30,10 +34,48 @@ const StackEdit = () => {
         sharedBottomSheetRef.current?.present();
     }    
 
+// Cierra el BottomSheetModal cuando la pantalla pierde el foco
+// useFocusEffect(
+//     useCallback(() => {
+//     // Esta función se ejecuta cuando la pantalla tiene el foco
+//     return () => {
+//         // Esta función se ejecuta cuando la pantalla pierde el foco
+//         bottomSheetModalRef.current?.dismiss();
+//         // sharedBottomSheetRef.current?.dismiss();
+//         bottomSheetModalRef.current?.close();
+//     };
+//     }, [])
+    // );
 
+
+    // Cierra el BottomSheetModal justo antes de que la pantalla se elimine
+
+
+const [isVisible, setIsVisible] = useState(false);
+const [isModalClosed, setIsModalClosed] = useState(true);
+
+// useFocusEffect(
+//     useCallback(() => {
+//       console.log(".... Esato de la MODAL: ",bottomSheetModalRef.current?._isMounted);
+//     const handleBlur = () => {
+//       setIsVisible(false);
+//       setTimeout(() => {
+//         //   bottomSheetModalRef.current?.dismiss();
+//           bottomSheetModalRef.current?.close();
+//       }, 200); // agregar un retraso de 200ms
+//         console.log("Modal CERRADO..."+bottomSheetModalRef.current)
+//     };
+
+//     return handleBlur;
+//   }, [isVisible, bottomSheetModalRef])
+// );
+    
     return (
         // <SafeAreaView style={styles.container}>
-            <BottomSheetModalProvider>
+        <BottomSheetModalProvider
+            
+            onDismiss={() => setIsModalClosed(true)}
+        >
                 <View style={styles.container}>
                     <Text
                         style={{

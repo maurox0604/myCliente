@@ -6,6 +6,8 @@ import { StatusBar } from 'expo-status-bar';
 
 import ItemCart from './ItemCart';
 import { CartContext } from '../context/CartContext';
+import { AuthContext } from '../context/AuthContext';
+
 //import { useNavigation } from '@react-navigation/native';
 
 
@@ -13,15 +15,19 @@ import { CartContext } from '../context/CartContext';
 
 const CartModalContent = ({ closeModal, carrito }) => {
 
-   // const navigation = useNavigation();
+    // const navigation = useNavigation();
+    const { emailUser } = useContext(AuthContext);
 
-    console.log("CartModalContent   carrito::::::: ",carrito)
+    console.log("CartModalContent   emailUser::::::: ",emailUser)
 
     const {carts, totalPrice, clearCart, calculateTotalPrice} = useContext(CartContext);
 
     console.log("CartModalContent ......Carts: ",carts);
 
-    calculateTotalPrice(carts);
+    useEffect(() => {
+        calculateTotalPrice(carts);
+    },  
+    [] );
 
     const actualizarHelado = async () => {
 
@@ -58,14 +64,21 @@ const CartModalContent = ({ closeModal, carrito }) => {
     //const { id_helado, cantidad, precio, fecha }
     const guardarVentas = async () => {
         try {
-                    const response = await fetch(`https://backend-de-prueba-delta.vercel.app/ventas`, {
+            console.log("Datos a enviar: ",JSON.stringify(carts))
+            // const response = await fetch(`https://backend-de-prueba-delta.vercel.app/ventas`, {
+            const response = await fetch(`http://localhost:3001/ventas`, {
                     headers: {
                     "Content-Type": "application/json",
                 },
-
                 method: "POST",
-                body: JSON.stringify({ items: carts }),
-            });
+                        // body: JSON.stringify({ items: carts}),
+                body: JSON.stringify({ 
+            items: carts.map(item => ({ ...item, user: emailUser })), // Agregamos el campo 'user' a cada item
+}),
+                    });
+            
+            
+            // console.log("Datos a ENVIADOS: ", JSON.stringify(items))
 
             if (!response.ok) {
                 const errorText = await response.text();
@@ -76,8 +89,8 @@ const CartModalContent = ({ closeModal, carrito }) => {
             console.log("Datos actualizados: ", data);
         
         } catch (error) {
-            console.error('Error al actualizar el helado:', error);
-            alert('Error', `No se pudo actualizar el helado: ${error.message}`);
+            console.error('Error al guardarVentas el helado:', error);
+            alert(`No se pudo guardarVentas el helado: ${error.message}`);
         }
     }
 

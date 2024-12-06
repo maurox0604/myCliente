@@ -26,7 +26,8 @@ export const useVentas = () => {
 
 export const VentasContextProvider = ({ children }) => {
     const [ventas, setVentas] = useState([]);
-    //..................................... Cargar tareas All()
+
+    //..................................... Cargar ventas All()
     const loadVentas = async () => {
     try {
         //const ventasData = await getVentasAll();
@@ -44,7 +45,29 @@ export const VentasContextProvider = ({ children }) => {
     } catch (error) {
         console.error("Error al cargar las ventas:", error);
     }
-};
+    };
+
+      // Cargar ventas por rango de fechas
+    const loadVentasByDateRange = async (startDate, endDate) => {
+        try {
+            const ventasData = await cargarVentas(startDate, endDate);
+            console.log("Ventas por rango de fechas:", ventasData);
+            setVentas(ventasData);
+        } catch (error) {
+            console.error("Error al cargar ventas por rango de fechas:", error);
+        }
+    };
+    
+     // Ordenar ventas
+    const sortVentas = (criterion) => {
+        const sortedVentas = [...ventas];
+        if (criterion === "fecha") {
+            sortedVentas.sort((a, b) => new Date(b.fecha) - new Date(a.fecha));
+        } else if (criterion === "producto") {
+            sortedVentas.sort((a, b) => b.cantidad - a.cantidad); // Orden por unidades vendidas
+        }
+        setVentas(sortedVentas);
+    };
 
     
     return (
@@ -53,7 +76,8 @@ export const VentasContextProvider = ({ children }) => {
                 ventas,
                 loadVentas,
                 setVentas,
-
+                loadVentasByDateRange,
+                sortVentas
             }}>
             {children}
         </VentaContext.Provider>

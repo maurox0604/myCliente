@@ -28,7 +28,7 @@ export const  CartProvider = ({children}) => {
                     : cart
             );
         }
-    
+
         // Actualizamos el estado del carrito
         setCarts(updatedCarts);
     

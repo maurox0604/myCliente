@@ -1,6 +1,9 @@
 import { useNavigation } from '@react-navigation/native';
 import React, { useState } from 'react';
-import { Text, StyleSheet, View, TouchableOpacity, Alert, Button, TextInput, Image} from 'react-native';
+import { Text, StyleSheet, View, TouchableOpacity, Alert, Button, TextInput, Image } from 'react-native';
+import Welcome from './Welcome';
+
+// import {Welcome} from './Welcome';
 
 //import logo from '../assets/images/LogoQueen.png'
 const HomeScreen = () => {
@@ -12,7 +15,8 @@ const HomeScreen = () => {
 
     return (
         
-        <View  style={styles.container}>
+        <View style={styles.container}>
+            {/* <Welcome/> */}
             <Image source={require('../assets/images/LogoQueen.png')} style={{ width: 200, height: 100, resizeMode: "contain", }} />
             <Text
                 style={{
@@ -25,7 +29,7 @@ const HomeScreen = () => {
             </Text>
             <View  style={styles.menu}>
                 <TouchableOpacity
-                onPress={() => navigation.navigate("ListaHelados")}
+                onPress={() => navigation.navigate("Sabores")}
                 style={[styles.boton, {
                     backgroundColor: "#e91e63",
                 }]}
@@ -89,7 +93,7 @@ export default HomeScreen;
 
 const styles = StyleSheet.create({
     container: {
-        flexWrap: 'wrap',
+        // flexWrap: 'wrap',
         flex: 1,
         backgroundColor: "#11eeff",
         alignItems: "center",
@@ -97,7 +101,6 @@ const styles = StyleSheet.create({
         fontWeight: "400",
         fontSize: 29,
         width:"100%",
-        marginTop:40,
     },
     menu: {
         flexWrap: 'wrap',

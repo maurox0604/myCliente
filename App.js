@@ -1,13 +1,18 @@
 
-import { StyleSheet, Text, View, FlatList, SafeAreaView } from "react-native"; 
+import { StyleSheet, Text, View, FlatList, SafeAreaView, Image } from "react-native"; 
 import React from "react";
 import Navigation from "./Navigation";
 import { CartModalProvider } from "./context/CartModalContext";
 import { DbaseProvider } from "./context/DbaseContext";
+import { BlurView } from "expo-blur";
 
 import {LogBox} from 'react-native';
 import { GestureHandlerRootView } from "react-native-gesture-handler";
 import { VentaContext, VentasContextProvider } from "./context/VentasContext";
+import { Dimensions } from "react-native";
+import { AuthProvider } from "./context/AuthContext";
+
+const uri = 'https://my-cliente.vercel.app/assets/assets/images/LogoQueen.4b364def9b5acb1851859bc949d7163f.png';
 
 // Ignore log notification by message
 LogBox.ignoreLogs([
@@ -20,21 +25,35 @@ LogBox.ignoreLogs([
 
 // Ignore all log notifications
 LogBox.ignoreAllLogs();
-
+// const screenWidth = Dimensions.get("window").width;
 export default function App(){
-
+    
     const funMsg = function FunciMSG (){
         return (console.log("Esat es una prueba"));
     }
 
-    return(
-        <GestureHandlerRootView style={{ flex: 1 }}>
+// function HomeScreen() {
+//     return (
+//     <View style={styles.container}>
+//             <Image source={{uri}} style={[styles.image, StyleSheet.absoluteFill]} />
+//     </View>
+//     )
+// }
+
+    return (
+        
+        <GestureHandlerRootView >
+                {/* <View>
+                    <Image source={{ uri: uri }} style={styles.image}/>
+                </View> */}
             <VentasContextProvider>
-                <DbaseProvider>
-                    <CartModalProvider>
-                        <Navigation />
-                    </CartModalProvider>
-                </DbaseProvider>
+                <AuthProvider>
+                    <DbaseProvider>
+                        <CartModalProvider>
+                            <Navigation style={styles.container}/>
+                        </CartModalProvider>
+                    </DbaseProvider>
+                </AuthProvider>
             </VentasContextProvider>
         
         </GestureHandlerRootView>
@@ -43,15 +62,17 @@ export default function App(){
 
 const styles = StyleSheet.create({
     container: {
-        flexWrap: 'wrap',
+        // flexWrap: 'wrap',
         flex: 1,
-        backgroundColor: "#E9E9EF",
+        backgroundColor: "#f00",
         alignItems: "center",
         justifyContent : "center",
         fontWeight: "400",
         fontSize: 29,
-        width:"100%",
-        marginTop:40,
+        // width:screenWidth,
+        marginTop: 40,
+        overflow: 'hidden',
+        width: "80%",
     },
     contentContainerStyle: {
         padding: 18,
@@ -60,5 +81,10 @@ const styles = StyleSheet.create({
         fontWeight: "800",
         fontSize: 28,
         marginBottom: 15,
+    },
+    image: {
+        width: "100%",
+        height: "100%",
+        resizeMode: "cover",
     },
 });

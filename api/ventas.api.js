@@ -32,3 +32,4 @@ export const cargarVentas = async () => {
         throw error;  // Lanza el error para que pueda ser capturado donde se llame la función
     }
 };
+

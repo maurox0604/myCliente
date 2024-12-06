@@ -1,13 +1,17 @@
 import { FontAwesome5 } from "@expo/vector-icons";
-import { useState } from "react";
+import { useFocusEffect } from "@react-navigation/native";
+import { useCallback, useEffect, useRef, useState } from "react";
 import { Dimensions, Keyboard, View, Text, StyleSheet, Button, Alert, Pressable, TouchableOpacity } from "react-native";
 import { ScrollView, TextInput } from "react-native-gesture-handler";
+import { useNavigation } from '@react-navigation/native';
 
-export default function EditModalContent({ id, _icon, _sabor, _precio, _cantidad, reloadListDB, closeModal }) {
+export default function EditModalContent({ id, _icon, _sabor, _precio, _cantidad, reloadListDB, closeModal, bottomSheetModalRef }) {
   const [focus, setFocus] = useState(false);
   const [sabor, setSabor] = useState(_sabor);// Campo input
   const [precio, setPrecio] = useState(_precio);// Campo input
   const [cantidad, setCantidad] = useState(_cantidad);// Campo input
+  // const bottomSheetModalRef = useRef(null);
+  const navigation = useNavigation();
   // const [foto, setFoto] = useState("../assets/images/helados/Icon_App.png");// Campo Uri Foto
   const [foto, setFoto] = useState(_icon);// Campo Uri Foto
 
@@ -61,7 +65,7 @@ export default function EditModalContent({ id, _icon, _sabor, _precio, _cantidad
 
       const data = await response.json();
       console.log("Datos actualizados: ", data);
-      alert('Éxito', 'Helado actualizado correctamente');
+      // alert('Éxito', 'Helado actualizado correctamente');
       reloadListDB(id); // Si reloadListDB se encarga de limpiar o recargar datos
       closeModal(); // Cerrar el modal después de la actualización exitosa
     } catch (error) {
@@ -69,6 +73,52 @@ export default function EditModalContent({ id, _icon, _sabor, _precio, _cantidad
       alert('Error', `No se pudo actualizar el helado: ${error.message}`);
     }
   }
+
+// useFocusEffect(
+//   useCallback(() => {
+//     // Acción al enfocar la pantalla
+//     console.log("Pantalla enfocada. Intentando cerrar el modal...");
+//     console.log("bottomSheetModalRef.current: ", bottomSheetModalRef.current);
+//     if (bottomSheetModalRef.current) {
+//       bottomSheetModalRef.current.dismiss();
+//       console.log("SIIIII ENFOCO")
+//       bottomSheetModalRef.current?.close();
+//       //closeModal();
+//     }
+
+//     // Acción de limpieza al desenfocar la pantalla
+//     return () => {
+//       console.log("Pantalla desenfocada. Cerrando el modal si está abierto...");
+//       if (bottomSheetModalRef.current) {
+//         console.log("SIIIII SALIO DEL FOCO")
+//         bottomSheetModalRef.current.dismiss();
+//         bottomSheetModalRef.current?.close();
+//         // closeModal();
+//       }
+//       // Asegúrate de que closeModal se llame solo si es necesario
+//       // closeModal();
+//     };
+//   }, [])
+  // );
+  
+
+  useFocusEffect(
+  useCallback(() => {
+    const timeout = setTimeout(() => {
+      if (bottomSheetModalRef.current) {
+        bottomSheetModalRef.current.dismiss();
+      } else {
+        console.log("bottomSheetModalRef no está disponible aún.");
+      }
+    }, 100); // Retraso de 100ms, ajusta según sea necesario
+
+    return () => {
+      clearTimeout(timeout);
+    };
+  }, [])
+);
+
+
 
   return (
     <View style={styles.contentContainer}>
