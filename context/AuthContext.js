@@ -34,7 +34,9 @@ const AuthProvider = ({ children }) => {
 
             // Obtener el rol desde la base de datos
             try {
-                const response = await axios.post('http://localhost:3001/getUserRole', {
+                // const response = await axios.post('http://localhost:3001/getUserRole', {
+                const response = await axios.post(`https://backend-de-prueba-delta.vercel.app/getUserRole`, {
+                    
                     email: currentUser.email, // Enviar el email en el cuerpo de la solicitud
                 });
                 setRole(response.data.rol); // Asignar el rol recibido

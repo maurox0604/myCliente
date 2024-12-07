@@ -5,8 +5,8 @@
 
 export const cargarVentas = async () => {
     try {
-        // const response = await fetch(`https://backend-de-prueba-delta.vercel.app/ventas`, {
-        const response = await fetch(`http://localhost:3001/ventas`, {
+        const response = await fetch(`https://backend-de-prueba-delta.vercel.app/ventas`, {
+        // const response = await fetch(`http://localhost:3001/ventas`, {
             method: "GET",
             headers: {
                 'Content-Type': 'application/json',
