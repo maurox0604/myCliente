@@ -88,6 +88,11 @@ export const  CartProvider = ({children}) => {
         setCarts([]);
         setTotalPrice(0);
         setCartItemCount(0);
+
+        // Llamar a la función `updateHeladoCantidad` después de eliminar un ítem
+        
+            updateHeladoCantidadFunc(id, 0);  // Aquí puedes ajustar la cantidad a lo que necesites
+        
         //settoTalItemCompra(0);
     }
 
