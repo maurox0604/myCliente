@@ -11,13 +11,15 @@ import { AuthContext } from '../context/AuthContext';
 //import { useNavigation } from '@react-navigation/native';
 
 
-
+// const [helados, setHelados] = useState([]);
 
 const CartModalContent = ({ closeModal, carrito }) => {
 
     // const navigation = useNavigation();
     const { emailUser } = useContext(AuthContext);
-    const [helados, setHelados] = useState([]); // Estado para almacenar los helados
+
+    console.log("CartModalContent   emailUser::::::: ",emailUser)
+
     const {carts, totalPrice, clearCart, calculateTotalPrice} = useContext(CartContext);
 
     console.log("CartModalContent ......Carts: ",carts);
@@ -25,11 +27,7 @@ const CartModalContent = ({ closeModal, carrito }) => {
     useEffect(() => {
         calculateTotalPrice(carts);
     },  
-        []);
-    
-    useEffect(() => {
-        fetchHelados(); // Cargar helados al montar el componente
-    }, []);
+    [] );
 
     const actualizarHelado = async () => {
 
@@ -73,10 +71,11 @@ const CartModalContent = ({ closeModal, carrito }) => {
                     "Content-Type": "application/json",
                 },
                 method: "POST",
+                        // body: JSON.stringify({ items: carts}),
                 body: JSON.stringify({ 
-                    items: carts.map(item => ({ ...item, user: emailUser })), // Agregamos el campo 'user' a cada item
-                    }),
-            });
+            items: carts.map(item => ({ ...item, user: emailUser })), // Agregamos el campo 'user' a cada item
+}),
+                    });
             
             
             // console.log("Datos a ENVIADOS: ", JSON.stringify(items))
@@ -88,11 +87,6 @@ const CartModalContent = ({ closeModal, carrito }) => {
             const data = await response.json();
            // alert('Éxito', 'Helado actualizado correctamente');
             console.log("Datos actualizados: ", data);
-
-            // Después de guardar, recargar los helados
-            await fetchHelados();
-            clearModal();
-            closeModal();
         
         } catch (error) {
             console.error('Error al guardarVentas el helado:', error);
@@ -100,23 +94,30 @@ const CartModalContent = ({ closeModal, carrito }) => {
         }
     }
 
-    // useEffect(() => {
-    //     // fetchData();
-    //     fetchHelados();
-    // },  
-    // [] );
+    useEffect(() => {
+        // fetchData();
+        fetchHelados();
+    },  
+    [] );
 
-    const fetchHelados = async () => {
-    try {
-        console.log("Fetching helados...");
-        const response = await fetch(`https://backend-de-prueba-delta.vercel.app/helados`);
+    async function fetchHelados() {
+        console.log("Esta es fethcData")
+
+        // const response = await fetch("http://10.0.2.2:8000/helados", {
+        const response = await fetch(`https://backend-de-prueba-delta.vercel.app/helados`, {
+         //   headers: {
+         //     "x-api-key": "abcdef123456",
+         //   },
+        });
         const data = await response.json();
-        console.log("Helados obtenidos: ", data);
-        setHelados(data); // Actualizar el estado con los datos obtenidos
-    } catch (error) {
-        console.error("Error al obtener los helados:", error);
+        console.log("Los datos:  ", data)
+        console.log("//Los datos:  ", data[0].sabor)
+
+        // const lowQuantityCount = data.filter(helado => helado.cantidad === 1).length;
+        //     setBadgeCount(lowQuantityCount);
+        //  setHelados(data);
+       // console.log('LOS DATOS: '+helados.length);
     }
-}
 
     const clearModal = () => {
         clearCart();
