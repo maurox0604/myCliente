@@ -40,7 +40,8 @@ export const cargarVentas = async (startDate = null, endDate = null) => {
         const start = startDate ? new Date(startDate).toISOString().split('T')[0] : null;
         const end = endDate ? new Date(endDate).toISOString().split('T')[0] : null;
 
-        let url = `http://localhost:3001/ventas`;
+        let url = `https://backend-de-prueba-delta.vercel.app/ventas`;
+        // let url = `http://localhost:3001/ventas`;
 
         if (start && end) {
             url += `?startDate=${start}&endDate=${end}`;

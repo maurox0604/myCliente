@@ -82,13 +82,13 @@ function VentasScreen() {
                         onSelect = { handleDateSelect }  //cuando se hace clic en el día 
                         onChange = { handleDateChange }  //solo cuando el valor ha cambiado 
                     /> */}
-                     <DatePickerModal
+                     {/* <DatePickerModal
       mode="single"
       visible={true}
       onDismiss={() => console.log('dismissed')}
       date={date}
       onConfirm={onConfirm}
-    />
+    /> */}
                 </View>
 
                 
