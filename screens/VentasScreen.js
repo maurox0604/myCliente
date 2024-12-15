@@ -5,7 +5,7 @@ import VentasItem from "../components/VentasItem";
 import DatePicker from "react-native-date-picker"; // Asegúrate de instalar un picker de fechas
 import { CLIENT_RENEG_LIMIT } from "tls";
 import { MaterialCommunityIcons } from "@expo/vector-icons";
-import { DatePickerModal } from 'react-native-paper-dates';
+// import { DatePickerModal } from 'react-native-paper-dates';
 
 function VentasScreen() {
     const { ventas, loadVentasByDateRange, sortVentas } = useVentas();
