@@ -4,6 +4,10 @@ import { CartContext } from "../context/CartContext";
 import { Feather, MaterialCommunityIcons } from "@expo/vector-icons";
 import { SelectList } from 'react-native-dropdown-select-list';
 import { useFocusEffect } from "@react-navigation/native";
+import { HeladosContext } from "../context/HeladosContext";
+
+
+
 
 
 
@@ -18,9 +22,10 @@ export default function Calculadora({
   completed,
   // closeCartModal,
   datosPaCalc,
-  updateHeladoCantidad,
   addItemCardModalRef,
 }) {
+
+  const { updateHeladoCantidad  } = useContext(HeladosContext);
   
   const { addToCart, existCart } = useContext(CartContext);
   const [activMensaje, setActivMensaje] = useState(false);
@@ -127,21 +132,21 @@ export default function Calculadora({
   }
 
 
-  useFocusEffect(
-  useCallback(() => {
-    const timeout = setTimeout(() => {
-      if (addItemCardModalRef.current) {
-        addItemCardModalRef.current.dismiss();
-      } else {
-        console.log("addItemCardModalRef no está disponible aún.");
-      }
-    }, 100); // Retraso de 100ms, ajusta según sea necesario
+// useFocusEffect(
+//   useCallback(() => {
+//     const timeout = setTimeout(() => {
+//       if (addItemCardModalRef.current) {
+//         addItemCardModalRef.current.dismiss();
+//       } else {
+//         console.log("addItemCardModalRef no está disponible aún.");
+//       }
+//     }, 100); // Retraso de 100ms, ajusta según sea necesario
 
-    return () => {
-      clearTimeout(timeout);
-    };
-  }, [])
-);
+//     return () => {
+//       clearTimeout(timeout);
+//     };
+//   }, [])
+// );
 
 
 

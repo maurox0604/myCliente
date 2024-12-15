@@ -6,6 +6,7 @@ import Editor from '../components/Editor';
 import { DbaseContext } from '../context/DbaseContext'
 import { useFocusEffect } from '@react-navigation/native';
 import { useNavigation } from '@react-navigation/native';
+import { HeladosContext } from '../context/HeladosContext';
 
 
 const StackEdit = () => {
@@ -18,73 +19,32 @@ const StackEdit = () => {
     const [elCambio, setElCambio] = useState();
     const navigation = useNavigation();
 
-    // 
-    // console.log("El Cambio es: ", elCambio)
-    console.log("El Cambiossses: ", cambios)
-    // if (cambios) {
-    //     setElCambio(cambios);
+    const { handleSearch, updateHeladoCantidad } = useContext(HeladosContext); // Llamando a handleSearch para actualizar la lista de helados
+
+    // function handlePresentModal() {
+    //     bottomSheetModalRef.current?.present();
     // }
-    
 
-    function handlePresentModal() {
-        bottomSheetModalRef.current?.present();
-        }
+    // function handlePresentShared() {
+    //     sharedBottomSheetRef.current?.present();
+    // }    
 
-    function handlePresentShared() {
-        sharedBottomSheetRef.current?.present();
-    }    
+    // const [isVisible, setIsVisible] = useState(false);
+    const [isModalClosed, setIsModalClosed] = useState(true);
+    // 
 
-// Cierra el BottomSheetModal cuando la pantalla pierde el foco
-// useFocusEffect(
-//     useCallback(() => {
-//     // Esta función se ejecuta cuando la pantalla tiene el foco
-//     return () => {
-//         // Esta función se ejecuta cuando la pantalla pierde el foco
-//         bottomSheetModalRef.current?.dismiss();
-//         // sharedBottomSheetRef.current?.dismiss();
-//         bottomSheetModalRef.current?.close();
-//     };
-//     }, [])
-    // );
-
-
-    // Cierra el BottomSheetModal justo antes de que la pantalla se elimine
-
-
-const [isVisible, setIsVisible] = useState(false);
-const [isModalClosed, setIsModalClosed] = useState(true);
-
-// useFocusEffect(
-//     useCallback(() => {
-//       console.log(".... Esato de la MODAL: ",bottomSheetModalRef.current?._isMounted);
-//     const handleBlur = () => {
-//       setIsVisible(false);
-//       setTimeout(() => {
-//         //   bottomSheetModalRef.current?.dismiss();
-//           bottomSheetModalRef.current?.close();
-//       }, 200); // agregar un retraso de 200ms
-//         console.log("Modal CERRADO..."+bottomSheetModalRef.current)
-//     };
-
-//     return handleBlur;
-//   }, [isVisible, bottomSheetModalRef])
-// );
+    useEffect(() => {
+        // Actualiza `filteredHelados` automáticamente cuando `helados` cambia
+        handleSearch("");
+        updateHeladoCantidad();
+    }, [""]);
     
     return (
         // <SafeAreaView style={styles.container}>
         <BottomSheetModalProvider
-            
-            onDismiss={() => setIsModalClosed(true)}
+            onDismiss={() => {setIsModalClosed(true); }}
         >
                 <View style={styles.container}>
-                    <Text
-                        style={{
-                            fontSize:20,
-                            textAlign: "Center",
-                            marginTop: "5%"
-                        }}
-                    > EDITAR helados </Text>
-
                     <ListaHelados deletItem={true} editItem></ListaHelados>
                     {/* cambios ? <ListaHelados deletItem={true} editItem></ListaHelados> : null */}
 
@@ -97,8 +57,6 @@ const [isModalClosed, setIsModalClosed] = useState(true);
                 </View>
             </BottomSheetModalProvider>
         // </SafeAreaView>
-        
-        
         )
 }
 export default StackEdit;

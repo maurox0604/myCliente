@@ -1,44 +1,23 @@
 import { FontAwesome5 } from "@expo/vector-icons";
 import { useFocusEffect } from "@react-navigation/native";
-import { useCallback, useEffect, useRef, useState } from "react";
+import { useCallback, useContext, useEffect, useRef, useState } from "react";
 import { Dimensions, Keyboard, View, Text, StyleSheet, Button, Alert, Pressable, TouchableOpacity } from "react-native";
 import { ScrollView, TextInput } from "react-native-gesture-handler";
 import { useNavigation } from '@react-navigation/native';
+import { HeladosContext } from "../context/HeladosContext";
 
-export default function EditModalContent({ id, _icon, _sabor, _precio, _cantidad, reloadListDB, closeModal, bottomSheetModalRef }) {
+export default function EditModalContent({ id, _icon, _sabor, _precio, _cantidad, closeModal, bottomSheetModalRef }) {
   const [focus, setFocus] = useState(false);
   const [sabor, setSabor] = useState(_sabor);// Campo input
   const [precio, setPrecio] = useState(_precio);// Campo input
   const [cantidad, setCantidad] = useState(_cantidad);// Campo input
+  const { updateHeladoCantidad, handleSearch } = useContext(HeladosContext);
+
   // const bottomSheetModalRef = useRef(null);
   const navigation = useNavigation();
   // const [foto, setFoto] = useState("../assets/images/helados/Icon_App.png");// Campo Uri Foto
   const [foto, setFoto] = useState(_icon);// Campo Uri Foto
 
-  // const handleSubmit = async () => {
-  //   const response = await fetch("http://192.168.1.11:8000/todos/shared_todos", {
-  //     headers: {
-  //       "x-api-key": "abcdef123456",
-  //       "Content-Type": "application/json",
-  //     },
-  //     method: "POST",
-  //     body: JSON.stringify({
-  //       todo_id: id,
-  //       user_id: 1,   // hard coded value (user 1)
-  //       email: email, // hard coded value (user 2)
-  //     }),
-  //   });
-  //   const data = await response.json();
-  //   console.log(data);
-  //   Keyboard.dismiss();
-  //   setEmail("");
-  //   setFocus(false);
-  //   Alert.alert(
-  //     "Congratulations 🎉",
-  //     `You successfully shared ${_sabor} with ${email}`,
-  //     [{ text: "Okay" }]
-  //   );
-  // };
 
   const actualizarHelado = async () => {
     console.log("☻ sabor: ",sabor, "- precio: ",precio)
@@ -66,41 +45,14 @@ export default function EditModalContent({ id, _icon, _sabor, _precio, _cantidad
       const data = await response.json();
       console.log("Datos actualizados: ", data);
       // alert('Éxito', 'Helado actualizado correctamente');
-      reloadListDB(id); // Si reloadListDB se encarga de limpiar o recargar datos
+      updateHeladoCantidad(id, cantidad); //  updateHeladoCantidad se encarga de limpiar o recargar datos
+      handleSearch("")
       closeModal(); // Cerrar el modal después de la actualización exitosa
     } catch (error) {
       console.error('Error al actualizar el helado:', error);
       alert('Error', `No se pudo actualizar el helado: ${error.message}`);
     }
   }
-
-// useFocusEffect(
-//   useCallback(() => {
-//     // Acción al enfocar la pantalla
-//     console.log("Pantalla enfocada. Intentando cerrar el modal...");
-//     console.log("bottomSheetModalRef.current: ", bottomSheetModalRef.current);
-//     if (bottomSheetModalRef.current) {
-//       bottomSheetModalRef.current.dismiss();
-//       console.log("SIIIII ENFOCO")
-//       bottomSheetModalRef.current?.close();
-//       //closeModal();
-//     }
-
-//     // Acción de limpieza al desenfocar la pantalla
-//     return () => {
-//       console.log("Pantalla desenfocada. Cerrando el modal si está abierto...");
-//       if (bottomSheetModalRef.current) {
-//         console.log("SIIIII SALIO DEL FOCO")
-//         bottomSheetModalRef.current.dismiss();
-//         bottomSheetModalRef.current?.close();
-//         // closeModal();
-//       }
-//       // Asegúrate de que closeModal se llame solo si es necesario
-//       // closeModal();
-//     };
-//   }, [])
-  // );
-  
 
   useFocusEffect(
   useCallback(() => {

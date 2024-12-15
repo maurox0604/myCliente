@@ -11,6 +11,7 @@ import { GestureHandlerRootView } from "react-native-gesture-handler";
 import { VentaContext, VentasContextProvider } from "./context/VentasContext";
 import { Dimensions } from "react-native";
 import { AuthProvider } from "./context/AuthContext";
+import { HeladosProvider } from "./context/HeladosContext";
 
 const uri = 'https://my-cliente.vercel.app/assets/assets/images/LogoQueen.4b364def9b5acb1851859bc949d7163f.png';
 
@@ -46,16 +47,17 @@ export default function App(){
                 {/* <View>
                     <Image source={{ uri: uri }} style={styles.image}/>
                 </View> */}
-            <VentasContextProvider>
-                <AuthProvider>
-                    <DbaseProvider>
-                        <CartModalProvider>
-                            <Navigation style={styles.container}/>
-                        </CartModalProvider>
-                    </DbaseProvider>
-                </AuthProvider>
-            </VentasContextProvider>
-        
+            <HeladosProvider>
+                <VentasContextProvider>
+                    <AuthProvider>
+                        <DbaseProvider>
+                            <CartModalProvider>
+                                <Navigation style={styles.container}/>
+                            </CartModalProvider>
+                        </DbaseProvider>
+                    </AuthProvider>
+                </VentasContextProvider>
+            </HeladosProvider>
         </GestureHandlerRootView>
     )
 }

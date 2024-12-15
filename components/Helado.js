@@ -64,13 +64,13 @@ import { DbaseContext } from '../context/DbaseContext'
         }) 
     {
         const datosPaCalc = { id, sabor, cantidad, icon,precio, closeCartModal }
-    const [isDeleteActive, setIsDeleteActive] = useState(false);
-    const [imageSource, setImageSource] = useState({ uri: icon });
+        const [isDeleteActive, setIsDeleteActive] = useState(false);
+        const [imageSource, setImageSource] = useState({ uri: icon });
 
-    const bottomSheetModalRef = useRef(null);
-    const addItemCardModalRef = useRef(null);
-    const snapPointsEditar = ["25%", "50%", "90%"];// el ultimo es la altura
-    const snapPointsCalculadora = ["80%"];
+        const bottomSheetModalRef = useRef(null);
+        const addItemCardModalRef = useRef(null);
+        const snapPointsEditar = ["25%", "50%", "90%"];// el ultimo es la altura
+        const snapPointsCalculadora = ["80%"];
 
     function handlePresentModal() {
         console.log("Vamos a editarrrrrrr")
@@ -151,7 +151,7 @@ import { DbaseContext } from '../context/DbaseContext'
         }
         //alert("hello ID: "+id)
         
-        reloadListDB(id);
+        // reloadListDB(id);
         // console.log(response.status);
 }
 
@@ -259,7 +259,6 @@ return (
                     completed={completed}
                     // closeCartModal={closeCartModal}
                     datosPaCalc = {datosPaCalc}
-                    reloadListDB={reloadListDB}
                     updateHeladoCantidad={updateHeladoCantidad}
                     addItemCardModalRef={addItemCardModalRef}
                 />
@@ -273,7 +272,7 @@ return (
                 snapPoints={snapPointsEditar}
                 backgroundStyle={{ borderRadius: 30, borderWidth: 4 }}
                 >
-                <EditModalContent id={id} _icon={icon} _sabor={sabor} _precio={precio} _cantidad={cantidad} reloadListDB={reloadListDB} closeModal={closeModal} bottomSheetModalRef={bottomSheetModalRef}/>
+                <EditModalContent id={id} _icon={icon} _sabor={sabor} _precio={precio} _cantidad={cantidad} closeModal={closeModal} bottomSheetModalRef={bottomSheetModalRef}/>
             </BottomSheetModal>
     </TouchableOpacity>
     </GestureHandlerRootView>

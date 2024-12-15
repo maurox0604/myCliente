@@ -7,6 +7,7 @@ import { StatusBar } from 'expo-status-bar';
 import ItemCart from './ItemCart';
 import { CartContext } from '../context/CartContext';
 import { AuthContext } from '../context/AuthContext';
+import { HeladosContext } from '../context/HeladosContext';
 
 //import { useNavigation } from '@react-navigation/native';
 
@@ -17,6 +18,7 @@ const CartModalContent = ({ closeModal, carrito }) => {
 
     // const navigation = useNavigation();
     const { emailUser } = useContext(AuthContext);
+    const { updateHeladoCantidad } = useContext(HeladosContext);
 
     console.log("CartModalContent   emailUser::::::: ",emailUser)
 
@@ -52,6 +54,9 @@ const CartModalContent = ({ closeModal, carrito }) => {
             clearModal()
             closeModal(); // Cerrar el modal después de la actualización exitosa
             guardarVentas();
+            updateHeladoCantidad();
+
+            
             
 
         } catch (error) {
@@ -66,18 +71,16 @@ const CartModalContent = ({ closeModal, carrito }) => {
         try {
             console.log("Datos a enviar: ",JSON.stringify(carts))
             const response = await fetch(`https://backend-de-prueba-delta.vercel.app/ventas`, {
-            // const response = await fetch(`http://localhost:3001/ventas`, {
-                    headers: {
+                // const response = await fetch(`http://localhost:3001/ventas`, {
+                headers: {
                     "Content-Type": "application/json",
                 },
                 method: "POST",
-                        // body: JSON.stringify({ items: carts}),
+                // body: JSON.stringify({ items: carts}),
                 body: JSON.stringify({ 
-            items: carts.map(item => ({ ...item, user: emailUser })), // Agregamos el campo 'user' a cada item
-}),
-                    });
-            
-            
+                    items: carts.map(item => ({ ...item, user: emailUser })), // Agregamos el campo 'user' a cada item
+                }),
+            });
             // console.log("Datos a ENVIADOS: ", JSON.stringify(items))
 
             if (!response.ok) {
@@ -87,6 +90,13 @@ const CartModalContent = ({ closeModal, carrito }) => {
             const data = await response.json();
            // alert('Éxito', 'Helado actualizado correctamente');
             console.log("Datos actualizados: ", data);
+
+        // Sincronizar los helados con las cantidades actualizadas
+        // const updatedItems = carts.map(item => ({
+        //     id: item.id,
+        //     cantidad: item.cantidad - item.unidadesVendidas, // Ejemplo: ajustar cantidades
+        // }));
+        // syncHelados(updatedItems);
         
         } catch (error) {
             console.error('Error al guardarVentas el helado:', error);
@@ -112,11 +122,6 @@ const CartModalContent = ({ closeModal, carrito }) => {
         const data = await response.json();
         console.log("Los datos:  ", data)
         console.log("//Los datos:  ", data[0].sabor)
-
-        // const lowQuantityCount = data.filter(helado => helado.cantidad === 1).length;
-        //     setBadgeCount(lowQuantityCount);
-        //  setHelados(data);
-       // console.log('LOS DATOS: '+helados.length);
     }
 
     const clearModal = () => {
