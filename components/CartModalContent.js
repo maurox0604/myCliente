@@ -38,7 +38,7 @@ const CartModalContent = ({ closeModal, carrito }) => {
                     const response = await fetch(`https://backend-de-prueba-delta.vercel.app/multicompra`, {
                     headers: {
                     "Content-Type": "application/json",
-                    'Access-Control-Allow-Origin': '*',
+                    // 'Access-Control-Allow-Origin': '*',
                 },
                 method: "PUT",
                 body: JSON.stringify({ items: carts }),
@@ -55,10 +55,6 @@ const CartModalContent = ({ closeModal, carrito }) => {
             closeModal(); // Cerrar el modal después de la actualización exitosa
             guardarVentas();
             updateHeladoCantidad();
-
-            
-            
-
         } catch (error) {
             console.error('Error al actualizar el helado:', error);
         //   Alert.alert('Error', `No se pudo actualizar el helado: ${error.message}`);

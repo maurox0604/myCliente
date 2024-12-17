@@ -26,7 +26,6 @@ export default function EditModalContent({ id, _icon, _sabor, _precio, _cantidad
         const response = await fetch(`https://backend-de-prueba-delta.vercel.app/helados/${id}`, {
           headers: {
             "Content-Type": "application/json",
-            'Access-Control-Allow-Origin': '*',
           },
           method: "PUT",
           body: JSON.stringify({

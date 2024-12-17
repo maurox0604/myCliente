@@ -166,8 +166,8 @@ return (
         onLongPress={() => activaDelete()}// Activa el boton BORRAR Item
         onPress={() => setIsDeleteActive(false)}
         activeOpacity={0.8}
-        style={cantidad === 0 ? [styles.container, styles.containerVacio, styles.shadowProp] : [styles.container, styles.shadowProp] 
-            && columnas === true ? [styles.containerCol] : [styles.container]
+        style={cantidad !== 0 ? [styles.shadowProp, styles.container] : [styles.container, styles.containerVacio, styles.shadowProp] 
+            // && columnas === true ? [styles.containerCol] : [styles.container]
         } 
             // & cantidad === 1 && [styles.containerCasiVacio] }
         >
@@ -188,7 +188,7 @@ return (
         {/* .................................................................................... Nombre */}
         <View style={columnas === true ? [styles.containerDatosCol] : [styles.containerDatos]}>
             {/* <CheckMark id={id} completed={completed} toggleTodo={toggleTodo} /> */}
-            <Text style={styles.title}>{sabor}</Text>
+            <Text style={styles.title} adjustsFontSizeToFit={true} numberOfLines={1}>{sabor}</Text>
             <View style={styles.cantPrecio}>
                 {/* .................................................................... Precio */}
                 <Text style={styles.description}>${precio} </Text>
@@ -286,8 +286,8 @@ container: {
     flexDirection: "row",
     justifyContent: "space-between",
     alignItems:"center",
-    height:60,
-    padding: 5,
+    height:80,
+    padding: 10,
     borderRadius: 15,
     marginBottom: 32,
     backgroundColor: "white",
@@ -297,7 +297,7 @@ container: {
     width:"100%",
     
     },
-containerCol: {//    .......................en caso de COLUNMAS
+    containerCol: {//    .......................en caso de COLUNMAS
     flex: 1,
     flexDirection: "column",
     minHeight: 100,
@@ -307,7 +307,7 @@ containerCol: {//    .......................en caso de COLUNMAS
     padding: 5,
     borderRadius: 15,
     marginBottom: 32,
-    backgroundColor: "green",
+    backgroundColor: "#ffdf00",
     width:"100%",
 },
 containerDatos: {
@@ -398,7 +398,8 @@ cantPrecio: {
     // backgroundColor: "red",
     // width:"100%",
     // alignItems:"stretch",
-    position:"relative"
+    position: "relative",
+    marginTop: 10,
 },
 
 containerCasiVacio:{
@@ -424,11 +425,11 @@ textCantidad:{
     width:25,
     height:25,
     textAlign: "center",
-    backgroundColor:"#6b00f6",
+    backgroundColor:"#09aef5",
     borderRadius:20,
     position:"absolute",
-    top: 20,
-    right:64,
+    top: 15,
+    right:72,
     alignContent:"center",
     justifyContent:"center",
 },
@@ -459,7 +460,7 @@ title: {
     fontWeight: "bold",
     letterSpacing: 0.5,
     fontSize: 20,
-    lineHeight: 14,
+    // lineHeight: 14,
     marginTop: 9,
     // width: "100%",
 },
@@ -492,10 +493,10 @@ elevation: {
 },
 
 shadowProp: {
-    shadowColor: 'rgba(0, 0, 0, 0.4)',
+    shadowColor: 'rgba(38, 43, 48, 0.4)',
     shadowOpacity: 0.8,
-    elevation: 4,
-    shadowRadius: 7 ,
+    elevation: 11,
+    shadowRadius: 21 ,
     shadowOffset : { width: 1, height: 7},
 },
 

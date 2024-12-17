@@ -97,7 +97,14 @@ const RegisterScreen = ({ navigation, route }) => {
                             />
                             
                             <TouchableOpacity onPress={handleCreateAccount} style={styles.signInButton}>
-                                <Text style={{color: 'white', fontWeight: 'bold'}}>Create Account</Text>
+                                <Text style={{color: 'white', fontWeight: 'bold'}}>Crear cuenta</Text>
+                            </TouchableOpacity>
+
+                            <TouchableOpacity
+                                onPress={() => navigation.navigate('LoginScreen', { userId: 2 })}
+                                // navigation.navigate('Profile', { userId: 1 });
+                                style={styles.button2}>
+                                <Text style={styles.buttonsText}>Loguearse</Text>
                             </TouchableOpacity>
 
                         </View>

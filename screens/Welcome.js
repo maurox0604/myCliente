@@ -1,4 +1,4 @@
-import React from 'react';
+import React, { useContext, useEffect } from 'react';
 import {
   SafeAreaView,
   TouchableOpacity,
@@ -10,12 +10,22 @@ import {
   View,
   Dimensions,
 } from 'react-native';
+import { AuthContext } from '../context/AuthContext'; // Ajusta la ruta según tu estructura de carpetas
+
 
 // import MyBlur from '../../components/MyBlur';
 
 const Welcome = ({navigation}) => {
   const { height } = Dimensions.get('window');
+  const { user, loading } = useContext(AuthContext); // Obtén el estado de autenticación
   // const screenWidth  = Dimensions.get("window").width;
+
+  useEffect(() => {
+    if (!loading && user) {
+      // Si no está cargando y el usuario está autenticado, navega a HomeTabs
+      navigation.replace('HomeTabs');
+    }
+  }, [user, loading, navigation]);
   
 
   return (

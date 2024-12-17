@@ -27,6 +27,12 @@ export default function ListaHelados({ deletItem = false, editItem = false }) {
         handleSearch('');
     }
 
+    function onRefresh() {
+    setIsFetching(true);
+    handleSearch(''); // O recargar datos desde el servidor
+    setTimeout(() => setIsFetching(false), 1000); // Simula la finalización
+}
+
 
     useEffect(() => {
         updateHeladoCantidad();
@@ -62,7 +68,7 @@ export default function ListaHelados({ deletItem = false, editItem = false }) {
                     <Button title="Actualizar" onPress={onRefresh} />
             </View>
                 
-            <FlatList
+            {/* <FlatList
                 style={isThreeColumns ? styles.contFlatListCol : styles.contFlatList}
                 data={filteredHelados}
                 onRefresh={() => onRefresh()}
@@ -78,7 +84,27 @@ export default function ListaHelados({ deletItem = false, editItem = false }) {
                 )}
                 numColumns={isThreeColumns ? 2 : 1}
                 columnWrapperStyle={isThreeColumns ? { gap: 10 } : null}
-            />
+            /> */}
+                
+                <FlatList
+                    style={isThreeColumns ? styles.contFlatListCol : styles.contFlatList}
+                    data={filteredHelados}
+                    keyExtractor={(item) => item.id.toString()}
+                    renderItem={({ item }) => (
+                        <Helado
+                            {...item}
+                            activaDeleteItem={deletItem}
+                            editItem={editItem}
+                            columnas={isThreeColumns}
+                        />
+                        )}
+                        numColumns={isThreeColumns ? 2 : 1} // Alterna entre una y dos columnas
+                        columnWrapperStyle={isThreeColumns ? styles.columnWrapper : null} // Agrega espacio entre columnas
+                        key={isThreeColumns ? 'two-column' : 'one-column'} // Fuerza el re-render para evitar bugs
+                        onRefresh={onRefresh} // Implementa función de actualización
+                        refreshing={isFetching}
+                />
+
             </SafeAreaView>
         </GestureHandlerRootView>
     );
@@ -87,13 +113,14 @@ export default function ListaHelados({ deletItem = false, editItem = false }) {
 const styles = StyleSheet.create({
     container: {
         flex: 1,
-        backgroundColor: "#ddd",
+        backgroundColor: "#fff",
     },
     header: {
         flexDirection: "row",
         justifyContent: "flex-end",
         paddingHorizontal: 10,
         width: "100%",
+        backgroundColor: "#140663",
     },
     botOrder: {
         margin: 10,
@@ -113,10 +140,16 @@ const styles = StyleSheet.create({
     contFlatList: {
         flex: 1,
         width: "100%",
+        paddingTop: 28,
+        paddingHorizontal: 10,
     },
     contFlatListCol: {
         flex: 1 / 2,
         width: "100%",
+    },
+    columnWrapper: {
+        justifyContent: 'space-between',
+        paddingHorizontal: 10,
     },
 });
 
