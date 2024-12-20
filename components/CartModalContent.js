@@ -31,99 +31,133 @@ const CartModalContent = ({ closeModal, carrito }) => {
     },  
     [] );
 
-    const actualizarHelado = async () => {
+    // const actualizarHelado = async () => {
 
-        try {
-                // const response = await fetch(`http://192.168.1.11:8000/multicompra`, { //web
-                    const response = await fetch(`https://backend-de-prueba-delta.vercel.app/multicompra`, {
-                    headers: {
-                    "Content-Type": "application/json",
-                    // 'Access-Control-Allow-Origin': '*',
-                },
-                method: "PUT",
-                body: JSON.stringify({ items: carts }),
-            });
+    //     try {
+    //             // const response = await fetch(`http://192.168.1.11:8000/multicompra`, { //web
+    //                 const response = await fetch(`https://backend-de-prueba-delta.vercel.app/multicompra`, {
+    //                 headers: {
+    //                 "Content-Type": "application/json",
+    //                 // 'Access-Control-Allow-Origin': '*',
+    //             },
+    //             method: "PUT",
+    //             body: JSON.stringify({ items: carts }),
+    //         });
 
-            if (!response.ok) {
-                const errorText = await response.text();
-                throw new Error(`Error HTTP: ${response.status} - ${errorText}`);
-            }
-            const data = await response.json();
-            console.log("Datos actualizados: ", data);
-        //   Alert.alert('Éxito', 'Helado actualizado correctamente');
-            clearModal()
-            closeModal(); // Cerrar el modal después de la actualización exitosa
-            guardarVentas();
-            updateHeladoCantidad();
-        } catch (error) {
-            console.error('Error al actualizar el helado:', error);
-        //   Alert.alert('Error', `No se pudo actualizar el helado: ${error.message}`);
-        }
-    }
+    //         if (!response.ok) {
+    //             const errorText = await response.text();
+    //             throw new Error(`Error HTTP: ${response.status} - ${errorText}`);
+    //         }
+    //         const data = await response.json();
+    //         console.log("Datos actualizados: ", data);
+    //     //   Alert.alert('Éxito', 'Helado actualizado correctamente');
+    //         clearModal()
+    //         closeModal(); // Cerrar el modal después de la actualización exitosa
+    //         guardarVentas();
+    //         updateHeladoCantidad();
+    //     } catch (error) {
+    //         console.error('Error al actualizar el helado:', error);
+    //     //   Alert.alert('Error', `No se pudo actualizar el helado: ${error.message}`);
+    //     }
+    // }
 
 
-    //const { id_helado, cantidad, precio, fecha }
-    const guardarVentas = async () => {
-        try {
-            console.log("Datos a enviar: ",JSON.stringify(carts))
-            const response = await fetch(`https://backend-de-prueba-delta.vercel.app/ventas`, {
-                // const response = await fetch(`http://localhost:3001/ventas`, {
-                headers: {
-                    "Content-Type": "application/json",
-                },
-                method: "POST",
-                // body: JSON.stringify({ items: carts}),
-                body: JSON.stringify({ 
-                    items: carts.map(item => ({ ...item, user: emailUser })), // Agregamos el campo 'user' a cada item
-                }),
-            });
-            // console.log("Datos a ENVIADOS: ", JSON.stringify(items))
+    // //const { id_helado, cantidad, precio, fecha }
+    // const guardarVentas = async () => {
+    //     try {
+    //         console.log("Datos a enviar: ",JSON.stringify(carts))
+    //         const response = await fetch(`https://backend-de-prueba-delta.vercel.app/ventas`, {
+    //             // const response = await fetch(`http://localhost:3001/ventas`, {
+    //             headers: {
+    //                 "Content-Type": "application/json",
+    //             },
+    //             method: "POST",
+    //             // body: JSON.stringify({ items: carts}),
+    //             body: JSON.stringify({ 
+    //                 items: carts.map(item => ({ ...item, user: emailUser })), // Agregamos el campo 'user' a cada item
+    //             }),
+    //         });
+    //         // console.log("Datos a ENVIADOS: ", JSON.stringify(items))
 
-            if (!response.ok) {
-                const errorText = await response.text();
-                throw new Error(`Error HTTP: ${response.status} - ${errorText}`);
-            }
-            const data = await response.json();
-           // alert('Éxito', 'Helado actualizado correctamente');
-            console.log("Datos actualizados: ", data);
+    //         if (!response.ok) {
+    //             const errorText = await response.text();
+    //             throw new Error(`Error HTTP: ${response.status} - ${errorText}`);
+    //         }
+    //         const data = await response.json();
+    //        // alert('Éxito', 'Helado actualizado correctamente');
+    //         console.log("Datos actualizados: ", data);
 
-        // Sincronizar los helados con las cantidades actualizadas
-        // const updatedItems = carts.map(item => ({
-        //     id: item.id,
-        //     cantidad: item.cantidad - item.unidadesVendidas, // Ejemplo: ajustar cantidades
-        // }));
-        // syncHelados(updatedItems);
+    //     // Sincronizar los helados con las cantidades actualizadas
+    //     // const updatedItems = carts.map(item => ({
+    //     //     id: item.id,
+    //     //     cantidad: item.cantidad - item.unidadesVendidas, // Ejemplo: ajustar cantidades
+    //     // }));
+    //     // syncHelados(updatedItems);
         
-        } catch (error) {
-            console.error('Error al guardarVentas el helado:', error);
-            alert(`No se pudo guardarVentas el helado: ${error.message}`);
-        }
+    //     } catch (error) {
+    //         console.error('Error al guardarVentas el helado:', error);
+    //         alert(`No se pudo guardarVentas el helado: ${error.message}`);
+    //     }
+    // }
+    
+    
+    const procesarCarrito = async () => {
+    try {
+        // const response = await fetch('https://backend-de-prueba-delta.vercel.app/procesarCarrito', {
+            const response = await fetch('http://localhost:3001/procesarCarrito', {
+            headers: { "Content-Type": "application/json" },
+            method: "POST",
+            body: JSON.stringify({
+                items: carts.map(item => ({ ...item, user: emailUser }))
+            }),
+        });
+
+        if (!response.ok) throw new Error(await response.text());
+
+        console.log('Carrito procesado con éxito');
+        clearModal();
+        closeModal();
+    } catch (error) {
+        console.error('Error procesando el carrito:', error);
     }
+};
+
 
     useEffect(() => {
-        // fetchData();
-        fetchHelados();
-    },  
-    [] );
+    fetchHelados();
+}, [clearCart]); // Llama fetchHelados solo si clearCart se ejecuta
 
+    // async function fetchHelados() {
+    //     console.log("Esta es fethcData")
+
+        
+    //     const response = await fetch(`https://backend-de-prueba-delta.vercel.app/helados`, {
+    //      //   headers: {
+    //      //     "x-api-key": "abcdef123456",
+    //      //   },
+    //     });
+    //     const data = await response.json();
+    //     console.log("Los datos:  ", data)
+    //     console.log("//Los datos:  ", data[0].sabor)
+    // }
     async function fetchHelados() {
-        console.log("Esta es fethcData")
+        try {
+        const response = await fetch("http://localhost:3001/helados");
+        // const response = await fetch('https://backend-de-prueba-delta.vercel.app/helados');
+        if (!response.ok) throw new Error('Error al obtener los helados');
 
-        // const response = await fetch("http://10.0.2.2:8000/helados", {
-        const response = await fetch(`https://backend-de-prueba-delta.vercel.app/helados`, {
-         //   headers: {
-         //     "x-api-key": "abcdef123456",
-         //   },
-        });
         const data = await response.json();
-        console.log("Los datos:  ", data)
-        console.log("//Los datos:  ", data[0].sabor)
+        console.log("Datos de helados cargados:", data);
+    } catch (error) {
+        console.error('Error al cargar helados:', error);
     }
+}
 
     const clearModal = () => {
         clearCart();
         fetchHelados();
     }
+    
 
     return (
 
@@ -170,7 +204,7 @@ const CartModalContent = ({ closeModal, carrito }) => {
                 </View>
 
                 <View>
-                    <Pressable  style={styles.button} onPress={() => actualizarHelado() } disabled={carts.length === 0}>
+                    <Pressable  style={styles.button} onPress={() => procesarCarrito() } disabled={carts.length === 0}>
                         <Text style={styles.buttonText}> Compra </Text>
                     </Pressable>
                 </View>

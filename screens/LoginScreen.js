@@ -74,7 +74,8 @@ const LoginScreen = ({ navigation, route }) => {
             await login(email, password);
             navigation.navigate('HomeTabs')
         } catch (error) {
-        console.error(error);
+            console.error(error);
+            alert("Error al iniciar sesión: "+ errorMessage)
         }
     };
 
