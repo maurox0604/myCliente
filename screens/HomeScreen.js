@@ -17,10 +17,11 @@ const HomeScreen = () => {
 const uri = '../assets/images/fondLogin.png';
 
     return (
+        <SafeAreaView style={styles.container}>
         <View style={{flex: 1, alignContent: 'center', justifyContent: 'center', backgroundColor: 'purple', position: 'static'}}>
                 <Image source={{image}} style={[styles.image, StyleSheet.absoluteFill]} />
             
-        <ImageBackground source={image} resizeMode="cover" style={styles.imagen}>
+        {/* <ImageBackground source={image} resizeMode="cover" style={styles.imagen}> */}
             
                             
             <View style={[styles.container, { flex: 2 }]}>
@@ -100,8 +101,9 @@ const uri = '../assets/images/fondLogin.png';
                     {/* <Button title="☻.: TEST3 :..♥♥" onPress={request} /> */}
                     
                 
-            </ImageBackground>
-        </View>
+            {/* </ImageBackground> */}
+            </View>
+        </SafeAreaView>
         )
 }
 export default HomeScreen;
