@@ -168,7 +168,7 @@ const styles = StyleSheet.create({
     imagen: {
         flex: 1,
         justifyContent: 'center',
-        width: null,
-        height: null,
+        width: "100%",
+        height: "100%",
     },
 });
