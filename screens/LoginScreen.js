@@ -87,7 +87,7 @@ const LoginScreen = ({ navigation, route }) => {
                 <View style={{flex: 1, alignContent: 'center', justifyContent: 'center', backgroundColor: 'purple', position: 'static'}}>
                     <Image source={{uri}} style={[styles.image, StyleSheet.absoluteFill]} />
                 </View>
-                <View style={{width:100, height: 100, backgroundColor: 'red', position: 'absolute'}}>
+                <View style={{width:100, height: 100, backgroundColor: 'blue', position: 'absolute'}}>
                     
                 </View>
 

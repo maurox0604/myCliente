@@ -14,11 +14,15 @@ const HomeScreen = () => {
     // const [url, setUrl] = useState('/helados');
     // const [focus, setFocus] = useState(false);
     // const [respuesta, setRespuesta] = useState();
-
+const uri = '../assets/images/fondLogin.png';
 
     return (
         
-            <ImageBackground source={image} resizeMode="cover" style={styles.imagen}>
+        <ImageBackground source={image} resizeMode="cover" style={styles.imagen}>
+            <View style={{flex: 1, alignContent: 'center', justifyContent: 'center', backgroundColor: 'purple', position: 'static'}}>
+                <Image source={{image}} style={[styles.image, StyleSheet.absoluteFill]} />
+            </View>
+                            
             <View style={[styles.container, { flex: 2 }]}>
                 {/* view vacio */}
             </View>
