@@ -65,7 +65,7 @@ export default function ListaHelados({ deletItem = false, editItem = false }) {
                 <Pressable style={styles.botOrder} onPress={onRefresh}>
                     <MaterialCommunityIcons name="update" size={24} color="black" />
                 </Pressable>
-                    <Button title="Actualizar" onPress={onRefresh} />
+                    {/* <Button title="Actualizar" onPress={onRefresh} /> */}
             </View>
                 
             {/* <FlatList

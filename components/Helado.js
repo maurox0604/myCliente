@@ -330,9 +330,10 @@ contImg:{
     },
 contImgCol:{// ......................en caso de COLUNMAS
     position:"absolute",
-    top: -40,
+    top: -56,
     left: -36,
     // right: 6,
+    height: "75%"
 },
 contImgAndCant:{
     flex:4,

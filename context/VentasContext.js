@@ -43,6 +43,7 @@ export const VentasContextProvider = ({ children }) => {
 
             // Aquí es donde accedes a ventasData
             setVentas(ventasData);  // Asumiendo que usas algún state para guardar ventas
+            sortVentas("fecha");
         } catch (error) {
                 console.error("Error al cargar las ventas:", error);
         }
