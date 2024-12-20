@@ -103,8 +103,8 @@ const CartModalContent = ({ closeModal, carrito }) => {
     
     const procesarCarrito = async () => {
     try {
-        // const response = await fetch('https://backend-de-prueba-delta.vercel.app/procesarCarrito', {
-            const response = await fetch('http://localhost:3001/procesarCarrito', {
+        const response = await fetch('https://backend-de-prueba-delta.vercel.app/procesarCarrito', {
+            // const response = await fetch('http://localhost:3001/procesarCarrito', {
             headers: { "Content-Type": "application/json" },
             method: "POST",
             body: JSON.stringify({
@@ -142,8 +142,8 @@ const CartModalContent = ({ closeModal, carrito }) => {
     // }
     async function fetchHelados() {
         try {
-        const response = await fetch("http://localhost:3001/helados");
-        // const response = await fetch('https://backend-de-prueba-delta.vercel.app/helados');
+        // const response = await fetch("http://localhost:3001/helados");
+        const response = await fetch('https://backend-de-prueba-delta.vercel.app/helados');
         if (!response.ok) throw new Error('Error al obtener los helados');
 
         const data = await response.json();
