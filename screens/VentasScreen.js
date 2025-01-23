@@ -1,24 +1,14 @@
-import { useState, useEffect } from "react";
-import { View, Text, Button, FlatList, StyleSheet, TouchableOpacity, Pressable } from "react-native";
+import React, { useState, useEffect } from "react";
+import { View, Text, FlatList, StyleSheet, Pressable } from "react-native";
 import { useVentas } from "../context/VentasContext";
-import VentasItem from "../components/VentasItem";
-import DatePicker from "react-native-date-picker"; // Asegúrate de instalar un picker de fechas
-import { CLIENT_RENEG_LIMIT } from "tls";
 import { MaterialCommunityIcons } from "@expo/vector-icons";
-// import { DatePickerModal } from 'react-native-paper-dates';
+import VentasItem from "../components/VentasItem";
 
 function VentasScreen() {
     const { ventas, loadVentasByDateRange, sortVentas } = useVentas();
-    const [startDate, setStartDate] = useState(new Date()); // Fecha inicial
-    const [endDate, setEndDate] = useState(new Date()); // Fecha final
-    const [calendarVisible, setCalendarVisible] = useState(false);
-    // const [date, setDate] = useState(new Date());
-    const [date, setDate] = useState(null);
-
-    const onConfirm = ({ date }) => {
-    setDate(date);
-    return true;
-};
+    const [startDate, setStartDate] = useState(new Date());
+    const [endDate, setEndDate] = useState(new Date());
+    const [expandedFacturaId, setExpandedFacturaId] = useState(null);
 
     useEffect(() => {
         const sevenDaysAgo = new Date();
@@ -27,87 +17,120 @@ function VentasScreen() {
         loadVentasByDateRange(sevenDaysAgo, new Date());
     }, []);
 
-    const handleSort = (criterion) => {
-        sortVentas(criterion);
-    };
+    const formatHora = (fechaISO) => {
+        const fecha = new Date(fechaISO);
+        let horas = fecha.getHours();
+        const minutos = fecha.getMinutes().toString().padStart(2, "0");
+        const periodo = horas >= 12 ? "PM" : "AM";
+        horas = horas % 12 || 12;
+        return `${horas}:${minutos} ${periodo}`;
+        };
+        
+    
+const groupVentasByDateAndFactura = () => {
+    console.log("Datos crudos de ventas:", ventas); // Verificar los datos iniciales
 
-    const handleDateRangeSelection = () => {
-        setCalendarVisible(false);
-        loadVentasByDateRange(startDate, endDate);
-    };
+    // Agrupar facturas estrictamente por fecha local y evitar duplicados
+    const grouped = ventas.reduce((acc, venta) => {
+        // Convertir la fecha a la zona horaria local
+        const date = new Intl.DateTimeFormat("es-ES", { timeZone: "America/Bogota" })
+        .format(new Date(venta.fecha))
+        .split("T")[0]; // Formato YYYY-MM-DD
 
-    const handleRefresh = () => {
-        loadVentasByDateRange(startDate, endDate); // Recarga los datos con el rango de fechas actual
-    };
+        if (!acc[date]) acc[date] = {};
+        if (!acc[date][venta.id_factura]) acc[date][venta.id_factura] = [];
+        acc[date][venta.id_factura].push(venta);
 
-    const [expandedId, setExpandedId] = useState(null);
-    const handlePress = (id) => {
-        setExpandedId((prevId) => (prevId === id ? null : id)); // Alternar entre expandir/contraer
-    };
+        return acc;
+    }, {});
 
-//     () => {
-//   const [startDate, setStartDate] = useState(new Date());
-//   return (
-//     <DatePicker
-//       showIcon
-//       selected={startDate}
-//       onChange={(date) => setStartDate(date)}
-//     />
-//   );
-// };
+    console.log("Datos agrupados por fecha y factura (antes de procesar):", grouped);
+
+    // Procesar las agrupaciones para generar los totales
+    const result = Object.entries(grouped)
+        .map(([date, facturas]) => ({
+        date,
+        facturas: Object.entries(facturas)
+            .map(([id_factura, items]) => ({
+            id_factura,
+            items,
+            totalVenta: items.reduce((sum, item) => sum + item.venta_helado, 0),
+            totalCantidad: items.reduce((sum, item) => sum + item.cantidad, 0),
+            horaFactura: items.length > 0 ? formatHora(items[0].fecha) : null, // Hora del primer item
+            }))
+            .filter((factura) => factura.items.length > 0), // Filtrar facturas sin items
+        }))
+        .filter((group) => group.facturas.length > 0); // Filtrar fechas sin facturas
+
+    console.log("Datos finales agrupados por fechas y facturas:", result);
+    return result;
+};
+
+
+
+
+    
+    const groupedVentas = groupVentasByDateAndFactura();
+
+    const handlePress = (facturaId) => {
+        setExpandedFacturaId((prevId) => (prevId === facturaId ? null : facturaId));
+        };
 
     return (
         <View style={styles.container}>
-            
-            {/* Botón para actualizar las ventas */}
-            {/* <Button title="Actualizar" onPress={handleRefresh} /> */}
-            <View style={styles.filterBar}>
-                <Button title="Fecha" onPress={() => handleSort("fecha")} />
-                <Button title="Más vendido" onPress={() => handleSort("producto")} />
-                <Button title="Rango" onPress={() => setCalendarVisible(true)} />
-                <Pressable style={styles.botOrder} onPress={handleRefresh}>
-                    <MaterialCommunityIcons name="update" size={24} color="black" />
-                </Pressable>
-            </View>
+        <View style={styles.filterBar}>
+            <Pressable onPress={() => sortVentas("fecha")} style={styles.filterButton}>
+            <Text>Ordenar por Fecha</Text>
+            </Pressable>
+            <Pressable onPress={() => sortVentas("producto")} style={styles.filterButton}>
+            <Text>Más Vendido</Text>
+            </Pressable>
+            <Pressable onPress={() => loadVentasByDateRange(startDate, endDate)} style={styles.filterButton}>
+            <MaterialCommunityIcons name="update" size={24} color="black" />
+            </Pressable>
+        </View>
 
-            {calendarVisible && (
-                <View>
-                    {/* <DatePicker date={startDate} onDateChange={setStartDate} />
-                    <DatePicker date={endDate} onDateChange={setEndDate} /> */}
-                    <Button title="Aplicar rango" onPress={handleDateRangeSelection} />
-                    {/* <DatePicker selected={startDate} onChange={(startDate) => setStartDate(startDate)} /> */}
-                    {/* <DatePicker selected={date} onChange={(date) => setDate(date)} /> */}
-                    {/* <DatePicker 
-                        selected = { Date } 
-                        onSelect = { handleDateSelect }  //cuando se hace clic en el día 
-                        onChange = { handleDateChange }  //solo cuando el valor ha cambiado 
-                    /> */}
-                     {/* <DatePickerModal
-      mode="single"
-      visible={true}
-      onDismiss={() => console.log('dismissed')}
-      date={date}
-      onConfirm={onConfirm}
-    /> */}
+        <FlatList
+            data={groupedVentas}
+            keyExtractor={(item) => item.date}
+            renderItem={({ item }) => {
+            const { date, facturas } = item;
+            const totalDiaVentas = facturas.reduce((sum, factura) => sum + factura.totalVenta, 0);
+            const totalDiaCantidad = facturas.reduce((sum, factura) => sum + factura.totalCantidad, 0);
+
+            return (
+                <View style={styles.dateBlock}>
+                <Text style={styles.dateTitle}>
+                    {date} - Total Ventas: ${totalDiaVentas}, Total Helados: {totalDiaCantidad}
+                </Text>
+
+                {facturas.map((factura) => (
+                    <View key={factura.id_factura} style={styles.facturaBlock}>
+                    <Text
+                        style={styles.facturaTitle}
+                        onPress={() => handlePress(factura.id_factura)}
+                    >
+                        F_No. {factura.id_factura} - Cant: {factura.totalCantidad} - Hora: {factura.horaFactura}
+                    </Text>
+
+                    {expandedFacturaId === factura.id_factura && (
+                        <View>
+                        {factura.items.map((venta) => (
+                            <VentasItem
+                            key={venta.id}
+                            venta={venta}
+                            isExpanded={true}
+                            onPress={() => {}}
+                            />
+                        ))}
+                        </View>
+                    )}
+                    </View>
+                ))}
                 </View>
-
-                
-            )}
-
-            <FlatList
-                data={ventas}
-                keyExtractor={(venta) => venta.id.toString()}
-                renderItem={({ item }) => (
-                   // console.log("item en flatlist: "+item.fecha),
-                    <VentasItem
-                        venta={item}
-                        isExpanded={item.id === expandedId}
-                        onPress={() => handlePress(item.id)}
-                        
-                    />
-                    
-                )}
-            />
+            );
+            }}
+        />
         </View>
     );
 }
@@ -118,18 +141,37 @@ const styles = StyleSheet.create({
         padding: 10,
         backgroundColor: "#fff",
     },
-    title: {
-        fontSize: 24,
+    filterBar: {
+        flexDirection: "row",
+        justifyContent: "space-between",
+        marginBottom: 10,
+    },
+    filterButton: {
+        padding: 10,
+        backgroundColor: "#ddd",
+        borderRadius: 5,
+    },
+    dateBlock: {
+        marginBottom: 20,
+        padding: 10,
+        backgroundColor: "#f00",
+        borderRadius: 10,
+    },
+    dateTitle: {
+        fontSize: 18,
         fontWeight: "bold",
         marginBottom: 10,
     },
-    filterBar: {
-        flexDirection: "row",
-        justifyContent: "space-around",
+    facturaBlock: {
         marginBottom: 10,
+        padding: 10,
+        backgroundColor: "#f1f8e9",
+        borderRadius: 10,
     },
-    list: {
-        flex: 1,
+    facturaTitle: {
+        fontSize: 16,
+        fontWeight: "bold",
+        marginBottom: 5,
     },
 });
 

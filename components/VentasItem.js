@@ -42,7 +42,7 @@ const { fecha, hora } = formatFechaHora(venta.fecha);
                 <View style={styles.expandedContent}>
                     <Text style={styles.column}>Unidades: {venta.cantidad}</Text>
                     <Text style={styles.column}>Precio: ${venta.precio_helado}</Text>
-                    <Text style={styles.column}>Fecha: {fecha + " - " + hora}</Text>
+                    {/* <Text style={styles.column}>Fecha: {fecha + " - " + hora}</Text> */}
                     <Text style={styles.column}>Vendedor: {venta.email}</Text>
                 </View>
             )}
