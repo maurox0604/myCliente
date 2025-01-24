@@ -34,13 +34,14 @@ const { fecha, hora } = formatFechaHora(venta.fecha);
 
     return (
         <TouchableOpacity onPress={onPress} style={styles.itemContainer}>
-            <View>
+            <View style={{ flexDirection: "row", justifyContent: "space-between" }}>
                 <Text style={styles.column}>Sabor: {venta.sabor}</Text>
-                <Text style={styles.column}>Venta: ${venta.venta_helado}</Text>
+                <Text style={[styles.column, styles.textCantidad]}>{venta.cantidad}</Text>
             </View>
             {isExpanded && (
                 <View style={styles.expandedContent}>
-                    <Text style={styles.column}>Unidades: {venta.cantidad}</Text>
+                    <Text style={styles.column}>Venta: ${venta.venta_helado}</Text>
+                    {/* <Text style={styles.column}>Unidades: {venta.cantidad}</Text> */}
                     <Text style={styles.column}>Precio: ${venta.precio_helado}</Text>
                     {/* <Text style={styles.column}>Fecha: {fecha + " - " + hora}</Text> */}
                     <Text style={styles.column}>Vendedor: {venta.email}</Text>
@@ -60,6 +61,18 @@ const styles = StyleSheet.create({
         fontSize: 16,
         marginBottom: 5,
     },
+    textCantidad:{
+    fontSize: 16,
+    fontWeight: "600",
+    color: "#ffffff",
+    width:25,
+    height:25,
+    textAlign: "center",
+    backgroundColor:"#09aef5",
+    borderRadius:20,
+    alignContent:"center",
+    justifyContent:"center",
+},
     expandedContent: {
         backgroundColor: "#ccc",
     }

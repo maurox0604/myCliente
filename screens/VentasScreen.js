@@ -100,18 +100,20 @@ const groupVentasByDateAndFactura = () => {
 
             return (
                 <View style={styles.dateBlock}>
-                <Text style={styles.dateTitle}>
-                    {date} - Total Ventas: ${totalDiaVentas}, Total Helados: {totalDiaCantidad}
-                </Text>
-
+                    <View style={styles.dateLine} >
+                        <Text style={styles.dateTitle}>
+                            {date} - Total Ventas: ${totalDiaVentas}, Total Helados: {totalDiaCantidad}
+                        </Text>
+                    </View>
+                
                 {facturas.map((factura) => (
                     <View key={factura.id_factura} style={styles.facturaBlock}>
-                    <Text
-                        style={styles.facturaTitle}
-                        onPress={() => handlePress(factura.id_factura)}
-                    >
-                        F_No. {factura.id_factura} - Cant: {factura.totalCantidad} - Hora: {factura.horaFactura}
-                    </Text>
+                        <View style={styles.facturaBlockHeader}>
+                            <Text style={styles.facturaTitle}    onPress={() => handlePress(factura.id_factura)}>
+                                F_No. {factura.id_factura} - Hora: {factura.horaFactura}
+                            </Text>
+                            <Text style={styles.textCantidad}>{factura.totalCantidad}</Text>
+                        </View>
 
                     {expandedFacturaId === factura.id_factura && (
                         <View>
@@ -120,7 +122,10 @@ const groupVentasByDateAndFactura = () => {
                             key={venta.id}
                             venta={venta}
                             isExpanded={true}
-                            onPress={() => {}}
+                                onPress={() => { }}
+                                
+                                // isExpanded={item.id === expandedId}
+                                // onPress={() => handlePress(item.id)}
                             />
                         ))}
                         </View>
@@ -154,13 +159,14 @@ const styles = StyleSheet.create({
     dateBlock: {
         marginBottom: 20,
         padding: 10,
-        backgroundColor: "#f00",
+        backgroundColor: "#e91e63",
         borderRadius: 10,
     },
     dateTitle: {
         fontSize: 18,
         fontWeight: "bold",
         marginBottom: 10,
+        color: "#fff",
     },
     facturaBlock: {
         marginBottom: 10,
@@ -168,11 +174,28 @@ const styles = StyleSheet.create({
         backgroundColor: "#f1f8e9",
         borderRadius: 10,
     },
+    facturaBlockHeader: {
+        flex: 1,
+        flexDirection: "row",
+        justifyContent: "space-between",
+    },
     facturaTitle: {
-        fontSize: 16,
+        fontSize: 18,
         fontWeight: "bold",
         marginBottom: 5,
     },
+        textCantidad:{
+    fontSize: 16,
+    fontWeight: "600",
+    color: "#ffffff",
+    width:30,
+    height:30,
+    textAlign: "center",
+    backgroundColor:"#f0f",
+    borderRadius:20,
+    alignContent:"center",
+    justifyContent:"center",
+},
 });
 
 export default VentasScreen;
