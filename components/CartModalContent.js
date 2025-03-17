@@ -1,5 +1,5 @@
 import { useContext, useEffect, useState } from 'react';
-import { View, Text, Button, StyleSheet, SafeAreaView, FlatList, Pressable } from 'react-native';
+import { View, Text, Button, StyleSheet, SafeAreaView, FlatList, Pressable, ActivityIndicator } from 'react-native';
 import { StatusBar } from 'expo-status-bar';
 // import { StyleSheet, Text, View, , SafeAreaView } from "react-native"; 
 // import Helado from './Helado';
@@ -19,10 +19,8 @@ const CartModalContent = ({ closeModal, carrito }) => {
     // const navigation = useNavigation();
     const { emailUser } = useContext(AuthContext);
     const { updateHeladoCantidad } = useContext(HeladosContext);
-
-    console.log("CartModalContent   emailUser::::::: ",emailUser)
-
-    const {carts, totalPrice, clearCart, calculateTotalPrice} = useContext(CartContext);
+    const { carts, totalPrice, clearCart, calculateTotalPrice, cartItemCount } = useContext(CartContext);
+    const [isProcessing, setIsProcessing] = useState(false); // Estado para controlar el botón
 
     console.log("CartModalContent ......Carts: ",carts);
 
@@ -102,7 +100,8 @@ const CartModalContent = ({ closeModal, carrito }) => {
     
     
     const procesarCarrito = async () => {
-    try {
+        try {
+        setIsProcessing(true); // Deshabilitar el botón mientras se procesa
         const response = await fetch('https://backend-de-prueba-delta.vercel.app/procesarCarrito', {
             // const response = await fetch('http://localhost:3001/procesarCarrito', {
             headers: { "Content-Type": "application/json" },
@@ -119,7 +118,9 @@ const CartModalContent = ({ closeModal, carrito }) => {
         closeModal();
     } catch (error) {
         console.error('Error procesando el carrito:', error);
-    }
+    }finally {
+            setIsProcessing(false); // Volver a habilitar el botón
+        }
 };
 
 
@@ -163,12 +164,13 @@ const CartModalContent = ({ closeModal, carrito }) => {
 
         <SafeAreaView style={styles.contentContainer}> 
             <View style={styles.contHeader}>
+                <Text style={styles.textCantidad}>{cartItemCount}</Text>
                 {carts.length == 0 ?
                     <Text>
                         NO hay nada en el carrito
                     </Text>
                     :
-                    <Text style={styles.title}> Este es CartModalContent </Text>
+                    <Text style={styles.title}> Helados en el carrito </Text>
                 } 
                 {/* <Button 
                     style={styles.botCerrarModal}
@@ -204,8 +206,16 @@ const CartModalContent = ({ closeModal, carrito }) => {
                 </View>
 
                 <View>
-                    <Pressable  style={styles.button} onPress={() => procesarCarrito() } disabled={carts.length === 0}>
-                        <Text style={styles.buttonText}> Compra </Text>
+                    <Pressable
+                        style={[styles.button, isProcessing && styles.buttonDisabled]} // Cambiar estilo si está deshabilitado
+                        onPress={procesarCarrito}
+                        disabled={isProcessing || carts.length === 0} // Deshabilitar si está procesando o no hay items
+                    >
+                        {isProcessing ? (
+                            <ActivityIndicator color="#FFFFFF" /> // Mostrar spinner si está procesando
+                        ) : (
+                            <Text style={styles.buttonText}>Compra</Text>
+                        )}
                     </Pressable>
                 </View>
             </View>
@@ -217,32 +227,42 @@ const CartModalContent = ({ closeModal, carrito }) => {
 const styles = StyleSheet.create({
     contentContainer: {
         flex: 1,
-        backgroundColor: "#00E9ff",
+        backgroundColor: "#fbddf0",
         alignItems: "center",
         justifyContent : "center",
         fontWeight: "400",
         fontSize: 29,
 
-        borderBlockColor:"red",
-        borderWidth:2,
+        // borderBlockColor:"red",
+        // borderWidth: 2,
+        borderTopRightRadius: 30,
+        borderTopLeftRadius: 30,
     },
     contHeader:{
-        flex:2,
+        flex:1,
         flexDirection:'row',
         alignContent:"space-between",
-        height:20,
+        height: 20,
+        alignItems: 'center',
+        justifyContent: 'space-between',
+        backgroundColor: '#FDEBD0',
+        width:"100%",
+        paddingHorizontal: 10,
+        borderTopRightRadius: 20,
+        borderTopLeftRadius: 20,
     },
     contFlatList:{
         flex:8,
-        borderBlockColor:"blue",
-        borderWidth:2,
+        // borderBlockColor:"blue",
+        // borderWidth:2,
         width:"100%", // define el ancho de la fila
     },
     contentContainerStyle: {
-        paddingHorizontal:10,
-        borderColor:"green",
-        borderWidth:2,
-        backgroundColor: "#aa00dd"
+        paddingHorizontal: 10,
+        paddingTop: 15,
+        // borderColor:"green",
+        // borderWidth:2,
+        backgroundColor: "#ff1188"
     },
     pie: {
         flex: 3,
@@ -250,31 +270,53 @@ const styles = StyleSheet.create({
         width:"100%",
         // height:30,
         flexDirection:"row",
-        alignItems: 'center',
+        alignItems: 'flex-end',
         alignContent:"center",
         justifyContent: 'space-around',
-        backgroundColor:'#FDEBD0'
+        backgroundColor: '#fff',
+        borderTopRightRadius: 25,
+        borderTopLeftRadius: 25,
+        shadowColor: "#000",
+        shadowOffset: {
+            width: 0,
+            height: 3,
+        },
+        shadowOpacity: 0.25,
+        shadowRadius: 33,
+        elevation: 5,
     },
 
     title: {
         fontSize: 24,
-        marginBottom: 20,
+        // marginBottom: 20,
     },
 
     priceText: {
-        fontSize: 34,
-        color: "#757575",
+        fontSize: 40,
         fontWeight: "600",
-        backgroundColor: "red",
+        backgroundColor: "#0092e7",
         color: "#FFFFFF",
+        padding: 10,
+        borderRadius: 15,
     },
     button: {
-        backgroundColor: "#E96E6E",
+        backgroundColor: "#e70071",
         height: 50,
         alignItems: "center",
         justifyContent: "center",
         borderRadius: 15,
+        paddingHorizontal: 20,
+        shadowColor: "#000",
+        shadowOffset: {
+            width: 0,
+            height: 2,
+        },
+        shadowOpacity: 0.45,
+        shadowRadius: 15,
         // marginTop: 30,
+    },
+    buttonDisabled: {
+        backgroundColor: "#cccccc", // Color cuando el botón está deshabilitado
     },
     buttonText: {
     fontSize: 24,
@@ -289,7 +331,22 @@ const styles = StyleSheet.create({
         justifyContent:"center",
         alignItems:"center",
         textAlign:"center"
-    }
+    },
+
+        textCantidad: {
+        display: "flex",
+        justifyContent: "center",
+        fontSize: 18,
+        fontWeight: "600",
+
+    color: "#ffffff",
+    width:32,
+    height:32,
+    textAlign: "center",
+    backgroundColor:"#09aef5",
+    borderRadius:20,
+    alignItems:"center",
+    },
 });
 
 export default CartModalContent;

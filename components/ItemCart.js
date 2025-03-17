@@ -111,8 +111,8 @@ const styles = StyleSheet.create({
     paddingHorizontal:10,
     backgroundColor: "white",
 
-    borderBlockColor:"green",
-    borderWidth:2,
+    // borderBlockColor:"green",
+    // borderWidth:2,
     width:"100%",
     
 },
@@ -126,8 +126,8 @@ const styles = StyleSheet.create({
     // backgroundColor: "#ccc",
     // width:"60%",
     alignItems:"stretch",
-    borderRightBlockColor: "#ccc",
-    borderRightWidth:2,
+    // borderRightBlockColor: "#ccc",
+    // borderRightWidth:2,
 },
 contImg:{
     flex:3,
