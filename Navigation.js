@@ -58,6 +58,18 @@ function MyTabs({ openCartModal, role }) {
                 />)}
             
             <Tab.Screen 
+                name="Editar" 
+                component={StackEdit} 
+                options={{
+                    tabBarLabel: 'Editar',
+                    tabBarIcon: ({ color, size }) => (
+                        <MaterialCommunityIcons name="ice-pop" color={color} size={size} />
+                    ),
+                    tabBarBadge: cartItemCero > 0 ? cartItemCero : undefined,
+                }}
+            />
+            
+            <Tab.Screen 
                 name="Carrito"
                 component={CreateNewPlaceholder}
                 options={{
@@ -82,17 +94,7 @@ function MyTabs({ openCartModal, role }) {
                     },
                 })}
             />
-            <Tab.Screen 
-                name="Editar" 
-                component={StackEdit} 
-                options={{
-                    tabBarLabel: 'Editar',
-                    tabBarIcon: ({ color, size }) => (
-                        <MaterialCommunityIcons name="ice-pop" color={color} size={size} />
-                    ),
-                    tabBarBadge: cartItemCero > 0 ? cartItemCero : undefined,
-                }}
-            />
+
             <Tab.Screen 
                 name="Sabores" //        ojo este es el nombre usado en la ruta
                 component={ListaHelados} 
