@@ -17,8 +17,8 @@ const HomeScreen = () => {
     return (
         <SafeAreaView style={styles.container}>
             <View style={{flex: 1, alignContent: 'center', justifyContent: 'center', backgroundColor: 'purple', position: 'static'}}>
-                <Image source={require(uri)} style={[styles.image, StyleSheet.absoluteFill]} />
-                 <Image source={HomeFondo} style={styles.image} />
+                <Image source={HomeFondo} style={[styles.image, StyleSheet.absoluteFill]} />
+                 {/* <Image source={HomeFondo} style={styles.image} /> */}
             </View>
             
             <View style={[styles.container, { flex: 2 }]}>
