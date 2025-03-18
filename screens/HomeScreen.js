@@ -2,7 +2,8 @@ import { useNavigation } from '@react-navigation/native';
 import React, { useState } from 'react';
 import { Text, StyleSheet, View, TouchableOpacity, Alert, Button, TextInput, Image, ImageBackground } from 'react-native';
 import Welcome from './Welcome';
-import {SafeAreaView, SafeAreaProvider} from 'react-native-safe-area-context';
+import { SafeAreaView, SafeAreaProvider } from 'react-native-safe-area-context';
+import HomeFondo from '../assets/images/HomeFondo.png'; // Importa la imagen
 
 
 // import {Welcome} from './Welcome';
@@ -12,10 +13,12 @@ const HomeScreen = () => {
     const navigation = useNavigation();
     const uri = '../assets/images/HomeFondo.png';
 
+
     return (
         <SafeAreaView style={styles.container}>
             <View style={{flex: 1, alignContent: 'center', justifyContent: 'center', backgroundColor: 'purple', position: 'static'}}>
-                <Image source={{uri}} style={[styles.image, StyleSheet.absoluteFill]} />
+                <Image source={require(uri)} style={[styles.image, StyleSheet.absoluteFill]} />
+                 <Image source={HomeFondo} style={styles.image} />
             </View>
             
             <View style={[styles.container, { flex: 2 }]}>
