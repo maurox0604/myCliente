@@ -1,454 +1,230 @@
-import { useContext, useEffect, useState } from "react";
-import * as ImagePicker from 'expo-image-picker';
-import { Dimensions, Text, Button, TextInput, StyleSheet, View, Image, KeyboardAvoidingView, Platform, Keyboard, Alert, Animated, TouchableOpacity } from "react-native";
+import { useContext, useEffect, useState, useCallback } from "react";
+import {
+  Dimensions, Text, Button, TextInput, StyleSheet, View, Image,
+  KeyboardAvoidingView, Platform, Keyboard, Alert, Animated, TouchableOpacity
+} from "react-native";
+import * as ImagePicker from "expo-image-picker";
 import { FontAwesome5 } from "@expo/vector-icons";
-import { CartContext } from '../context/CartContext';
-import { DbaseContext } from '../context/DbaseContext'
+import { CartContext } from "../context/CartContext";
+import { DbaseContext } from "../context/DbaseContext";
+import { Dropdown } from "react-native-element-dropdown";
+import { useFocusEffect } from "@react-navigation/native";
 
-
-export default function InputHelado(reloadListDB) {
+export default function InputHelado() {
     const [showEmojies, setShowEmojies] = useState(false);
-    const [messageBody, setMessageBody] = useState("");
     const [sabor, setSabor] = useState("");
     const [precio, setPrecio] = useState("");
     const [cantidad, setCantidad] = useState("");
-    const [foto, setFoto] = useState("");  // Inicializa sin ruta
-    const [fadeAnim] = useState(new Animated.Value(0.1));
     const [selectedImage, setSelectedImage] = useState(null);
-    // const [fetchHelados] = useContext(CartContext);
-    const {fetchHelados} = useContext(CartContext);
-    const {regCambios} = useContext(DbaseContext);
-    // const [image, setImage] = useState<string | null>(null);
+    const [loading, setLoading] = useState(false); // ⬅ para evitar doble guardado mientras sube
+    const [categorias, setCategorias] = useState([]);
+    const [idCategoria, setIdCategoria] = useState(null);
+    const [isFocus, setIsFocus] = useState(false);
+    const [fadeAnim] = useState(new Animated.Value(0.1));
 
+    const { fetchHelados } = useContext(CartContext);
+    const { regCambios } = useContext(DbaseContext);
+
+  /* ⬇⬇ Cargar categorías desde el servidor al abrir pantalla */
+    useFocusEffect(
+        useCallback(() => {
+            console.log("ruta categorias: ", process.env.EXPO_PUBLIC_API_URL)
+            fetch(process.env.EXPO_PUBLIC_API_URL + "/categorias")
+                .then(res => res.json())
+                .then(data => {
+                    if (data.ok) {
+                        setCategorias(data.categorias.map(c => ({
+                            label: c.nombre,
+                            value: c.id
+                        })));
+                    }
+                })
+                .catch(err => console.log("Error obteniendo categorías:", err));
+        }, [])
+    );
+
+
+  /* ⬇⬇ Animación opcional del teclado */
     useEffect(() => {
         const showSubscription = Keyboard.addListener("keyboardDidShow", () => {
-            setShowEmojies(true);
-            Animated.timing(fadeAnim, {
-                toValue: 1,
-                duration: 500,
-                useNativeDriver: true,
-            }).start();
+        setShowEmojies(true);
+        Animated.timing(fadeAnim, { toValue: 1, duration: 500, useNativeDriver: true }).start();
         });
 
         const hideSubscription = Keyboard.addListener("keyboardDidHide", () => {
-            setShowEmojies(false);
-            Animated.timing(fadeAnim, {
-                toValue: 0,
-                duration: 1000,
-                useNativeDriver: true,
-            }).start();
+        setShowEmojies(false);
+        Animated.timing(fadeAnim, { toValue: 0, duration: 1000, useNativeDriver: true }).start();
         });
 
         return () => {
-            showSubscription.remove();
-            hideSubscription.remove();
+        showSubscription.remove();
+        hideSubscription.remove();
         };
     }, []);
 
-    // Función para seleccionar la imagen
-    const openBrowserImage = async () => {
+  /* ⬇⬇ Abrir galería para elegir imagen */
+    const pickImage = async () => {
+        const { status } = await ImagePicker.requestMediaLibraryPermissionsAsync();
+        if (status !== "granted") {
+        alert("Se requieren permisos para acceder a la galería");
+        return;
+        }
+
         let result = await ImagePicker.launchImageLibraryAsync({
-            mediaTypes: ImagePicker.MediaTypeOptions.Images,
-            allowsEditing: true,
-            aspect: [4, 3],
-            quality: 1,
+        mediaTypes: ImagePicker.MediaTypeOptions.Images,
+        allowsEditing: true,
+        aspect: [4, 3],
+        quality: 1,
         });
 
         if (!result.canceled) {
-            console.log("result.assets[0].uri: ", result.assets[0].uri)
-            setFoto(result.assets[0].uri);  // Actualiza la URI de la foto seleccionada
-            // setSelectedImage(result.assets[0].uri );
-            setSelectedImage({ localUri: result.assets[0].uri });
-            console.log("Foto: ", foto, "      selectedImage: ", selectedImage)
-        }
-    };
-    const guardarHelado = async () => { 
-        try {
-            const response = await fetch(`https://backend-de-prueba-delta.vercel.app/createHelados`, {
-                method: 'POST',
-                headers: {
-                    'Content-Type': 'application/json',
-                },
-                body: JSON.stringify({
-                    sabor: sabor,
-                    precio: precio,
-                    icon: foto,
-                    cantidad: cantidad,
-                    user: "ID usuario",
-                }),
-            });
-
-            const data = await response.json();
-            regCambios(true); // Registra que se hizo un cambio en la DB
-            console.log("Los datos enviados: ", data);
-            alert('Éxito ehelado' + 'Helado guardado correctamente');
-            reloadListDB(id); // Si reloadListDB se encarga de limpiar o recargar datos
-            fetchHelados();
-        } catch (error) {
-            console.error('Error al guardar el helado:', error);
-            alert('Error frio' + `No se pudo guardar el helado: ${error.message}`);
-        }
-    }
-    
-
-    const guardarHeladoxxxx = async () => {
-            // console.log("................Foto: ", foto);
-            // console.log("................setSelectedImage: ", setSelectedImage.localUri);
-
-            // const formData = new FormData();
-            // formData.append('sabor', sabor);
-            // formData.append('precio', precio);
-            // formData.append('cantidad', cantidad);
-            try {
-                const response = await fetch(`https://backend-de-prueba-delta.vercel.app/helados`, {
-                // const response = await fetch(`http://192.168.1.11:3001/createHelados`, {
-                method: 'POST',
-                headers: {
-                    'Content-Type': 'application/json',
-                },
-                body: JSON.stringify({
-                    sabor: sabor,
-                    precio: precio,
-                    icon: foto,
-                    cantidad: cantidad,
-                }),
-                });
-                
-            console.log("response: ", response)
-            if (!response.ok) {
-                const contentType = response.headers.get("content-type");
-                if (contentType && contentType.indexOf("application/json") !== -1) {
-                    const errorData = await response.json();
-                    throw new Error(errorData.error || 'Error desconocido');
-                } else {
-                    const errorText = await response.text();
-                    throw new Error(`Error HTTP: ${response.status} - ${errorText}`);
-                }
-            }
-                
-
-            const data = await response.json();
-            regCambios(true); // Registra que se hizo un cambio en la DB
-            console.log("Los datos enviados: ", data);
-            Alert.alert('Éxito', 'Helado guardado correctamente');
-            reloadListDB(id); // Si reloadListDB se encarga de limpiar o recargar datos
-            fetchHelados();
-        } catch (error) {
-            console.error('Error al guardar el helado:', error);
-            alert('Error', `No se pudo guardar el helado: ${error.message}`);
+        setSelectedImage(result.assets[0]); // ⬅ guardamos info de la imagen
         }
     };
 
-    const pickImage = async () => {
-        // Solicita permisos para acceder a la galería de imágenes
-        if (Platform.OS !== 'web') {
-            const { status } = await ImagePicker.requestMediaLibraryPermissionsAsync();
-            if (status !== 'granted') {
-                alert('Se requieren permisos para acceder a las imágenes');
-                return;
-            }
-        }
-
-        
-
-        // Abre la galería para seleccionar una imagen
-        let result = await ImagePicker.launchImageLibraryAsync({
-            // let result = await ImagePicker.launchImageLibrary({
-            mediaTypes: ImagePicker.MediaTypeOptions.All,
-            allowsEditing: true,
-            aspect: [4, 3],
-            quality: 1,
-          });
-      
-          console.log("++++++++++++      ++   : ",result);
-      
-          if (!result.canceled) {
-            setSelectedImage(result.assets[0].uri);
-          }
-
-        if (!result.canceled) {
-            // setSelectedImage(result.uri);
-            console.log("1.enviando imagen: ", result)
-             console.log("2.enviando imagen result.uri: ", result.assets[0].uri)
-        }
-        if (!result.canceled) {
-           // setSelectedImage(result.assets[0]);
-            console.log("3. enviando imagen: ", result.assets[0])
-            console.log("4 .enviando imagen URI: ", result.assets[0].fileName)
-        }
-    };
-
-    const handleUpload = async () => {
-        if (!selectedImage) {
-            alert('Por favor selecciona una imagen');
-            return;
-        }
-
-        // const formData = new FormData();
-        // formData.append('image', {
-        //     uri: selectedImage,
-        //     name: 'image.jpg',
-        //     type: 'image/jpeg',
-        // });
+  /* ⬇⬇ Subir imagen a freeimage.host y devolver la URL pública */
+    const uploadImageToFreeImageHost = async () => {
+        const apiKey = "TU_API_KEY_DE_FREEIMAGE_HOST"; // ⚠ REEMPLAZAR
 
         const formData = new FormData();
-    // formData.append('sabor', sabor);
-    // formData.append('precio', precio);
-    // formData.append('cantidad', cantidad);
-
-    if (selectedImage) {
-        // const filename = selectedImage.uri.split('/').pop();
-        // const match = /\.(\w+)$/.exec(filename);
-        // const type = match ? `image/${match[1]}` : `image`;
-
-        formData.append('file', { 
-            uri: selectedImage.uri, 
-            name: selectedImage.fileName, 
-            type: selectedImage.type 
+        formData.append("source", {
+        uri: selectedImage.uri,
+        name: "helado.jpg",
+        type: "image/jpeg",
         });
-    }
+        formData.append("key", apiKey);
+        formData.append("format", "json");
 
-    formData.append('array',JSON.stringify(Array));
-        try {
-            const response = await fetch('http://192.168.1.11:3001/upload', {
-                method: 'POST',
-                body: formData,
-                headers: {
-                    'Content-Type': 'multipart/form-data',
-                },
-            });
+        const res = await fetch("https://freeimage.host/api/1/upload", {
+        method: "POST",
+        body: formData,
+        });
 
-            if (response.ok) {
-                const data = await response.json();
-                console.log('Imagen subida con éxito:', data.imageUrl);
-                Alert.alert('Éxito', 'Imagen subida con éxito');
-            } else {
-                console.error('Error al subir la imagen:', response.statusText);
-                Alert.alert('Error', 'Hubo un problema al subir la imagen');
-            }
-        } catch (error) {
-            console.error('Error al realizar la solicitud:', error);
-            Alert.alert('Error', 'Hubo un problema con la solicitud');
-        }
+        const data = await res.json();
+        return data?.image?.url || null;
     };
 
+  /* ⬇⬇ Guardar helado (automáticamente sube imagen primero si existe) */
+    const guardarHelado = async () => {
+        if (loading) return; // previene toques repetidos
+        if (!sabor || !precio || !cantidad || !idCategoria) {
+        Alert.alert("Campos incompletos", "Llena todos los campos antes de guardar");
+        return;
+        }
 
-    // const pickImage = async () => {
-    //     let result = await ImagePicker.launchImageLibraryAsync({
-    //       mediaTypes: ImagePicker.MediaTypeOptions.Images,
-    //       allowsEditing: true,
-    //       aspect: [4, 3],
-    //       quality: 1,
-    //     });
-    
-    //     if (!result.canceled) {
-    //       setSelectedImage(result.assets[0].uri);
-    //     }
-    //   };
-    
-    //   const uploadImage = async () => {
-    //     if (!selectedImage) {
-    //       Alert.alert('Error', 'Por favor selecciona una imagen primero');
-    //       return;
-    //     }
-    
-    //     let filename = selectedImage.split('/').pop();
-    //     let match = /\.(\w+)$/.exec(filename);
-    //     let type = match ? `image/${match[1]}` : `image`;
-    
-    //     let formData = new FormData();
-    //     formData.append('image', { uri: selectedImage, name: filename, type });
-    
-    //     try {
-    //       const response = await fetch('http://192.168.1.11:3001/upload', {
-    //         method: 'POST',
-    //         body: formData,
-    //         headers: {
-    //           'Content-Type': 'multipart/form-data',
-    //         },
-    //       });
-    
-    //       if (!response.ok) {
-    //         throw new Error(`Error HTTP: ${response.status}`);
-    //       }
-    
-    //       const data = await response.json();
-    //       console.log('Imagen subida:', data.filePath);
-    //       Alert.alert('Éxito', 'Imagen subida correctamente');
-    //     } catch (error) {
-    //       console.error('Error al subir la imagen:', error);
-    //       Alert.alert('Error', `No se pudo subir la imagen: ${error.message}`);
-    //     }
-    //   };
+        setLoading(true);
 
+        try {
+        let iconUrl = "";
+
+        // ⭐ Si el usuario seleccionó una imagen, primero subirla
+        if (selectedImage) {
+            iconUrl = await uploadImageToFreeImageHost();
+
+            if (!iconUrl) {
+            Alert.alert("Error", "Falló la subida de imagen, intenta nuevamente");
+            setLoading(false);
+            return;
+            }
+        }
+
+      // 🔥 Ahora guardar helado en backend
+        const res = await fetch(process.env.EXPO_PUBLIC_API_URL + "/createHelados", {
+            method: "POST",
+            headers: { "Content-Type": "application/json" },
+            body: JSON.stringify({
+            sabor,
+            precio,
+            cantidad,
+            icon: iconUrl,  // ⬅ se guarda URL pública
+            id_categoria: idCategoria,
+            }),
+        });
+
+        await res.json();
+
+        regCambios(true);
+        fetchHelados(); // refresca lista global
+
+        Alert.alert("¡Éxito!", "Helado guardado correctamente");
+        setSabor(""); setPrecio(""); setCantidad(""); setSelectedImage(null); setIdCategoria(null);
+        } catch (error) {
+        Alert.alert("Error", "No se pudo guardar el helado");
+        console.log(error);
+        }
+
+        setLoading(false);
+    };
 
     return (
         <KeyboardAvoidingView behavior={Platform.OS === "ios" ? "padding" : "height"}>
-            <View style={styles.container}>
-                {showEmojies && (
-                    <Animated.View style={[styles.emojiesContainer, { opacity: fadeAnim }]}>
-                        {/* Emojis u otros componentes pueden ir aquí */}
-                    </Animated.View>
-                )}
+        <View style={styles.container}>
 
-                <Animated.View style={[styles.fadingContainer, { opacity: fadeAnim }]}>
-                    <Text style={styles.fadingText}>Fading View!</Text>
-                </Animated.View>
-
-                <View style={styles.inputContainer}>
-                    <View style={styles.campos}>
-                        <FontAwesome5 name="ice-cream" style={styles.iconos} />
-                        <TextInput
-                            style={styles.containerTextInput}
-                            placeholder="Sabor"
-                            onChangeText={setSabor}
-                            defaultValue={sabor}
-                        />
-                    </View>
-                    <View style={styles.campos}>
-                        <FontAwesome5 name="dollar-sign" style={styles.iconos} borderRadius={20} backgroundColor="red" />
-                        <TextInput
-                            style={styles.containerTextInput}
-                            placeholder="Precio"
-                            onChangeText={setPrecio}
-                            keyboardType="numeric"
-                            defaultValue={precio}
-                        />
-                    </View>
-                    <View style={styles.campos}>
-                        <FontAwesome5 name="calculator" style={styles.iconos} />
-                        <TextInput
-                            style={styles.containerTextInput}
-                            placeholder="Cantidad"
-                            onChangeText={setCantidad}
-                            keyboardType="numeric"
-                            defaultValue={cantidad}
-                        />
-                    </View>
-                </View>
-
-                <TouchableOpacity onPress={openBrowserImage}>
-                    <Text style={styles.saveButtonText}>
-                        Cargar foto
-                    </Text>
-                </TouchableOpacity>
-{/* 
-                <Image
-                    source={{
-                        uri:
-                        selectedImage !== null 
-                        ? selectedImage.localUri
-                        : "https://picsum.photos/200/200",
-                        }}
-                    style={styles.img}
-                    /> */}
-
-                {/* {image && <Image source={{ uri: image }} style={{ width: 100, height: 100 }} />} */}
-
-                <TouchableOpacity onPress={guardarHelado} style={styles.saveButton}>
-                    <Text style={styles.saveButtonText}>Guardar</Text>
-                </TouchableOpacity>
-
-                <View style={{ alignItems: 'center', justifyContent: 'center', flex: 1 }}>
-            <Button title="Seleccionar Imagen" onPress={pickImage} />
-            {selectedImage && (
-                <Image
-                    source={{ uri: selectedImage.uri }}
-                    style={{ width: 200, height: 200, marginTop: 20 }}
-                />
-            )}
-            <Button title="Subir Imagen" onPress={handleUpload} />
-        </View>
-
-
-                
+            {/* Campos del formulario */}
+            <View style={styles.inputContainer}>
+            <View style={styles.campos}>
+                <FontAwesome5 name="ice-cream" style={styles.iconos} />
+                <TextInput style={styles.containerTextInput} placeholder="Sabor" value={sabor} onChangeText={setSabor} />
             </View>
+
+            <View style={styles.campos}>
+                <FontAwesome5 name="dollar-sign" style={styles.iconos} />
+                <TextInput style={styles.containerTextInput} placeholder="Precio" value={precio} keyboardType="numeric" onChangeText={setPrecio} />
+            </View>
+
+            <View style={styles.campos}>
+                <FontAwesome5 name="calculator" style={styles.iconos} />
+                <TextInput style={styles.containerTextInput} placeholder="Cantidad" value={cantidad} keyboardType="numeric" onChangeText={setCantidad} />
+            </View>
+            </View>
+
+            {/* Selección de imagen */}
+            <TouchableOpacity onPress={pickImage}>
+            <Text style={styles.saveButtonText}>📷 Seleccionar imagen</Text>
+            </TouchableOpacity>
+            {selectedImage && (
+            <Image source={{ uri: selectedImage.uri }} style={{ width: 150, height: 150, marginTop: 10 }} />
+            )}
+
+            {/* Dropdown de categorías */}
+            <Dropdown
+            style={[styles.dropdown, isFocus && { borderColor: "#e91e63" }]}
+            data={categorias}
+            labelField="label"
+            valueField="value"
+            placeholder={!isFocus ? "Selecciona categoría" : "..."}
+            search
+            value={idCategoria}
+            onFocus={() => setIsFocus(true)}
+            onBlur={() => setIsFocus(false)}
+            onChange={(item) => {
+                setIdCategoria(item.value);
+                setIsFocus(false);
+            }}
+            />
+
+            {/* Botón guardar */}
+            <TouchableOpacity onPress={guardarHelado} style={styles.saveButton} disabled={loading}>
+            <Text style={styles.saveButtonText}>
+                {loading ? "Guardando..." : "Guardar"}
+            </Text>
+            </TouchableOpacity>
+        </View>
         </KeyboardAvoidingView>
     );
-}
+    }
 
 const windowWidth = Dimensions.get("window").width;
-
 const styles = StyleSheet.create({
-    container: {
-        borderTopWidth: 0.2,
-        borderTopColor: "#00000030",
-        alignItems: "baseline",
-    },
-    emojiesContainer: {
-        width: "100%",
-        flexDirection: "row",
-        alignItems: "baseline",
-        justifyContent: "space-between",
-        paddingLeft: 10,
-        marginVertical: 10,
-    },
-    inputContainer: {
-        width: "100%",
-        flexDirection: "column",
-        alignItems: "center",
-        justifyContent: "center",
-    },
+    container: { borderTopWidth: 0.2, borderTopColor: "#00000030", alignItems: "baseline" },
+    inputContainer: { width: "100%", alignItems: "center", justifyContent: "center" },
     containerTextInput: {
-        width: windowWidth - 10,
-        borderWidth: 1,
-        borderRadius: 30,
-        minHeight: 45,
-        paddingHorizontal: 15,
-        paddingTop: 8,
-        fontSize: 16,
-        paddingVertical: 5,
-        borderColor: "lightgray",
-        backgroundColor: "#fff",
-        marginBottom: 5,
-        marginLeft:8,
-        fontWeight: "600",
+        width: windowWidth - 10, borderWidth: 1, borderRadius: 30, minHeight: 45,
+        paddingHorizontal: 15, fontSize: 16, backgroundColor: "#fff", marginBottom: 5, marginLeft: 8,
     },
-    campos:{
-        flex: 1,
-        flexDirection: "row",
-        justifyContent: "space-between",
-        alignItems:"center",
-        height:60,
-        padding: 10,
-        // borderRadius: 15,
-        marginBottom: 32,
-        backgroundColor: "white",
-        width:"100%",
-    },
-    iconos:{
-        display:"flex",
-        alignItems:"center",
-        justifyContent:"center",
-        color:"#01abea", 
-        borderWidth:1,
-        borderColor:"#01abea",
-        borderRadius:20,
-        padding:10,
-        width:"21%",
-        fontSize:24,
-
-  // backgroundColor="red" 
-},
-    saveButton: {
-        backgroundColor: "purple",
-        padding: 10,
-        alignSelf: "center",
-        borderRadius: 10,
-    },
-    saveButtonText: {
-        fontWeight: "800",
-        fontSize: 15,
-        textAlign: "center",
-        color: "white",
-    },
-    img:{
-    width: 150,
-    height: 150,
-    resizeMode:"contain",
-    zIndex: 1,
-    position: "relative",
-    top: 10
-  },
+    campos: { flexDirection: "row", alignItems: "center", height: 60, marginBottom: 32, width: "100%" },
+    iconos: { color: "#01abea", borderWidth: 1, borderColor: "#01abea", borderRadius: 20, padding: 10, width: "21%", fontSize: 24 },
+    saveButton: { backgroundColor: "purple", padding: 13, alignSelf: "center", borderRadius: 10, width: windowWidth - 60 },
+    saveButtonText: { color: "white", textAlign: "center", fontWeight: "800", fontSize: 16 },
+    dropdown: { height: 55, borderColor: "#ccc", borderWidth: 1, borderRadius: 10, paddingHorizontal: 12, marginTop: 20, width: windowWidth - 40 },
 });
-

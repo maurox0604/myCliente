@@ -63,13 +63,10 @@ const groupVentasByDateAndFactura = () => {
         .filter((group) => group.facturas.length > 0); // Filtrar fechas sin facturas
 
     console.log("Datos finales agrupados por fechas y facturas:", result);
+    console.log("☻Datos finales agrupados por fechas y facturas totalCantidad:", result.totalCantidad);
     return result;
 };
 
-
-
-
-    
     const groupedVentas = groupVentasByDateAndFactura();
 
     const handlePress = (facturaId) => {
@@ -78,64 +75,65 @@ const groupVentasByDateAndFactura = () => {
 
     return (
         <View style={styles.container}>
-        <View style={styles.filterBar}>
-            <Pressable onPress={() => sortVentas("fecha")} style={styles.filterButton}>
-            <Text>Ordenar por Fecha</Text>
-            </Pressable>
-            <Pressable onPress={() => sortVentas("producto")} style={styles.filterButton}>
-            <Text>Más Vendido</Text>
-            </Pressable>
-            <Pressable onPress={() => loadVentasByDateRange(startDate, endDate)} style={styles.filterButton}>
-            <MaterialCommunityIcons name="update" size={24} color="black" />
-            </Pressable>
-        </View>
+            <View style={styles.filterBar}>
+                <Pressable onPress={() => sortVentas("fecha")} style={styles.filterButton}>
+                <Text>Ordenar por Fecha</Text>
+                </Pressable>
+                <Pressable onPress={() => sortVentas("producto")} style={styles.filterButton}>
+                <Text>Más Vendido</Text>
+                </Pressable>
+                <Pressable onPress={() => loadVentasByDateRange(startDate, endDate)} style={styles.filterButton}>
+                <MaterialCommunityIcons name="update" size={24} color="black" />
+                </Pressable>
+            </View>
 
-        <FlatList
-            data={groupedVentas}
-            keyExtractor={(item) => item.date}
-            renderItem={({ item }) => {
-            const { date, facturas } = item;
-            const totalDiaVentas = facturas.reduce((sum, factura) => sum + factura.totalVenta, 0);
-            const totalDiaCantidad = facturas.reduce((sum, factura) => sum + factura.totalCantidad, 0);
+            <FlatList
+                data={groupedVentas}
+                keyExtractor={(item) => item.date}
+                renderItem={({ item }) => {
+                const { date, facturas } = item;
+                const totalDiaVentas = facturas.reduce((sum, factura) => sum + factura.totalVenta, 0);
+                const totalDiaCantidad = facturas.reduce((sum, factura) => sum + factura.totalCantidad, 0);
 
-            return (
-                <View style={styles.dateBlock}>
-                    <View style={styles.dateLine} >
-                        <Text style={styles.dateTitle}>
-                            {date} - Total Ventas: ${totalDiaVentas}, Total Helados: {totalDiaCantidad}
-                        </Text>
-                    </View>
-                
-                {facturas.map((factura) => (
-                    <View key={factura.id_factura} style={styles.facturaBlock}>
-                        <View style={styles.facturaBlockHeader}>
-                            <Text style={styles.facturaTitle}    onPress={() => handlePress(factura.id_factura)}>
-                                F_No. {factura.id_factura} - Hora: {factura.horaFactura}
+                return (
+                    <View style={styles.dateBlock}>
+                        <View style={styles.dateLine} >
+                            <Text style={styles.dateTitle}>
+                                {date} - Total Ventas: ${totalDiaVentas}, Total Helados: {totalDiaCantidad}
                             </Text>
-                            <Text style={styles.textCantidad}>{factura.totalCantidad}</Text>
                         </View>
+                    
+                    {facturas.map((factura) => (
+                        <View key={factura.id_factura} style={styles.facturaBlock}>
+                            <View style={styles.facturaBlockHeader}>
+                                <Text style={styles.facturaTitle}    onPress={() => handlePress(factura.id_factura)}>
+                                    F_No. {factura.id_factura} - Hora: {factura.horaFactura}
+                                </Text>
+                                <Text style={styles.textCantidad}>{factura.totalCantidad}</Text>
+                            </View>
 
-                    {expandedFacturaId === factura.id_factura && (
-                        <View>
-                        {factura.items.map((venta) => (
-                            <VentasItem
-                            key={venta.id}
-                            venta={venta}
-                            isExpanded={true}
-                                onPress={() => { }}
-                                
-                                // isExpanded={item.id === expandedId}
-                                // onPress={() => handlePress(item.id)}
-                            />
-                        ))}
+                        {expandedFacturaId === factura.id_factura && (
+                            <View>
+                            {factura.items.map((venta) => (
+                                <VentasItem
+                                key={venta.id}
+                                venta={venta}
+                                isExpanded={true}
+                                    onPress={() => { }}
+                                    
+                                    // isExpanded={item.id === expandedId}
+                                    // onPress={() => handlePress(item.id)}
+                                />
+                            ))}
+                            </View>
+                        )}
                         </View>
-                    )}
+                    ))}
                     </View>
-                ))}
-                </View>
-            );
-            }}
-        />
+                );
+                }}
+            />
+            {/* {sortVentas("fecha")} */}
         </View>
     );
 }

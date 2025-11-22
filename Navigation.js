@@ -11,12 +11,16 @@ import LoginScreen from './screens/LoginScreen'; // Asegúrate de importar tu pa
 import RegisterScreen from './screens/RegisterScreen';
 import Welcome from './screens/Welcome';
 import HomeScreen from './screens/HomeScreen';
-import CreaHeladoScreen from './screens/CreaHeladoScreen';
+import CrearProducto from './screens/CreaHeladoScreen';
 import StackEdit from './screens/StackEdit';
 import ListaHelados from './screens/ListaHelados';
 import GuardaFoto from './screens/GuardaFoto';
 import VentasScreen from './screens/VentasScreen';
 import CartModalContent from './components/CartModalContent';
+import CrearCategoria from './screens/CrearCategoria';
+import MenuCrear from './screens/MenuCrear';
+
+
 import { CartContext, CartProvider } from './context/CartContext';
 import LoadingScreen from './screens/LoadingScreen';
 import { AuthContext } from './context/AuthContext';
@@ -45,17 +49,37 @@ function MyTabs({ openCartModal, role }) {
                     ),
                 }}
             />
-             {role === 'vendedor' && ( // Mostrar solo si el usuario es admin
-            <Tab.Screen 
-                name="Crear" 
-                component={CreaHeladoScreen} 
-                options={{
-                    tabBarLabel: 'Crear',
-                    tabBarIcon: ({ color, size }) => (
-                        <MaterialCommunityIcons name="dots-triangle" color={color} size={size} />
-                    ),
-                }}
-                />)}
+            {/* {role === 'vendedor' && ( // Mostrar solo si el usuario es admin
+                    <Tab.Screen 
+                    name="Crear Helado" 
+                    component={CrearProducto} 
+                    options={{
+                        tabBarLabel: 'Crear Helado',
+                        tabBarIcon: ({ color, size }) => (
+                            <MaterialCommunityIcons name="dots-triangle" color={color} size={size} />
+                        ),
+                    }}
+                /> 
+            )} */}
+            
+                <Tab.Screen
+                    name="Crear Categoria"
+                    component={() => null} // ⬅ la pantalla no se usa, se reemplaza con menú
+                    options={{
+                        tabBarLabel: 'Crear',
+                        tabBarIcon: ({ color, size }) => (
+                            <MaterialCommunityIcons name="dots-triangle" color={color} size={size} />
+                        ),
+                    }}
+                    listeners={({ navigation }) => ({
+                        tabPress: (e) => {
+                            e.preventDefault(); // Evita que navegue a una pantalla
+                            navigation.navigate("MenuCrear"); // ⬅ iremos a un menú que crearemos ahora
+                        }
+                    })}
+                />
+                
+            
             
             <Tab.Screen 
                 name="Editar" 
@@ -175,6 +199,25 @@ export default function Navigation() {
                             name="ListaHelados" 
                             component={ListaHelados} 
                         />
+                        <MainStack.Screen 
+                            name="MenuCrear" 
+                            component={MenuCrear}
+                            options={{ title: "Agregar" }}
+                        />
+
+                        <MainStack.Screen 
+                            name="CrearCategoria" 
+                            component={CrearCategoria} 
+                            options={{ title: "Nueva Categoría" }} 
+                        />
+
+                        <MainStack.Screen
+                            name="CrearProducto"
+                            component={CrearProducto}
+                            options={{ title: "Nuevo Producto" }}
+                        />
+
+
                     </MainStack.Navigator>
                     <BottomSheetModal 
                         ref={cartModalRef} 

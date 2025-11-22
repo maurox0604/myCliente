@@ -56,6 +56,7 @@ export const VentasContextProvider = ({ children }) => {
             const ventasData = await cargarVentas(startDate, endDate);
             
             console.log("Ventas por rango de fechas:", ventasData);
+            
             setVentas(ventasData);
         } catch (error) {
             console.error("Error al cargar ventas por rango de fechas:", error);
@@ -78,7 +79,8 @@ export const VentasContextProvider = ({ children }) => {
             console.log(b+". Fecha B:", fechaB);
 
             // Restar las fechas para ordenarlas
-            return fechaB - fechaA; // De más reciente a más antiguo
+            // return fechaB - fechaA; // De más reciente a más antiguo
+            return fechaA - fechaB; // De más reciente a más antiguo
         });
     } else if (criterion === "producto") {
         sortedVentas.sort((a, b) => {
