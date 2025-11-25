@@ -10,7 +10,7 @@ export default function GetListHelados() {
     }, []);
 
     async function fetchHelados() {
-        const response = await fetch('${process.env.EXPO_PUBLIC_API_URL}/productos');
+        const response = await fetch('${process.env.EXPO_PUBLIC_API_URL}/productos/all');
         const data = await response.json();
         setHelados(data);
     }

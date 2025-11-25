@@ -144,7 +144,7 @@ const CartModalContent = ({ closeModal, carrito }) => {
     async function fetchHelados() {
         try {
         // const response = await fetch("http://localhost:3001/helados");
-        const response = await fetch('${process.env.EXPO_PUBLIC_API_URL}/productos');
+        const response = await fetch('${process.env.EXPO_PUBLIC_API_URL}/productos/all');
         if (!response.ok) throw new Error('Error al obtener los helados');
 
         const data = await response.json();
