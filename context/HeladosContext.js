@@ -20,25 +20,23 @@ export const HeladosProvider = ({ children }) => {
     console.log("👉 API URL usada:", process.env.EXPO_PUBLIC_API_URL);
 
 const fetchHelados = async () => {
-  try {
-    const response = await fetch(`${process.env.EXPO_PUBLIC_API_URL}/productos/all`, {
-      method: "GET",
-      headers: { "Content-Type": "application/json" },
-    });
+    try {
+        const response = await fetch(`${process.env.EXPO_PUBLIC_API_URL}/productos/all`, {
+        method: "GET",
+        headers: { "Content-Type": "application/json" },
+        });
 
-    const data = await response.json();
-    console.log("Helados cargados:", data.productos);
+        const data = await response.json();
+        console.log("Helados cargados:", data.productos);
 
-    setHelados(data.productos);
-    setFilteredHelados(data.productos);
-  } catch (error) {
-    console.error("Error al obtener los helados:", error);
-  }
+        setHelados(data.productos);
+        setFilteredHelados(data.productos);
+    } catch (error) {
+        console.error("Error al obtener los helados:", error);
+    }
 };
 
-    
-    
-    
+
 
     // Función para actualizar la cantidad de un helado en la lista
     const updateHeladoCantidad = (id, nuevaCantidad) => {
