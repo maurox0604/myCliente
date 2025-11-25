@@ -10,7 +10,7 @@ export default function GetListHelados() {
     }, []);
 
     async function fetchHelados() {
-        const response = await fetch('https://backend-de-prueba-delta.vercel.app/helados');
+        const response = await fetch('${process.env.EXPO_PUBLIC_API_URL}/productos');
         const data = await response.json();
         setHelados(data);
     }

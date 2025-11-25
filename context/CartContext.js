@@ -106,7 +106,7 @@ export const  CartProvider = ({children}) => {
         const fetchHelados = async () => {
 
         console.log("Esta es fethcData")
-        const response = await fetch(`https://backend-de-prueba-delta.vercel.app/helados`, {
+        const response = await fetch(`${process.env.EXPO_PUBLIC_API_URL}/productos`, {
             // const response = await fetch(`http://192.168.1.11:3001/helados`, {
             // 
             method: "GET",

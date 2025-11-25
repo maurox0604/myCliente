@@ -15,7 +15,7 @@ export default function Editor({
 
   async function fetchInfo() {
     // const response = await fetch(`http://192.168.1.11:8000/helados/${id}`,{
-      const response = await fetch(`https://backend-de-prueba-delta.vercel.app/helados/${id}`, {
+      const response = await fetch(`${process.env.EXPO_PUBLIC_API_URL}/productos/${id}`, {
         headers: {
           "x-api-key": "abcdef123456",
           // 'Access-Control-Allow-Origin': '*',
