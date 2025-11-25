@@ -30,12 +30,14 @@ const AuthProvider = ({ children }) => {
             console.log("Current user email:", currentUser.email);
 
             setEmailUser(currentUser.email);
+            console.log("👉 API URL para roles:", process.env.EXPO_PUBLIC_API_URL);
+
 
 
             // Obtener el rol desde la base de datos
             try {
                 // const response = await axios.post('http://localhost:3001/getUserRole', {
-                const response = await axios.post(`https://backend-de-prueba-delta.vercel.app/getUserRole`, {
+                const response = await axios.post(`${process.env.EXPO_PUBLIC_API_URL}/users/getUserRole`, {
                     
                     email: currentUser.email, // Enviar el email en el cuerpo de la solicitud
                 });

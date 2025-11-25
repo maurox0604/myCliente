@@ -17,23 +17,22 @@ export const HeladosProvider = ({ children }) => {
 
 
     // Función para obtener los datos de los helados
+    console.log("👉 API URL usada:", process.env.EXPO_PUBLIC_API_URL);
+
     const fetchHelados = async () => {
-        try {
-            console.log("Fetching helados...");
-            const response = await fetch(`https://backend-de-prueba-delta.vercel.app/helados`, {
-                method: "GET",
-                headers: {
-                    'Content-Type': 'application/json',
-                },
-            });
-            const data = await response.json();
-            console.log("Helados obtenidos: ", data);
-            setHelados(data);
-            setFilteredHelados(data); // Inicialmente, filtrados son iguales
-        } catch (error) {
-            console.error("Error al obtener los helados:", error);
-        }
-    };
+  try {
+    const response = await fetch(`${process.env.EXPO_PUBLIC_API_URL}/productos`, {
+      method: "GET",
+      headers: { "Content-Type": "application/json" },
+    });
+
+    const data = await response.json();
+    setHelados(data);
+    setFilteredHelados(data);
+  } catch (error) {
+    console.error("Error al obtener los helados:", error);
+  }
+};
 
     // Función para actualizar la cantidad de un helado en la lista
     const updateHeladoCantidad = (id, nuevaCantidad) => {
