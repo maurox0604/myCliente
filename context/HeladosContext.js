@@ -15,7 +15,6 @@ export const HeladosProvider = ({ children }) => {
         setFilteredHelados(helados);
     }, [helados]);
 
-
     // Función para obtener los datos de los helados
     console.log("👉 API URL usada:", process.env.EXPO_PUBLIC_API_URL);
 

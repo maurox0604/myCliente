@@ -128,19 +128,7 @@ const CartModalContent = ({ closeModal, carrito }) => {
     fetchHelados();
 }, [clearCart]); // Llama fetchHelados solo si clearCart se ejecuta
 
-    // async function fetchHelados() {
-    //     console.log("Esta es fethcData")
 
-        
-    //     const response = await fetch(`https://backend-de-prueba-delta.vercel.app/helados`, {
-    //      //   headers: {
-    //      //     "x-api-key": "abcdef123456",
-    //      //   },
-    //     });
-    //     const data = await response.json();
-    //     console.log("Los datos:  ", data)
-    //     console.log("//Los datos:  ", data[0].sabor)
-    // }
     async function fetchHelados() {
         try {
         // const response = await fetch("http://localhost:3001/helados");

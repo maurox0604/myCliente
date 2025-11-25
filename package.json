@@ -13,6 +13,9 @@
   "jest": {
     "preset": "jest-expo"
   },
+  "engines": {
+  "node": ">=18"
+},
   "dependencies": {
     "@auth0/auth0-react": "^2.2.4",
     "@expo/metro-runtime": "~3.2.3",
