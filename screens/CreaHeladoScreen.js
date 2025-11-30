@@ -46,59 +46,69 @@ export default function CreaHeladoScreen({ navigation }) {
 
     // 🔹 3. Guardar producto (sube imagen → luego crea producto)
     const guardarProducto = async () => {
-        if (!nombre || !precio || !cantidad || !idCategoria || !imagenLocal) {
-        Alert.alert("Error", "Todos los campos son obligatorios");
-        return;
-        }
+        console.log("vamos a guardar: ", nombre, precio, cantidad, idCategoria);
+
+
+        if (!nombre || !precio || !cantidad || !idCategoria) {
+    Alert.alert("Error", "Todos los campos son obligatorios");
+    return;
+}
 
         setLoading(true);
 
         try {
-        // 🟢 SUBIR IMAGEN A freeimage.host
-        const imgForm = new FormData();
-        imgForm.append("source", imagenLocal);
-        imgForm.append("type", "base64");
-        imgForm.append("action", "upload");
-        imgForm.append("key", process.env.EXPO_PUBLIC_IMAGE_API_KEY); // 🔑 tu API key de freeimage.host
+            console.log("probando desde try")
+            /*
+            // 🟢 SUBIR IMAGEN A freeimage.host
+                const imgForm = new FormData();
+                imgForm.append("source", imagenLocal);
+                imgForm.append("type", "base64");
+                imgForm.append("action", "upload");
+                imgForm.append("key", process.env.EXPO_PUBLIC_IMAGE_API_KEY); // 🔑 tu API key de freeimage.host
 
-        const uploadResp = await fetch("https://freeimage.host/api/1/upload", {
-            method: "POST",
-            body: imgForm,
-        });
+                const uploadResp = await fetch("https://freeimage.host/api/1/upload", {
+                    method: "POST",
+                    body: imgForm,
+            });
 
-        const uploadJSON = await uploadResp.json();
-        const imageURL = uploadJSON.image.url; // URL final para guardar en BD
+            const uploadJSON = await uploadResp.json();
+                const imageURL = uploadJSON.image.url; // URL final para guardar en BD
+                */
+            // export async function crearProducto(nombre, precio, imagen, cantidad, id_categoria) {
+            //     const [result] = await pool.query(
 
-        // 🟢 GUARDAR PRODUCTO EN BACKEND
-        const saveResp = await fetch(API + "/productos/create", {
-            method: "POST",
-            headers: { "Content-Type": "application/json" },
-            body: JSON.stringify({
-            nombre,
-            precio,
-            cantidad,
-            id_categoria: idCategoria,
-            imagen: imageURL,
-            }),
-        });
+                // 🟢 GUARDAR PRODUCTO EN BACKEND
+                console.log("CreaHeladoScreen: ", nombre, precio, cantidad, idCategoria);
+                const saveResp = await fetch(API + "/productos/create", { 
+                method: "POST",
+                headers: { "Content-Type": "application/json" },
+                body: JSON.stringify({
+                nombre,
+                precio,
+                cantidad,
+                id_categoria: idCategoria,
+                    // imagen: imageURL,
+                icon: '../assets/images/productoDefault.png',
+                }),
+            });
 
-        const responseData = await saveResp.json();
+            const responseData = await saveResp.json();
 
-        if (!responseData.ok) throw new Error();
+            if (!responseData.ok) throw new Error();
 
-        Alert.alert(
-            "Producto creado",
-            `"${nombre}" se guardó correctamente`,
-            [
-            { text: "Crear otro", onPress: () => resetForm() },
-            { text: "Volver", onPress: () => navigation.goBack() },
-            ]
-        );
+            Alert.alert(
+                "Producto creado",
+                `"${nombre}" se guardó correctamente`,
+                [
+                { text: "Crear otro", onPress: () => resetForm() },
+                { text: "Volver", onPress: () => navigation.goBack() },
+                ]
+            );
         } catch (err) {
-        Alert.alert("Error", "No se pudo crear el producto");
-        } finally {
-        setLoading(false);
-        }
+            Alert.alert("Error", "No se pudo crear el producto");
+            } finally {
+            setLoading(false);
+            }
     };
 
     const resetForm = () => {

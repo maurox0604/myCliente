@@ -25,9 +25,9 @@ export default function ListaHelados({ deletItem = false, editItem = false }) {
 const { fetchHelados } = useContext(HeladosContext);
 
 function onRefresh() {
-  setIsFetching(true);
-  fetchHelados();          // <--- ahora sí recarga los datos reales
-  setTimeout(() => setIsFetching(false), 1200);
+    setIsFetching(true);
+    fetchHelados();          // <--- ahora sí recarga los datos reales
+    setTimeout(() => setIsFetching(false), 1200);
 }
 
 

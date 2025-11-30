@@ -20,38 +20,38 @@ export default function EditModalContent({ id, _icon, _sabor, _precio, _cantidad
 
 
   const actualizarHelado = async () => {
-    console.log("☻ sabor: ",sabor, "- precio: ",precio)
-    try {
-        // const response = await fetch(`http://192.168.1.11:8000/helados/${id}`, {
-        const response = await fetch(`${process.env.EXPO_PUBLIC_API_URL}/productos/${id}`, {
-          headers: {
-            "Content-Type": "application/json",
-          },
-          method: "PUT",
-          body: JSON.stringify({
-            sabor: sabor,
-            precio: precio,
-            icon: foto,
-            cantidad: cantidad,
-          }),
-        });
+  try {
+    const response = await fetch(`${process.env.EXPO_PUBLIC_API_URL}/productos/update/${id}`, {
+      method: "PUT",
+      headers: { "Content-Type": "application/json" },
+      body: JSON.stringify({
+        id: id,
+        nombre: sabor,
+        precio: precio,
+        cantidad: cantidad,
+        icon: foto,
+        id_categoria: null, // ← luego la actualizamos correctamente
+      }),
+    });
 
-        if (!response.ok) {
-          const errorText = await response.text();
-          throw new Error(`Error HTTP: ${response.status} - ${errorText}`);
-        }
-
-      const data = await response.json();
-      console.log("Datos actualizados: ", data);
-      // alert('Éxito', 'Helado actualizado correctamente');
-      updateHeladoCantidad(id, cantidad); //  updateHeladoCantidad se encarga de limpiar o recargar datos
-      handleSearch("")
-      closeModal(); // Cerrar el modal después de la actualización exitosa
-    } catch (error) {
-      console.error('Error al actualizar el helado:', error);
-      alert('Error', `No se pudo actualizar el helado: ${error.message}`);
+    if (!response.ok) {
+      const errorText = await response.text();
+      throw new Error(`Error HTTP: ${response.status} - ${errorText}`);
     }
+
+    const data = await response.json();
+    console.log("Datos actualizados: ", data);
+
+    updateHeladoCantidad(id, cantidad);
+    handleSearch("");
+    closeModal();
+    
+  } catch (error) {
+    console.error("Error al actualizar el helado:", error);
+    alert("Error", `No se pudo actualizar el helado: ${error.message}`);
   }
+};
+
 
   useFocusEffect(
   useCallback(() => {
