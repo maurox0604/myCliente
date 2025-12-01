@@ -1,51 +1,13 @@
 // import * as React from "react";
-import { useRef, useEffect, useContext, useState } from "react";
-import { Animated, View, Text, StyleSheet, Pressable, TouchableOpacity, useWindowDimensions, Image, Alert } from "react-native";
+import { useRef, useEffect, useState } from "react";
+import { Animated, View, Text, StyleSheet, Pressable, TouchableOpacity, Image, Alert } from "react-native";
 import { Feather, MaterialCommunityIcons } from "@expo/vector-icons";
 import "react-native-gesture-handler";
 import { BottomSheetModal } from "@gorhom/bottom-sheet";
 import { GestureHandlerRootView } from 'react-native-gesture-handler';
 import Calculadora from "./Calculadora";
-import Editor from "./Editor";
 import EditModalContent from "./EditModalContent";
-import { CartContext } from "../context/CartContext";
-import { Alertas }from "./Alertas"
-import { DbaseContext } from '../context/DbaseContext'
 
-//const {regCambios} = useContext(DbaseContext);
-
-
-
-
-
-// function CheckMark({ id, completed, toggleTodo }) {
-//     async function toggle() {
-//         const response = await fetch(`http://192.168.1.11:8000/todos/${id}`, {
-//             headers: {
-//             "x-api-key": "abcdef123456",
-//             "Content-Type": "application/json",
-//             },
-//             method: "PUT",
-//             body: JSON.stringify({
-//             value: completed ? false : true,
-//             }),
-//         });
-
-//         const data = await response.json();
-//         toggleTodo(id);
-//         console.log(data);
-//     }
-
-    // return (
-    // <Pressable
-    //     onPress={toggle}
-    //     style={[
-    //     styles.checkMark,
-    //     { backgroundColor: completed === 0 ? "#E9E9EF" : "#0EA5E9" },
-    //     ]}
-    // ></Pressable>
-    // );
-    // }
 
     export default function Helado({
         id,
@@ -53,14 +15,12 @@ import { DbaseContext } from '../context/DbaseContext'
         precio,
         icon,
         cantidad,
-        shared_with_id,
         editItem,
         completed,
-        reloadListDB,
-        toggleTodo,
         activaDeleteItem,
         updateHeladoCantidad, 
         columnas,
+        onDeleteSuccess
         }) 
     {
         const datosPaCalc = { id, sabor, cantidad, icon,precio, closeCartModal }
@@ -116,44 +76,35 @@ import { DbaseContext } from '../context/DbaseContext'
         }).start();
         }
     }, [isDeleteActive]);
-
-    
-    async function deleteTodo() {
-        try{
-            console.log("Borrando un heloadoooo")
-            // const response = await fetch(`http://192.168.1.11:8000/desactivar/${id}`, {
-                const response = await fetch(`https://backend-de-prueba-delta.vercel.app/desactivar/${id}`, {
-                headers: {
-                "x-api-key": "abcdef123456",
-                },
-                    method: "PUT",
-                //mode: "no cors",
-            });
-
-            if (!response.ok) {
-                const contentType = response.headers.get("content-type");
-                if (contentType && contentType.indexOf("application/json") !== -1) {
-                    const errorData = await response.json();
-                    throw new Error(errorData.error || 'Error desconocido');
-                } else {
-                    const errorText = await response.text();
-                    throw new Error(`Error HTTP: ${response.status} - ${errorText}`);
-                }
-            }
-    
-            const data = await response.json();
-            alert('Éxito'+ '...Helado Borrado correctamente');
-          //  regCambios(true); //... Avisa a DbaseContext que se cambio algo en la DB 
-            //regCambios(true); // Registra que se hizo un cambio en la DB
-
-        }catch (error) {
-            alert('Error', `No se pudo Borrar el helado: ${error.message}` + id);
-        }
-        //alert("hello ID: "+id)
         
-        // reloadListDB(id);
-        // console.log(response.status);
-}
+        
+const deleteProdcuto = async (id) => {
+    try {
+        const response = await fetch(
+        `${process.env.EXPO_PUBLIC_API_URL}/productos/delete/${id}`,
+        {
+            method: "PUT",
+            headers: { "Content-Type": "application/json" },
+        }
+        );
+
+        if (!response.ok) {
+        const msg = await response.text();
+        throw new Error(`Error HTTP ${response.status} – ${msg}`);
+        }
+
+        const data = await response.json();
+        console.log("Producto desactivado:", data);
+
+        onDeleteSuccess();
+        setIsDeleteActive(false); // ← opcional, cerrar animación del botón
+    } catch (error) {
+        console.error("Error eliminando:", error);
+        Alert.alert("Error", "No se pudo eliminar el producto");
+    }
+};
+
+        
 
     const handleImageError = () => {
         setImageSource(require('../assets/images/productoDefault.png')); // Imagen por defecto
@@ -225,7 +176,8 @@ return (
                 <Animated.View style={[styles.deleteButton, { width: widthAnim }]}>
                     <Pressable
                         style={styles.pressableButton} // Aseguramos el área de toque
-                        onPressIn={deleteTodo}
+                        onPressIn={() => deleteProdcuto(id)}
+
                         hitSlop={20}
                     >
                         <MaterialCommunityIcons name="trash-can-outline" size={24} color="white" />
@@ -234,7 +186,8 @@ return (
 
                     <TouchableOpacity
                         style={styles.pressableButton}
-                        onPressIn={deleteTodo }
+                        onPressIn={() => deleteProdcuto(id)}
+
                         //   onPressOut={() => setIsDeleteActive(false)}
 
                         delayPressIn={100}  // Añadir un pequeño retraso al toque
@@ -257,7 +210,6 @@ return (
                 >
                 <Calculadora
                     completed={completed}
-                    // closeCartModal={closeCartModal}
                     datosPaCalc = {datosPaCalc}
                     updateHeladoCantidad={updateHeladoCantidad}
                     addItemCardModalRef={addItemCardModalRef}

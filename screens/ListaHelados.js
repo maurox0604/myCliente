@@ -91,6 +91,7 @@ function onRefresh() {
                         <Helado
                             {...item}
                             activaDeleteItem={deletItem}
+                            onDeleteSuccess={fetchHelados}
                             editItem={editItem}
                             columnas={isThreeColumns}
                         />

@@ -99,53 +99,94 @@ const CartModalContent = ({ closeModal, carrito }) => {
     // }
     
     
-    const procesarCarrito = async () => {
-        try {
-        setIsProcessing(true); // Deshabilitar el botón mientras se procesa
-        const response = await fetch('https://backend-de-prueba-delta.vercel.app/procesarCarrito', {
-            // const response = await fetch('http://localhost:3001/procesarCarrito', {
-            headers: { "Content-Type": "application/json" },
-            method: "POST",
-            body: JSON.stringify({
-                items: carts.map(item => ({ ...item, user: emailUser }))
-            }),
+    
+    
+const procesarCarrito = async () => {
+    try {
+        setIsProcessing(true);
+
+        const response = await fetch(`${process.env.EXPO_PUBLIC_API_URL}/ventas/procesar`, {
+        method: "POST",
+        headers: { "Content-Type": "application/json" },
+        body: JSON.stringify({
+            items: carts.map(item => ({ ...item, user: emailUser }))
+        }),
         });
 
         if (!response.ok) throw new Error(await response.text());
 
-        console.log('Carrito procesado con éxito');
-        clearModal();
-        closeModal();
+        clearCart();       // limpiar items
+        await fetchHelados(); // sincroniza cantidades visuales en lista
+        closeModal();      // cerrar modal
     } catch (error) {
-        console.error('Error procesando el carrito:', error);
-    }finally {
-            setIsProcessing(false); // Volver a habilitar el botón
-        }
+        console.error('Error procesando carrito:', error);
+    } finally {
+        setIsProcessing(false);
+    }
 };
+
+
+    
+    
+//     const procesarCarrito = async () => {
+//         try {
+//         setIsProcessing(true); // Deshabilitar el botón mientras se procesa
+//         const response = await fetch('https://backend-de-prueba-delta.vercel.app/procesarCarrito', {
+//             // const response = await fetch('http://localhost:3001/procesarCarrito', {
+//             headers: { "Content-Type": "application/json" },
+//             method: "POST",
+//             body: JSON.stringify({
+//                 items: carts.map(item => ({ ...item, user: emailUser }))
+//             }),
+//         });
+
+//         if (!response.ok) throw new Error(await response.text());
+
+//         console.log('Carrito procesado con éxito');
+//         clearModal();
+//         closeModal();
+//     } catch (error) {
+//         console.error('Error procesando el carrito:', error);
+//     }finally {
+//             setIsProcessing(false); // Volver a habilitar el botón
+//         }
+// };
 
 
     useEffect(() => {
     fetchHelados();
 }, [clearCart]); // Llama fetchHelados solo si clearCart se ejecuta
 
-
+    
+    
     async function fetchHelados() {
-        try {
-        // const response = await fetch("http://localhost:3001/helados");
-        const response = await fetch('${process.env.EXPO_PUBLIC_API_URL}/productos/all');
-        if (!response.ok) throw new Error('Error al obtener los helados');
-
-        const data = await response.json();
-        console.log("Datos de helados cargados:", data);
-    } catch (error) {
-        console.error('Error al cargar helados:', error);
-    }
+  try {
+    const response = await fetch(`${process.env.EXPO_PUBLIC_API_URL}/productos/all`);
+    const data = await response.json();
+    updateHeladoCantidad(null, data); // ⬅️ sincroniza inventario en HeladosContext
+  } catch (error) {
+    console.error('Error al cargar helados:', error);
+  }
 }
 
-    const clearModal = () => {
-        clearCart();
-        fetchHelados();
-    }
+
+//     async function fetchHelados() {
+//         try {
+//         // const response = await fetch("http://localhost:3001/helados");
+//         const response = await fetch('${process.env.EXPO_PUBLIC_API_URL}/productos/all');
+//         if (!response.ok) throw new Error('Error al obtener los helados');
+
+//         const data = await response.json();
+//         console.log("Datos de helados cargados:", data);
+//     } catch (error) {
+//         console.error('Error al cargar helados:', error);
+//     }
+// }
+
+    // const clearModal = () => {
+    //     clearCart();
+    //     fetchHelados();
+    // }
     
 
     return (
