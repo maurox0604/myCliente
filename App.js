@@ -12,6 +12,7 @@ import { VentaContext, VentasContextProvider } from "./context/VentasContext";
 import { Dimensions } from "react-native";
 import { AuthProvider } from "./context/AuthContext";
 import { HeladosProvider } from "./context/HeladosContext";
+import { ReportesProvider } from "./context/ReportesContext";
 
 const uri = 'https://my-cliente.vercel.app/assets/assets/images/LogoQueen.4b364def9b5acb1851859bc949d7163f.png';
 
@@ -47,6 +48,7 @@ export default function App(){
                 {/* <View>
                     <Image source={{ uri: uri }} style={styles.image}/>
                 </View> */}
+            <ReportesProvider>
             <HeladosProvider>
                 <VentasContextProvider>
                     <AuthProvider>
@@ -58,6 +60,7 @@ export default function App(){
                     </AuthProvider>
                 </VentasContextProvider>
             </HeladosProvider>
+            </ReportesProvider>
         </GestureHandlerRootView>
     )
 }

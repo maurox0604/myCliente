@@ -19,6 +19,8 @@ import VentasScreen from './screens/VentasScreen';
 import CartModalContent from './components/CartModalContent';
 import CrearCategoria from './screens/CrearCategoria';
 import MenuCrear from './screens/MenuCrear';
+// import CrearProducto from './screens/CreaHeladoScreen';
+import ReportesScreen from './screens/ReportesScreen';
 
 
 import { CartContext, CartProvider } from './context/CartContext';
@@ -139,6 +141,18 @@ function MyTabs({ openCartModal, role }) {
                     ),
                 }}
             />
+
+            <Tab.Screen
+                name="Reportes"
+                component={ReportesScreen}
+                options={{
+                    tabBarLabel: "Reportes",
+                    tabBarIcon: ({ color }) => (
+                    <MaterialCommunityIcons name="chart-pie" color={color} size={24} />
+                    )
+                }}
+            />
+
         </Tab.Navigator>
     );
 }

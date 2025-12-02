@@ -62,6 +62,25 @@ const HomeScreen = () => {
                     </Text>
                 </TouchableOpacity>
 
+                {/* boton de reportes */}
+                <TouchableOpacity 
+                    onPress={() => navigation.navigate("Reportes")}
+                    style={[styles.boton,{
+                        backgroundColor: "purple",
+                    }]}
+                    >
+                    <Text
+                        style={{
+                            fontWeight: "800",
+                            fontSize: 15,
+                            textAlign:"center",
+                            color:"white"
+                        }}
+                    >
+                        Generar reportes
+                    </Text>
+                </TouchableOpacity>
+
                 <TouchableOpacity 
                     onPress={() => navigation.navigate("GuardaFoto")}
                     style={[styles.boton,{

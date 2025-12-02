@@ -50,18 +50,34 @@ export const VentasContextProvider = ({ children }) => {
     };
 
       // Cargar ventas por rango de fechas
+    // const loadVentasByDateRange = async (startDate, endDate) => {
+    //     console.log("loadVentasByDateRange called startDate: ", startDate, "endDate: ", endDate);	
+    //     try {
+    //         const ventasData = await cargarVentas(startDate, endDate);
+            
+    //         console.log("Ventas por rango de fechas:", ventasData);
+            
+    //         setVentas(ventasData);
+    //     } catch (error) {
+    //         console.error("Error al cargar ventas por rango de fechas:", error);
+    //     }
+    // };
+    
     const loadVentasByDateRange = async (startDate, endDate) => {
-        console.log("loadVentasByDateRange called startDate: ", startDate, "endDate: ", endDate);	
-        try {
-            const ventasData = await cargarVentas(startDate, endDate);
-            
-            console.log("Ventas por rango de fechas:", ventasData);
-            
-            setVentas(ventasData);
-        } catch (error) {
-            console.error("Error al cargar ventas por rango de fechas:", error);
-        }
-    };
+    try {
+        const start = startDate.toISOString().split("T")[0];
+        const end = endDate.toISOString().split("T")[0];
+
+        const response = await fetch(
+            `${process.env.EXPO_PUBLIC_API_URL}/ventas?start=${start}&end=${end}`
+        );
+
+        const data = await response.json();
+        setVentas(data.ventas);
+    } catch (error) {
+        console.error("Error al cargar ventas por rango:", error);
+    }
+}
     
      // Ordenar ventas
   const sortVentas = (criterion) => {

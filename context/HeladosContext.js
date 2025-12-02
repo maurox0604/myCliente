@@ -9,11 +9,12 @@ export const HeladosProvider = ({ children }) => {
     const [searchText, setSearchText] = useState('');
     const [seActualiza, setSeActualiza] = useState(false);
 
-
     useEffect(() => {
-        // Actualiza `filteredHelados` automáticamente cuando `helados` cambia
-        setFilteredHelados(helados);
-    }, [helados]);
+    setFilteredHelados(...helados); // NO arrastra ordenamientos previos
+        setSearchText(""); // opcional — limpia el filtro si venía de una búsqueda
+        console.log("useEffect iniical helados",filteredHelados)
+}, [helados]);
+
 
     // Función para obtener los datos de los helados
     console.log("👉 API URL usada:", process.env.EXPO_PUBLIC_API_URL);
@@ -101,6 +102,7 @@ const syncHelados = (updatedItems) => {
     // Obtener los helados al montar el contexto
     useEffect(() => {
         fetchHelados();
+        console.log("fetchHelados filterHelados: ",filteredHelados)
     }, []);
 
     return (

@@ -4,12 +4,14 @@ import { useVentas } from "../context/VentasContext";
 import { MaterialCommunityIcons } from "@expo/vector-icons";
 import VentasItem from "../components/VentasItem";
 
+
 function VentasScreen() {
     const { ventas, loadVentasByDateRange, sortVentas } = useVentas();
     const [startDate, setStartDate] = useState(new Date());
     const [endDate, setEndDate] = useState(new Date());
     const [expandedFacturaId, setExpandedFacturaId] = useState(null);
 
+    // Cargar ventas de los últimos 7 días al montar el componente
     useEffect(() => {
         const sevenDaysAgo = new Date();
         sevenDaysAgo.setDate(sevenDaysAgo.getDate() - 7);
@@ -17,16 +19,29 @@ function VentasScreen() {
         loadVentasByDateRange(sevenDaysAgo, new Date());
     }, []);
 
-    const formatHora = (fechaISO) => {
-        const fecha = new Date(fechaISO);
-        let horas = fecha.getHours();
-        const minutos = fecha.getMinutes().toString().padStart(2, "0");
-        const periodo = horas >= 12 ? "PM" : "AM";
-        horas = horas % 12 || 12;
-        return `${horas}:${minutos} ${periodo}`;
-        };
+    // Formatear la hora en formato de 12 horas con AM/PM
+const formatHora = (fechaISO) => {
+    if (!fechaISO) return "—";
+
+    const fecha = new Date(fechaISO);
+    if (isNaN(fecha)) return "—";
+
+    // Convertir hora UTC → Colombia (UTC - 5)
+    fecha.setHours(fecha.getHours() - 5);
+
+    let horas = fecha.getHours();
+    const minutos = fecha.getMinutes().toString().padStart(2, "0");
+    const periodo = horas >= 12 ? "p. m." : "a. m.";
+    horas = horas % 12 || 12;
+
+    return `${horas}:${minutos} ${periodo}`;
+};
+
+
+
+
         
-    
+// Agrupar ventas por fecha y factura    
 const groupVentasByDateAndFactura = () => {
     console.log("Datos crudos de ventas:", ventas); // Verificar los datos iniciales
 
