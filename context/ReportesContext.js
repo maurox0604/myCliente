@@ -1,7 +1,7 @@
 import { createContext, useContext, useState } from "react";
 import { getTopSaboresRequest } from "../api/reportes.api";
 
-export const ReportesContext = createContext();
+const ReportesContext = createContext();
 
 export const useReportes = () => useContext(ReportesContext);
 
@@ -10,16 +10,16 @@ export const ReportesProvider = ({ children }) => {
 
     const loadTopSabores = async () => {
         try {
-        const { data } = await getTopSaboresRequest();
-        setTopSabores(data);
-        } catch (e) {
-        console.log("Error cargando top sabores", e);
+            const data = await getTopSaboresRequest();
+            setTopSabores(data);
+        } catch (error) {
+            console.error("Error cargando top sabores:", error);
         }
     };
 
     return (
         <ReportesContext.Provider value={{ topSabores, loadTopSabores }}>
-        {children}
+            {children}
         </ReportesContext.Provider>
     );
 };
