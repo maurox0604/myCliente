@@ -1,6 +1,8 @@
 import React, { useEffect } from "react";
 import { View, Text, StyleSheet, FlatList } from "react-native";
 import { useReportes } from "../context/ReportesContext";
+import { BarChart } from "react-native-chart-kit";
+import { Dimensions } from "react-native";
 
 export default function ReportesScreen() {
     const { topSabores, loadTopSabores } = useReportes();
@@ -13,13 +15,47 @@ export default function ReportesScreen() {
         ? Math.max(...topSabores.map(item => item.total_vendido))
         : 1;
 
+    const chartData = {
+  labels: topSabores.map(item => item.sabor),
+  datasets: [
+    {
+      data: topSabores.map(item => item.total)
+    }
+  ]
+};
+
     return (
         <View style={styles.container}>
             <Text style={styles.title}>TOP Sabores Más Vendidos</Text>
 
+
+<BarChart
+  data={{
+    labels: topSabores.map(s => s.sabor),
+    datasets: [{ data: topSabores.map(s => Number(s.total)) }]
+  }}
+  width={Dimensions.get("window").width - 20}
+  height={250}
+  chartConfig={{
+    backgroundGradientFrom: "#fff",
+    backgroundGradientTo: "#fff",
+    decimalPlaces: 0,
+    color: () => "#140663",
+    labelColor: () => "#000",
+  }}
+  fromZero
+/>
+
+            
+            {/* {topSabores && topSabores.map((item, index) => (
+  <Text key={index}>{item.sabor} - {item.total}</Text>
+))} */}
+
             <FlatList
                 data={topSabores}
-                keyExtractor={(item) => item.id.toString()}
+                // keyExtractor={(item) => item.id.toString()}
+                keyExtractor={(item, index) => `${item.sabor}-${index}`}
+
                 renderItem={({ item }) => {
                     const ancho = (item.total_vendido / maxCantidad) * 250;
 

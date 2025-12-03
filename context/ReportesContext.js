@@ -9,13 +9,14 @@ export const ReportesProvider = ({ children }) => {
     const [topSabores, setTopSabores] = useState([]);
 
     const loadTopSabores = async () => {
-        try {
-            const data = await getTopSaboresRequest();
-            setTopSabores(data);
-        } catch (error) {
-            console.error("Error cargando top sabores:", error);
-        }
-    };
+    try {
+        const data = await getTopSaboresRequest();
+        console.log("🔥 Top Sabores cargados:", data);
+        setTopSabores(data);
+    } catch (error) {
+        console.error("Error cargando top sabores:", error);
+    }
+};
 
     return (
         <ReportesContext.Provider value={{ topSabores, loadTopSabores }}>
