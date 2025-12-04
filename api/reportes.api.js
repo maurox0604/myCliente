@@ -1,9 +1,9 @@
-export const getTopSaboresRequest = async () => {
-    const response = await fetch(`${process.env.EXPO_PUBLIC_API_URL}/reportes/top-sabores`);
-    const json = await response.json();
+// api/reportes.api.js
+export const getTopSaboresRequest = async (query = "") => {
+    const response = await fetch(
+        `${process.env.EXPO_PUBLIC_API_URL}/reportes/top-sabores${query}`
+    );
 
-    return json.data.map(item => ({
-        sabor: item.sabor.trim(),
-        total: Number(item.total)
-    }));
+    const json = await response.json();
+    return json.data || [];
 };
