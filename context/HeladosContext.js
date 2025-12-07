@@ -35,6 +35,19 @@ const fetchHelados = async () => {
         console.error("Error al obtener los helados:", error);
     }
 };
+    
+        // ⭐ Cuando cambien los helados, actualiza automáticamente la lista visible
+    useEffect(() => {
+        if (searchText.trim() === "") {
+            setFilteredHelados(helados);
+        } else {
+            setFilteredHelados(
+                helados.filter(h =>
+                    h.sabor.toLowerCase().includes(searchText.toLowerCase())
+                )
+            );
+        }
+    }, [helados, searchText]);
 
 
 
@@ -99,6 +112,12 @@ const syncHelados = (updatedItems) => {
         setFilteredHelados(listaOrdenada);
     };
 
+     // ⭐ Forzamos un refresco global si algo modifica datos en BD
+    const reloadHelados = () => {
+        console.log("♻️ Reload helados desde el backend");
+        fetchHelados();
+    };
+
     // Obtener los helados al montar el contexto
     useEffect(() => {
         fetchHelados();
@@ -119,6 +138,7 @@ const syncHelados = (updatedItems) => {
                 seActualiza,
                 setSeActualiza,
                 syncHelados,
+                reloadHelados, 
             }}>
             {children}
         </HeladosContext.Provider>
