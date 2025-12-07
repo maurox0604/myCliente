@@ -10,7 +10,7 @@ export const HeladosProvider = ({ children }) => {
     const [seActualiza, setSeActualiza] = useState(false);
 
     useEffect(() => {
-    setFilteredHelados(...helados); // NO arrastra ordenamientos previos
+    setFilteredHelados(helados); // NO arrastra ordenamientos previos
         setSearchText(""); // opcional — limpia el filtro si venía de una búsqueda
         console.log("useEffect iniical helados",filteredHelados)
 }, [helados]);
