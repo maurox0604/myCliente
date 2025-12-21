@@ -6,51 +6,64 @@ import { ScrollView, TextInput } from "react-native-gesture-handler";
 import { useNavigation } from '@react-navigation/native';
 import { HeladosContext } from "../context/HeladosContext";
 
-export default function EditModalContent({ id, _icon, _sabor, _precio, _cantidad, closeModal, bottomSheetModalRef }) {
+export default function EditModalContent({ id, _icon, _sabor, _precio, _cantidad, closeModal, bottomSheetModalRef, _id_categoria }) {
   const [focus, setFocus] = useState(false);
   const [sabor, setSabor] = useState(_sabor);// Campo input
   const [precio, setPrecio] = useState(_precio);// Campo input
   const [cantidad, setCantidad] = useState(_cantidad);// Campo input
-  const { updateHeladoCantidad, handleSearch } = useContext(HeladosContext);
-
+  const { reloadHelados, updateHeladoCantidad, handleSearch } = useContext(HeladosContext);
+  const [categoria, setCategoria] = useState(_id_categoria);
+  
   // const bottomSheetModalRef = useRef(null);
   const navigation = useNavigation();
   // const [foto, setFoto] = useState("../assets/images/helados/Icon_App.png");// Campo Uri Foto
   const [foto, setFoto] = useState(_icon);// Campo Uri Foto
+  const [isSaving, setIsSaving] = useState(false);
+
 
 
   const actualizarHelado = async () => {
-  try {
-    const response = await fetch(`${process.env.EXPO_PUBLIC_API_URL}/productos/update/${id}`, {
-      method: "PUT",
-      headers: { "Content-Type": "application/json" },
-      body: JSON.stringify({
-        id: id,
-        nombre: sabor,
-        precio: precio,
-        cantidad: cantidad,
-        icon: foto,
-        id_categoria: null, // ← luego la actualizamos correctamente
-      }),
-    });
+    if (isSaving) return; // 🛑 protección extra
+    console.log(".......categoria, ", categoria)
+    try {
+      setIsSaving(true); // 🔒 bloquea el botón
 
-    if (!response.ok) {
-      const errorText = await response.text();
-      throw new Error(`Error HTTP: ${response.status} - ${errorText}`);
+      const response = await fetch(
+        `${process.env.EXPO_PUBLIC_API_URL}/productos/update/${id}`,
+        {
+          method: "PUT",
+          headers: { "Content-Type": "application/json" },
+          body: JSON.stringify({
+            nombre: sabor,
+            precio: Number(precio),
+            cantidad: Number(cantidad),
+            icon: foto,
+            id_categoria: categoria, // 🔴 OBLIGATORIO
+          }),
+        }
+      );
+
+      if (!response.ok) {
+        const errorText = await response.text();
+        throw new Error(`Error HTTP: ${response.status} - ${errorText}`);
+      }
+
+      const data = await response.json();
+      console.log("Datos actualizados: ", data);
+
+      updateHeladoCantidad(id, cantidad);
+      handleSearch("");
+      await reloadHelados(); // Refresca la lista en toda la app
+      closeModal();
+
+    } catch (error) {
+      console.error("Error al actualizar el helado:", error);
+      Alert.alert("Error", "No se pudo actualizar el helado");
+    } finally {
+      setIsSaving(false); // 🔓 libera botón
     }
-
-    const data = await response.json();
-    console.log("Datos actualizados: ", data);
-
-    updateHeladoCantidad(id, cantidad);
-    handleSearch("");
-    closeModal();
-    
-  } catch (error) {
-    console.error("Error al actualizar el helado:", error);
-    alert("Error", `No se pudo actualizar el helado: ${error.message}`);
-  }
 };
+
 
 
   useFocusEffect(
@@ -148,8 +161,8 @@ export default function EditModalContent({ id, _icon, _sabor, _precio, _cantidad
       /> */}
       <Button
         onPress={actualizarHelado}
-        title="GUARDAR"
-        disabled={sabor.length === 0}
+        title={isSaving ? "GUARDANDO..." : "GUARDAR"}
+        disabled={isSaving || sabor.length === 0}
       />
       </ScrollView>
     </View>

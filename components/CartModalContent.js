@@ -6,6 +6,10 @@ import ItemCart from './ItemCart';
 import { CartContext } from '../context/CartContext';
 import { AuthContext } from '../context/AuthContext';
 import { HeladosContext } from '../context/HeladosContext';
+import { useVentas } from '../context/VentasContext';
+
+
+
 
 const CartModalContent = ({ closeModal }) => {
 
@@ -13,6 +17,7 @@ const CartModalContent = ({ closeModal }) => {
     const { carts, totalPrice, clearCart, calculateTotalPrice, cartItemCount } = useContext(CartContext);
     const { reloadHelados } = useContext(HeladosContext);
     const [isProcessing, setIsProcessing] = useState(false);
+    const { fechaManual, activarVentaManual } = useVentas();
 
     useEffect(() => {
         calculateTotalPrice(carts);
@@ -20,13 +25,17 @@ const CartModalContent = ({ closeModal }) => {
 
     const procesarCarrito = async () => {
         try {
+            console.log("CartModalContent/procesarCarrito: ")
             setIsProcessing(true);
 
             const response = await fetch(`${process.env.EXPO_PUBLIC_API_URL}/ventas/procesar`, {
                 method: "POST",
                 headers: { "Content-Type": "application/json" },
                 body: JSON.stringify({
-                    items: carts.map(item => ({ ...item, user: emailUser }))
+                    items: carts.map(item => ({ ...item, user: emailUser })),
+                    fecha_manual: fechaManual
+                    ? new Date(fechaManual).toISOString().slice(0, 19).replace("T", " ")
+                    : null
                 }),
             });
 
@@ -46,6 +55,12 @@ const CartModalContent = ({ closeModal }) => {
     return (
         <SafeAreaView style={styles.contentContainer}>
             <View style={styles.contHeader}>
+                            {fechaManual && (
+            <Text style={{ fontSize: 12, color: "#555" }}>
+                📅 Venta: {new Date(fechaManual).toLocaleString()}
+            </Text>
+            )}
+
                 <Text style={styles.textCantidad}>{cartItemCount}</Text>
 
                 {carts.length === 0 ? (

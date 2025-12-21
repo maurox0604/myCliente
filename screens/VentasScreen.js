@@ -3,6 +3,7 @@ import { View, Text, FlatList, StyleSheet, Pressable } from "react-native";
 import { useVentas } from "../context/VentasContext";
 import { MaterialCommunityIcons } from "@expo/vector-icons";
 import VentasItem from "../components/VentasItem";
+import { formatFechaCO } from "../utils/formatFecha";
 
 
 function VentasScreen() {
@@ -13,6 +14,7 @@ function VentasScreen() {
 
     // Cargar ventas de los últimos 7 días al montar el componente
     useEffect(() => {
+        console.log("cargamdo ventas ultimos 7 dias.....")
         const sevenDaysAgo = new Date();
         sevenDaysAgo.setDate(sevenDaysAgo.getDate() - 7);
         setStartDate(sevenDaysAgo);
@@ -33,7 +35,7 @@ const formatHora = (fechaISO) => {
     const minutos = fecha.getMinutes().toString().padStart(2, "0");
     const periodo = horas >= 12 ? "p. m." : "a. m.";
     horas = horas % 12 || 12;
-
+    console.log("FFFFFECHAS: ", `${horas}:${minutos} ${periodo}`)
     return `${horas}:${minutos} ${periodo}`;
 };
 
@@ -71,7 +73,8 @@ const groupVentasByDateAndFactura = () => {
             items,
             totalVenta: items.reduce((sum, item) => sum + item.venta_helado, 0),
             totalCantidad: items.reduce((sum, item) => sum + item.cantidad, 0),
-            horaFactura: items.length > 0 ? formatHora(items[0].fecha) : null, // Hora del primer item
+               // horaFactura: items.length > 0 ? formatHora(items[0].fecha) : null, // Hora del primer item
+                horaFactura: items.length > 0 ? formatFechaCO(items[0].fecha) : null, // Hora del primer item (formato CO): null,
             }))
             .filter((factura) => factura.items.length > 0), // Filtrar facturas sin items
         }))

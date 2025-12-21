@@ -4,6 +4,7 @@
 
 
 export const cargarVentas = async (startDate = null, endDate = null) => {
+    console.log("Cargar VENTAS ☻☻")
     try {
         // Convertir las fechas a formato `YYYY-MM-DD`
         const start = startDate ? new Date(startDate).toISOString().split('T')[0] : null;
@@ -11,6 +12,7 @@ export const cargarVentas = async (startDate = null, endDate = null) => {
 
         let url = `https://backend-de-prueba-delta.vercel.app/ventas`;
         // let url = `http://localhost:3001/ventas`;
+        console.log("Fecha ini y fin: ", start, end)
 
         if (start && end) {
             url += `?startDate=${start}&endDate=${end}`;

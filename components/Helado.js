@@ -20,7 +20,8 @@ import EditModalContent from "./EditModalContent";
         activaDeleteItem,
         updateHeladoCantidad, 
         columnas,
-        onDeleteSuccess
+        onDeleteSuccess,
+        id_categoria,
         }) 
     {
         const datosPaCalc = { id, sabor, cantidad, icon,precio, closeCartModal }
@@ -224,7 +225,16 @@ return (
                 snapPoints={snapPointsEditar}
                 backgroundStyle={{ borderRadius: 30, borderWidth: 4 }}
                 >
-                <EditModalContent id={id} _icon={icon} _sabor={sabor} _precio={precio} _cantidad={cantidad} closeModal={closeModal} bottomSheetModalRef={bottomSheetModalRef}/>
+                <EditModalContent
+                    id={id}
+                    _icon={icon}
+                    _sabor={sabor}
+                    _precio={precio}
+                    _cantidad={cantidad}
+                    _id_categoria={id_categoria}   // ✅ CLAVE
+                    closeModal={closeModal}
+                    bottomSheetModalRef={bottomSheetModalRef}
+                    />
             </BottomSheetModal>
     </TouchableOpacity>
     </GestureHandlerRootView>

@@ -1,6 +1,6 @@
 import { useNavigation } from '@react-navigation/native';
 import React, { useState } from 'react';
-import { Text, StyleSheet, View, TouchableOpacity, Alert, Button, TextInput, Image, ImageBackground } from 'react-native';
+import { Text, StyleSheet, View, TouchableOpacity, Alert, Button, TextInput, Image, ImageBackground,Pressable } from 'react-native';
 import Welcome from './Welcome';
 import { SafeAreaView, SafeAreaProvider } from 'react-native-safe-area-context';
 import HomeFondo from '../assets/images/HomeFondo.png'; // Importa la imagen
@@ -13,6 +13,8 @@ const HomeScreen = () => {
     const navigation = useNavigation();
     const uri = '../assets/images/HomeFondo.png';
 
+    
+
 
     return (
         <SafeAreaView style={styles.container}>
@@ -20,6 +22,20 @@ const HomeScreen = () => {
                 <Image source={HomeFondo} style={[styles.image, StyleSheet.absoluteFill]} />
                  {/* <Image source={HomeFondo} style={styles.image} /> */}
             </View>
+
+            {/* <Pressable
+                onPress={() => navigation.navigate("VentaManual")}
+                style={{
+                    position: "absolute",
+                    top: 10,
+                    right: 10,
+                    padding: 8,
+                    zIndex: 999,
+                }}
+                >
+                <Text style={{ fontSize: 24 }}>☰</Text>
+                </Pressable> */}
+
             
             <View style={[styles.container, { flex: 2 }]}>
                 {/* view vacio */}

@@ -1,72 +1,55 @@
 import { createContext, useContext, useState } from "react";
-import {
-    deleteTaskRequest,
-    getTasksRequest,
-    createTaskRequest,
-    getOnlyTaskRequest,
-    updateTaskRequest,
-    toggleTaskDoneRequest,
-    getVentasAll,
-    cargarVentas,
-} from "../api/ventas.api";
+import { cargarVentas } from "../api/ventas.api";
 
-/* eslint-disable react/prop-types */
-/* eslint-disable react-refresh/only-export-components */
 export const VentaContext = createContext();
 
-//.......................................... Creando mi propio Hook, se puede llamar en cualquier modulo 
-//para acceder a las funciones
+// Hook personalizado
 export const useVentas = () => {
-    const context = useContext(VentaContext);
-    if (!context) {
-        throw new Error("useVentas must be used within a VentasContextProvider");
-    }
-    return context;
+  const context = useContext(VentaContext);
+  if (!context) {
+    throw new Error("useVentas must be used within a VentasContextProvider");
+  }
+  return context;
 };
 
 export const VentasContextProvider = ({ children }) => {
-    const [ventas, setVentas] = useState([]);
 
-    //..................................... Cargar ventas All()
+  // 🔹 ESTADOS GLOBALES (AQUÍ SÍ)
+  const [ventas, setVentas] = useState([]);
+  const [modoVenta, setModoVenta] = useState("normal"); // normal | manual
+  const [fechaManual, setFechaManual] = useState(null);
+
+  // 🔹 FUNCIONES DE VENTA MANUAL
+  const activarVentaManual = (fecha) => {
+    setModoVenta("manual");
+    setFechaManual(fecha);
+  };
+
+  const activarVentaNormal = () => {
+    setModoVenta("normal");
+    setFechaManual(null);
+  };
+
+  // 🔹 CARGAR VENTAS
     const loadVentas = async () => {
-        console.log("loadVentas called");
-        try {
-            //const ventasData = await getVentasAll();
-            const ventasData = await cargarVentas();
-            console.log("Ventas recibidas en el contexto:", ventasData);
-
-            // Verifica si ventasData existe y tiene datos
-            if (!ventasData || ventasData.length === 0) {
-                console.log("No se encontraron ventas.");
-                return; // O manejar la situación donde no hay datos
-            }
-
-            // Aquí es donde accedes a ventasData
-            setVentas(ventasData);  // Asumiendo que usas algún state para guardar ventas
-            sortVentas("fecha");
-        } catch (error) {
-                console.error("Error al cargar las ventas:", error);
-        }
+      console.log("Cargando ventas...");
+    try {
+      const ventasData = await cargarVentas();
+      if (!ventasData) return;
+      setVentas(ventasData);
+    } catch (error) {
+      console.error("Error al cargar ventas:", error);
+    }
     };
-
-      // Cargar ventas por rango de fechas
-    // const loadVentasByDateRange = async (startDate, endDate) => {
-    //     console.log("loadVentasByDateRange called startDate: ", startDate, "endDate: ", endDate);	
-    //     try {
-    //         const ventasData = await cargarVentas(startDate, endDate);
-            
-    //         console.log("Ventas por rango de fechas:", ventasData);
-            
-    //         setVentas(ventasData);
-    //     } catch (error) {
-    //         console.error("Error al cargar ventas por rango de fechas:", error);
-    //     }
-    // };
     
+
     const loadVentasByDateRange = async (startDate, endDate) => {
+        console.log("cargando ventas por rango.....")
     try {
         const start = startDate.toISOString().split("T")[0];
         const end = endDate.toISOString().split("T")[0];
+
+        console.log(`cargando /ventas?start=${start}&end=${end}).....`)
 
         const response = await fetch(
             `${process.env.EXPO_PUBLIC_API_URL}/ventas?start=${start}&end=${end}`
@@ -77,7 +60,9 @@ export const VentasContextProvider = ({ children }) => {
     } catch (error) {
         console.error("Error al cargar ventas por rango:", error);
     }
-}
+    }
+    
+
     
      // Ordenar ventas
   const sortVentas = (criterion) => {
@@ -111,17 +96,25 @@ export const VentasContextProvider = ({ children }) => {
 };
 
 
-    
-    return (
-        <VentaContext.Provider
-            value={{
-                ventas,
-                loadVentas,
-                setVentas,
-                loadVentasByDateRange,
-                sortVentas
-            }}>
-            {children}
-        </VentaContext.Provider>
-    );
+
+  return (
+    <VentaContext.Provider
+      value={{
+        // lo existente
+        ventas,
+        setVentas,
+        loadVentas,
+        loadVentasByDateRange,
+        sortVentas,
+
+        // venta manual
+        modoVenta,
+        fechaManual,
+        activarVentaManual,
+        activarVentaNormal,
+      }}
+    >
+      {children}
+    </VentaContext.Provider>
+  );
 };
