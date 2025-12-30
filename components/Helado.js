@@ -1,245 +1,155 @@
-// import * as React from "react";
 import { useRef, useEffect, useState } from "react";
-import { Animated, View, Text, StyleSheet, Pressable, TouchableOpacity, Image, Alert } from "react-native";
+import {
+  Animated,
+  View,
+  Text,
+  StyleSheet,
+  Pressable,
+  TouchableOpacity,
+  Image,
+  Alert,
+} from "react-native";
 import { Feather, MaterialCommunityIcons } from "@expo/vector-icons";
-import "react-native-gesture-handler";
 import { BottomSheetModal } from "@gorhom/bottom-sheet";
-import { GestureHandlerRootView } from 'react-native-gesture-handler';
+
 import Calculadora from "./Calculadora";
 import EditModalContent from "./EditModalContent";
 
+export default function Helado({
+  id,
+  sabor,
+  precio,
+  icon,
+  cantidad,
+  editItem,
+  activaDeleteItem,
+  columnas,
+  onDeleteSuccess,
+  id_categoria,
+}) {
+  const [isDeleteActive, setIsDeleteActive] = useState(false);
+  const [imageSource, setImageSource] = useState({ uri: icon });
 
-    export default function Helado({
-        id,
-        sabor,
-        precio,
-        icon,
-        cantidad,
-        editItem,
-        completed,
-        activaDeleteItem,
-        updateHeladoCantidad, 
-        columnas,
-        onDeleteSuccess,
-        id_categoria,
-        }) 
-    {
-        const datosPaCalc = { id, sabor, cantidad, icon,precio, closeCartModal }
-        const [isDeleteActive, setIsDeleteActive] = useState(false);
-        const [imageSource, setImageSource] = useState({ uri: icon });
+  const editModalRef = useRef(null);
+  const calcModalRef = useRef(null);
 
-        const bottomSheetModalRef = useRef(null);
-        const addItemCardModalRef = useRef(null);
-        const snapPointsEditar = ["25%", "50%", "90%"];// el ultimo es la altura
-        const snapPointsCalculadora = ["80%"];
+  const widthAnim = useRef(new Animated.Value(0)).current;
 
-    function handlePresentModal() {
-        console.log("Vamos a editarrrrrrr")
-        bottomSheetModalRef.current?.present();
-    }
+  /* ------------------ animación delete ------------------ */
+  useEffect(() => {
+    Animated.timing(widthAnim, {
+      toValue: isDeleteActive ? 150 : 0,
+      duration: 300,
+      useNativeDriver: false,
+    }).start();
+  }, [isDeleteActive]);
 
-    function closeCartModal () {
-        addItemCardModalRef.current?.dismiss();
-    };
+  /* ------------------ handlers ------------------ */
+    const openEditModal = () => editModalRef.current?.present();
+    const closeEditModal = () => editModalRef.current?.dismiss();
+    const openCalcModal = () => calcModalRef.current?.present();
+    const closeCalcModal = () => calcModalRef.current?.dismiss();
     
+    
+    const snapPointsEditar = ["25%", "50%", "90%"];// el ultimo es la altura
 
-    function handleEditModal() {
-        addItemCardModalRef.current?.present();
-    }
-
-    // Función para cerrar el modal
-    const closeModal = () => {
-        bottomSheetModalRef.current?.close();
-    };
-
-    function activaDelete(){
-        if (activaDeleteItem) {
-            setIsDeleteActive(true);
-        }
-    }
-
-    const widthAnim = useRef(new Animated.Value(0)).current; // Valor inicial de ancho 0
-
-    // ........................Animar el boton borar que esta oculto
-    useEffect(() => {
-        if (isDeleteActive) {
-        Animated.timing(widthAnim, {
-            toValue: 150, // El valor final del ancho
-            duration: 500, // Duración de la animación (0.5 segundos)
-            useNativeDriver: false, // Se debe deshabilitar el uso del NativeDriver para animar width
-        }).start();
-        } else {
-        // Si se oculta el botón, animar de vuelta a 0
-        Animated.timing(widthAnim, {
-            toValue: 0,
-            duration: 500,
-            useNativeDriver: false,
-        }).start();
-        }
-    }, [isDeleteActive]);
-        
-        
-const deleteProdcuto = async (id) => {
+  const handleDelete = async () => {
     try {
-        const response = await fetch(
-        `${process.env.EXPO_PUBLIC_API_URL}/productos/delete/${id}`,
-        {
-            method: "PUT",
-            headers: { "Content-Type": "application/json" },
-        }
-        );
-
-        if (!response.ok) {
-        const msg = await response.text();
-        throw new Error(`Error HTTP ${response.status} – ${msg}`);
-        }
-
-        const data = await response.json();
-        console.log("Producto desactivado:", data);
-
-        onDeleteSuccess();
-        setIsDeleteActive(false); // ← opcional, cerrar animación del botón
-    } catch (error) {
-        console.error("Error eliminando:", error);
-        Alert.alert("Error", "No se pudo eliminar el producto");
+      await onDeleteSuccess(id);
+      setIsDeleteActive(false);
+    } catch (err) {
+      Alert.alert("Error", "No se pudo eliminar");
     }
-};
+  };
 
-        
 
-    const handleImageError = () => {
-        setImageSource(require('../assets/images/productoDefault.png')); // Imagen por defecto
-    };
+  const handleImageError = () =>
+    setImageSource(require("../assets/images/productoDefault.png"));
 
-return (
-    
-    <GestureHandlerRootView>
+  const datosPaCalc = {
+    id,
+    sabor,
+    cantidad,
+    icon,
+    precio,
+    closeCartModal: closeCalcModal,
+  };
+
+  /* ------------------ render ------------------ */
+  return (
     <TouchableOpacity
-        onLongPress={() => activaDelete()}// Activa el boton BORRAR Item
+        onLongPress={() => activaDeleteItem && setIsDeleteActive(true)}
         onPress={() => setIsDeleteActive(false)}
-        activeOpacity={0.8}
-        style={cantidad !== 0 ? [styles.shadowProp, styles.container] : [styles.container, styles.containerVacio, styles.shadowProp] 
-            // && columnas === true ? [styles.containerCol] : [styles.container]
-        } 
-            // & cantidad === 1 && [styles.containerCasiVacio] }
-        >
-        <View style={styles.contImgAndCant}>
-            <View style={columnas === true ? [styles.contImgCol] : [styles.contImg]}>
-                {/* ............................................................................ Icono */}
-                <Image 
-                    style= {columnas === true ? [styles.iconImgCol] : styles.iconImg} 
-                    source={imageSource}
-                    onError={handleImageError}
-                />
-                {/* ........................................................................... Cantidad */}
-                <Text style={styles.textCantidad}>{cantidad}</Text>
-            </View>
-        </View>
-        
+        activeOpacity={0.9}
+            style={cantidad !== 0 ? [styles.shadowProp, styles.container]
+                :
+                [styles.container, styles.containerVacio, styles.shadowProp]}
+    >
+      {/* imagen */}
+      <View>
+        <Image
+          style={columnas ? styles.iconImgCol : styles.iconImg}
+          source={imageSource}
+          onError={handleImageError}
+        />
+        <Text style={styles.textCantidad}>{cantidad}</Text>
+      </View>
 
-        {/* .................................................................................... Nombre */}
-        <View style={columnas === true ? [styles.containerDatosCol] : [styles.containerDatos]}>
-            {/* <CheckMark id={id} completed={completed} toggleTodo={toggleTodo} /> */}
-            <Text style={styles.title} adjustsFontSizeToFit={true} numberOfLines={1}>{sabor}</Text>
-            <View style={styles.cantPrecio}>
-                {/* .................................................................... Precio */}
-                <Text style={styles.description}>${precio} </Text>
-            </View>
-        </View>
+      {/* datos */}
+      <View style={styles.containerDatos}>
+        <Text style={styles.title} numberOfLines={1}>
+          {sabor}
+        </Text>
+        <Text style={styles.description}>${precio}</Text>
+      </View>
 
-        {/* ......................... EDITAR Items o CALCULADORA en MODAL  <Feather> is a collection of simply beautiful open source icons for React Nativ*/}
-        <View
-                style={ columnas === true ?  [styles.contBotMasCol] : [styles.contBotMas] }>
-        
-            {/* {shared_with_id !== null ? ( */}
-            {editItem === false ? (  
-                <Feather
-                // .............................................boton MAS +
-                    style={styles.iconMas}
-                    onPress={handleEditModal}
-                    name="plus-circle"
-                />
-                ) : (
-            
-                <Feather
-                //............................................boton EDIT
-                    style={styles.iconEdit}
-                    onPress={handlePresentModal}
-                    name="edit"
-                />)
-            }
-        </View>
-        
-        
-        {/* // Opcion de BORRAR un item al dejar presionado sobre el item */}
-        {isDeleteActive && (
-            <View style={styles.contBorrar}>
-                <Animated.View style={[styles.deleteButton, { width: widthAnim }]}>
-                    <Pressable
-                        style={styles.pressableButton} // Aseguramos el área de toque
-                        onPressIn={() => deleteProdcuto(id)}
-
-                        hitSlop={20}
-                    >
-                        <MaterialCommunityIcons name="trash-can-outline" size={24} color="white" />
-                        {/* <Text style={{ color: "white", fontWeight: "bold" }}>x</Text> */}
-                    </Pressable>
-
-                    <TouchableOpacity
-                        style={styles.pressableButton}
-                        onPressIn={() => deleteProdcuto(id)}
-
-                        //   onPressOut={() => setIsDeleteActive(false)}
-
-                        delayPressIn={100}  // Añadir un pequeño retraso al toque
-                                    hitSlop={20}  // Ajustar el área de toque
-                                    pointerEvents="auto"  // Asegurar que el botón reciba eventos táctiles
-                        >
-                        <MaterialCommunityIcons name="trash-can-outline" size={24} color="#0ff" />
-                        {/* <Text style={{width:50, height:60 }}>borrar</Text> */}
-                    </TouchableOpacity>
-                </Animated.View>
-            </View>
-            
+      {/* botón */}
+      <View>
+        {editItem ? (
+          <Feather name="edit" style={styles.iconEdit} onPress={openEditModal} />
+        ) : (
+          <Feather
+            name="plus-circle"
+            style={styles.iconMas}
+            onPress={openCalcModal}
+          />
         )}
+      </View>
 
-            {/* 🛒 Modal Calcuadora  */}
-            <BottomSheetModal
-                ref={addItemCardModalRef}
-                snapPoints={snapPointsCalculadora}
-                backgroundStyle={{ borderRadius: 50, borderWidth: 4 }}
-                >
-                <Calculadora
-                    completed={completed}
-                    datosPaCalc = {datosPaCalc}
-                    updateHeladoCantidad={updateHeladoCantidad}
-                    addItemCardModalRef={addItemCardModalRef}
-                />
-            </BottomSheetModal> 
+      {/* delete */}
+      {isDeleteActive && (
+        <Animated.View style={[styles.deleteButton, { width: widthAnim }]}>
+          <Pressable onPress={handleDelete}>
+            <MaterialCommunityIcons
+              name="trash-can-outline"
+              size={24}
+              color="white"
+            />
+          </Pressable>
+        </Animated.View>
+      )}
 
-            {/* ✏️ Modal Editar helados  */}
-            <BottomSheetModal
-                ref={bottomSheetModalRef}
-                enableDismissOnClose={true}
-                index={2}
-                snapPoints={snapPointsEditar}
-                backgroundStyle={{ borderRadius: 30, borderWidth: 4 }}
-                >
-                <EditModalContent
-                    id={id}
-                    _icon={icon}
-                    _sabor={sabor}
-                    _precio={precio}
-                    _cantidad={cantidad}
-                    _id_categoria={id_categoria}   // ✅ CLAVE
-                    closeModal={closeModal}
-                    bottomSheetModalRef={bottomSheetModalRef}
-                    />
-            </BottomSheetModal>
+      {/* modales */}
+      <BottomSheetModal ref={calcModalRef} snapPoints={["80%"]}>
+        <Calculadora datosPaCalc={datosPaCalc} />
+      </BottomSheetModal>
+
+          <BottomSheetModal
+              ref={editModalRef}
+              snapPoints={["95%", "90%"]}>
+        <EditModalContent
+                  id={id}
+                  _icon={icon}
+                  _sabor={sabor}
+                  _precio={precio}
+                  _cantidad={cantidad}
+                  _id_categoria={id_categoria}
+                  closeEditModal={closeEditModal}
+        />
+      </BottomSheetModal>
     </TouchableOpacity>
-    </GestureHandlerRootView>
-);
-}// Close APP
+  );
+}
 
 
 const styles = StyleSheet.create({
@@ -464,3 +374,6 @@ shadowProp: {
 },
 
 });
+
+
+// Creo que eliminaste muchas funciones de HeladosContext que se usaban en  varios modulos como (updateHeladoCantidad(id, cantidad),  el buscador(handleSearch) ) y ahora no se como reemplazarlos donde los usaba antes y estan generando error

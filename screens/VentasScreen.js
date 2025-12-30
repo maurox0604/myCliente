@@ -3,7 +3,7 @@ import { View, Text, FlatList, StyleSheet, Pressable } from "react-native";
 import { useVentas } from "../context/VentasContext";
 import { MaterialCommunityIcons } from "@expo/vector-icons";
 import VentasItem from "../components/VentasItem";
-import { formatFechaCO } from "../utils/formatFecha";
+import { formatServerDateForDisplay } from "../utils/formatFechaGlobal";
 
 
 function VentasScreen() {
@@ -18,26 +18,28 @@ function VentasScreen() {
         const sevenDaysAgo = new Date();
         sevenDaysAgo.setDate(sevenDaysAgo.getDate() - 7);
         setStartDate(sevenDaysAgo);
+        setEndDate(new Date());
+        console.log("Fecha de inicio: ", startDate )
         loadVentasByDateRange(sevenDaysAgo, new Date());
     }, []);
 
     // Formatear la hora en formato de 12 horas con AM/PM
-const formatHora = (fechaISO) => {
-    if (!fechaISO) return "—";
+// const formatHora = (fechaISO) => {
+//     if (!fechaISO) return "—";
 
-    const fecha = new Date(fechaISO);
-    if (isNaN(fecha)) return "—";
+//     const fecha = new Date(fechaISO);
+//     if (isNaN(fecha)) return "—";
 
-    // Convertir hora UTC → Colombia (UTC - 5)
-    fecha.setHours(fecha.getHours() - 5);
+//     // Convertir hora UTC → Colombia (UTC - 5)
+//     fecha.setHours(fecha.getHours() - 5);
 
-    let horas = fecha.getHours();
-    const minutos = fecha.getMinutes().toString().padStart(2, "0");
-    const periodo = horas >= 12 ? "p. m." : "a. m.";
-    horas = horas % 12 || 12;
-    console.log("FFFFFECHAS: ", `${horas}:${minutos} ${periodo}`)
-    return `${horas}:${minutos} ${periodo}`;
-};
+//     let horas = fecha.getHours();
+//     const minutos = fecha.getMinutes().toString().padStart(2, "0");
+//     const periodo = horas >= 12 ? "p. m." : "a. m.";
+//     horas = horas % 12 || 12;
+//     console.log("FFFFFECHAS: ", `${horas}:${minutos} ${periodo}`)
+//     return `${horas}:${minutos} ${periodo}`;
+// };
 
 
 
@@ -74,7 +76,7 @@ const groupVentasByDateAndFactura = () => {
             totalVenta: items.reduce((sum, item) => sum + item.venta_helado, 0),
             totalCantidad: items.reduce((sum, item) => sum + item.cantidad, 0),
                // horaFactura: items.length > 0 ? formatHora(items[0].fecha) : null, // Hora del primer item
-                horaFactura: items.length > 0 ? formatFechaCO(items[0].fecha) : null, // Hora del primer item (formato CO): null,
+                horaFactura: items.length > 0 ? formatServerDateForDisplay(items[0].fecha) : null, // Hora del primer item (formato CO): null,
             }))
             .filter((factura) => factura.items.length > 0), // Filtrar facturas sin items
         }))

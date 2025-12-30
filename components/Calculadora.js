@@ -92,7 +92,8 @@ export default function Calculadora({
     console.log("Dentro de HANDLE ADD TO CART")
     if (cantCompra > 0) {
       addToCart(item);
-      updateHeladoCantidad(datosPaCalc.id, cantQueda); // Actualiza la cantidad en ListaHelados no en DB
+      // updateHeladoCantidad(datosPaCalc.id, cantQueda); // Actualiza la cantidad en ListaHelados no en DB
+      updateHeladoCantidad(datosPaCalc.id, Number(cantQueda)); // Actualiza la cantidad en ListaHelados no en DB
       
       datosPaCalc.closeCartModal();
 

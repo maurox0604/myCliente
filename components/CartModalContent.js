@@ -1,4 +1,4 @@
-import { useContext, useEffect, useState } from 'react';
+import { useContext, useEffect, useState, useCallback } from 'react';
 import { View, Text, StyleSheet, SafeAreaView, FlatList, Pressable, ActivityIndicator } from 'react-native';
 import { StatusBar } from 'expo-status-bar';
 
@@ -7,6 +7,9 @@ import { CartContext } from '../context/CartContext';
 import { AuthContext } from '../context/AuthContext';
 import { HeladosContext } from '../context/HeladosContext';
 import { useVentas } from '../context/VentasContext';
+import { useSede } from '../context/SedeContext';
+import { formatFechaVenta } from '../utils/formatFechaGlobal';
+
 
 
 
@@ -17,32 +20,52 @@ const CartModalContent = ({ closeModal }) => {
     const { carts, totalPrice, clearCart, calculateTotalPrice, cartItemCount } = useContext(CartContext);
     const { reloadHelados } = useContext(HeladosContext);
     const [isProcessing, setIsProcessing] = useState(false);
-    const { fechaManual, activarVentaManual } = useVentas();
+    // const { fechaVentaManual , activarVentaManual } = useVentas();
+    // const [fechaVentaManual , setfechaVentaManual ] = useState(fechaVentaManual );
+    const { fechaVentaManual  } = useContext(CartContext);
+
+
+    const { sedeActiva } = useSede();
+
 
     useEffect(() => {
-        calculateTotalPrice(carts);
-    }, []);
+    calculateTotalPrice(carts);
+}, [carts]);
+
+
+// Función para formatear la fecha en formato local YYYY-MM-DD HH:mm:ss
+    const formatLocalDateTime = (date) => {
+        const pad = (n) => n.toString().padStart(2, "0");
+
+        return `${date.getFullYear()}-${pad(date.getMonth() + 1)}-${pad(date.getDate())}
+        ${pad(date.getHours())}:${pad(date.getMinutes())}:${pad(date.getSeconds())}`;
+    };
 
     const procesarCarrito = async () => {
+        if (isProcessing) return; // 🔒 bloqueo duro
+        setIsProcessing(true);
+
         try {
-            console.log("CartModalContent/procesarCarrito: ")
+            console.log("CartModalContent/procesarCarrito fechaVentaManual : ", fechaVentaManual )
             setIsProcessing(true);
+             // Formatear fecha según el caso
+            const fechaFormateada = formatFechaVenta(fechaVentaManual);
 
             const response = await fetch(`${process.env.EXPO_PUBLIC_API_URL}/ventas/procesar`, {
                 method: "POST",
                 headers: { "Content-Type": "application/json" },
                 body: JSON.stringify({
                     items: carts.map(item => ({ ...item, user: emailUser })),
-                    fecha_manual: fechaManual
-                    ? new Date(fechaManual).toISOString().slice(0, 19).replace("T", " ")
-                    : null
-                }),
+                    fecha_manual:fechaFormateada,
+                    id_sede: sedeActiva?.id || 1
+                })
+
             });
 
             if (!response.ok) throw new Error(await response.text());
 
             clearCart();           // Vacía el carrito
-            await reloadHelados(); // Refresca la lista en toda la app
+            // await reloadHelados(); // Refresca la lista en toda la app
             closeModal();          // Cierra modal
 
         } catch (error) {
@@ -52,14 +75,28 @@ const CartModalContent = ({ closeModal }) => {
         }
     };
 
+// FlatList renderItem optimizado
+    const renderItem = useCallback(
+  ({ item }) => <ItemCart {...item} />,
+  []
+);
+
+
     return (
         <SafeAreaView style={styles.contentContainer}>
             <View style={styles.contHeader}>
-                            {fechaManual && (
+                            {fechaVentaManual  && (
             <Text style={{ fontSize: 12, color: "#555" }}>
-                📅 Venta: {new Date(fechaManual).toLocaleString()}
+                📅 Venta: {new Date(fechaVentaManual ).toLocaleString()}
             </Text>
-            )}
+                )}
+                
+                <Text>
+  Fecha carrito: {fechaVentaManual
+    ? new Date(fechaVentaManual).toLocaleString()
+    : "SIN FECHA"}
+</Text>
+
 
                 <Text style={styles.textCantidad}>{cartItemCount}</Text>
 
@@ -78,8 +115,10 @@ const CartModalContent = ({ closeModal }) => {
                 <FlatList
                     style={{ flex: 1 }}
                     data={carts}
-                    keyExtractor={(item) => item.id}
-                    renderItem={({ item }) => <ItemCart {...item} />}
+                    renderItem={renderItem}
+                    keyExtractor={(item) => item.id.toString()}
+                    // keyExtractor={(item) => item.id}
+                    // renderItem={({ item }) => <ItemCart {...item} />}
                     contentContainerStyle={styles.contentContainerStyle}
                 />
             </View>

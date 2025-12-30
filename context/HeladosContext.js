@@ -1,146 +1,102 @@
-import React, { createContext, useState, useEffect, useCallback } from 'react';
-// import { set } from 'react-datepicker/dist/date_utils';
+import { createContext, useState, useEffect } from "react";
+
 
 export const HeladosContext = createContext();
 
 export const HeladosProvider = ({ children }) => {
-    const [helados, setHelados] = useState([]);
-    const [filteredHelados, setFilteredHelados] = useState([]);
-    const [searchText, setSearchText] = useState('');
-    const [seActualiza, setSeActualiza] = useState(false);
+  const [helados, setHelados] = useState([]);
+  const [filteredHelados, setFilteredHelados] = useState([]);
 
-    useEffect(() => {
-    setFilteredHelados(helados); // NO arrastra ordenamientos previos
-        setSearchText(""); // opcional — limpia el filtro si venía de una búsqueda
-        console.log("useEffect iniical helados",filteredHelados)
-}, [helados]);
-
-
-    // Función para obtener los datos de los helados
-    console.log("👉 API URL usada:", process.env.EXPO_PUBLIC_API_URL);
-
-const fetchHelados = async () => {
+  /* ================= FETCH ================= */
+    const fetchHelados = async () => {
     try {
-        const response = await fetch(`${process.env.EXPO_PUBLIC_API_URL}/productos/all`, {
-        method: "GET",
-        headers: { "Content-Type": "application/json" },
-        });
+        const res = await fetch(`${process.env.EXPO_PUBLIC_API_URL}/productos/all`);
 
-        const data = await response.json();
-        console.log("Helados cargados:", data.productos);
-
-        setHelados(data.productos);
-        setFilteredHelados(data.productos);
-    } catch (error) {
-        console.error("Error al obtener los helados:", error);
-    }
-};
-    
-        // ⭐ Cuando cambien los helados, actualiza automáticamente la lista visible
-    useEffect(() => {
-        if (searchText.trim() === "") {
-            setFilteredHelados(helados);
-        } else {
-            setFilteredHelados(
-                helados.filter(h =>
-                    h.sabor.toLowerCase().includes(searchText.toLowerCase())
-                )
-            );
+        if (!res.ok) {
+        console.error("❌ Error HTTP:", res.status);
+        setHelados([]);
+        setFilteredHelados([]);
+        return;
         }
-    }, [helados, searchText]);
 
+        const data = await res.json();
 
+        // 🔒 BLINDAJE TOTAL
+        const productos = Array.isArray(data)
+        ? data
+        : Array.isArray(data.productos)
+            ? data.productos
+            : [];
 
-    // Función para actualizar la cantidad de un helado en la lista
-    const updateHeladoCantidad = (id, nuevaCantidad) => {
-        if (nuevaCantidad === undefined || nuevaCantidad < 0) {
-            console.log("RECARGANDO LA LISTA DE HELADOS");
-            setFilteredHelados(helados);
-            return;
-        }else{
-            console.log("Actualizando helado:", id, "nueva cantidad:", nuevaCantidad);
-            setHelados(prevHelados =>
-                prevHelados.map(helado =>
-                    helado.id === id ? { ...helado, cantidad: nuevaCantidad } : helado
-                )
-            );
+        setHelados(productos);
+        setFilteredHelados(productos);
+    } catch (err) {
+        console.error("❌ fetchHelados falló:", err);
+        setHelados([]);
+        setFilteredHelados([]);
     }
-        
-    
-   // setSeActualiza(true);
-    // setFilteredHelados(helados);
-};
+    };
+  /* ================= BUSCADOR ================= */
+  const handleSearch = (text) => {
+    if (!text) {
+      setFilteredHelados(helados);
+      return;
+    }
 
-    // Función para sincronizar múltiples helados (ej., después de una compra)
-const syncHelados = (updatedItems) => {
-    setHelados(prevHelados =>
-        prevHelados.map(helado => {
-            const updatedItem = updatedItems.find(item => item.id === helado.id);
-            return updatedItem ? { ...helado, cantidad: updatedItem.cantidad } : helado;
-        })
+    const filtered = helados.filter(h =>
+      h.sabor.toLowerCase().includes(text.toLowerCase())
     );
-};
+    setFilteredHelados(filtered);
+  };
 
-    // Función para eliminar un helado
-    const deleteHelado = (id) => {
-        console.log("Eliminando helado con ID:", id);
-        setHelados(prevHelados => prevHelados.filter(helado => helado.id !== id));
-    };
+  /* ================= UPDATE CANTIDAD ================= */
+  const updateHeladoCantidad = (id, nuevaCantidad) => {
+    setHelados(prev =>
+      prev.map(h =>
+        h.id === id ? { ...h, cantidad: nuevaCantidad } : h
+      )
+      );
+      
+      handleSearch(""); // refresca búsqueda
+      
+    setFilteredHelados(prev =>
+      prev.map(h =>
+        h.id === id ? { ...h, cantidad: nuevaCantidad } : h
+      )
+      );
+      
+  };
 
-    // Función para buscar helados por texto
-    const handleSearch = (text) => {
-        setSearchText(text);
-        if (text === '') {
-            setFilteredHelados(helados);
-        } else {
-            const heladosFiltrados = helados.filter(helado =>
-                helado.sabor.toLowerCase().includes(text.toLowerCase())
-            );
-            setFilteredHelados(heladosFiltrados);
-        }
-    };
-
-    // Función para ordenar los helados por nombre
-    const ordenarPorNombre = () => {
-        const listaOrdenada = [...filteredHelados].sort((a, b) => a.sabor.localeCompare(b.sabor));
-        setFilteredHelados(listaOrdenada);
-    };
-
-    // Función para ordenar los helados por cantidad
-    const ordenarPorCantidad = () => {
-        const listaOrdenada = [...filteredHelados].sort((a, b) => a.cantidad - b.cantidad);
-        setFilteredHelados(listaOrdenada);
-    };
-
-     // ⭐ Forzamos un refresco global si algo modifica datos en BD
-    const reloadHelados = () => {
-        console.log("♻️ Reload helados desde el backend");
-        fetchHelados();
-    };
-
-    // Obtener los helados al montar el contexto
-    useEffect(() => {
-        fetchHelados();
-        console.log("fetchHelados filterHelados: ",filteredHelados)
-    }, []);
-
-    return (
-        <HeladosContext.Provider
-            value={{
-                helados,
-                filteredHelados,
-                fetchHelados,
-                updateHeladoCantidad,
-                deleteHelado,
-                handleSearch,
-                ordenarPorNombre,
-                ordenarPorCantidad,
-                seActualiza,
-                setSeActualiza,
-                syncHelados,
-                reloadHelados, 
-            }}>
-            {children}
-        </HeladosContext.Provider>
+  /* ================= ORDEN ================= */
+  const ordenarPorNombre = () => {
+    setFilteredHelados(prev =>
+      [...prev].sort((a, b) => a.sabor.localeCompare(b.sabor))
     );
+  };
+
+  const ordenarPorCantidad = () => {
+    setFilteredHelados(prev =>
+      [...prev].sort((a, b) => a.cantidad - b.cantidad )
+    );
+  };
+
+  useEffect(() => {
+    fetchHelados();
+  }, []);
+
+  return (
+    <HeladosContext.Provider
+      value={{
+        helados,
+        filteredHelados,
+        fetchHelados,
+        handleSearch,
+        updateHeladoCantidad,
+        ordenarPorNombre,
+        ordenarPorCantidad,
+      }}
+    >
+      {children}
+    </HeladosContext.Provider>
+  );
 };

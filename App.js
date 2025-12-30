@@ -14,6 +14,7 @@ import { AuthProvider } from "./context/AuthContext";
 import { HeladosProvider } from "./context/HeladosContext";
 import { ReportesProvider } from "./context/ReportesContext";
 import { CategoriasProvider } from "./context/CategoriasContext";
+import { SedeProvider } from "./context/SedeContext";
 
 const uri = 'https://my-cliente.vercel.app/assets/assets/images/LogoQueen.4b364def9b5acb1851859bc949d7163f.png';
 
@@ -29,7 +30,21 @@ LogBox.ignoreLogs([
 // Ignore all log notifications
 LogBox.ignoreAllLogs();
 // const screenWidth = Dimensions.get("window").width;
-export default function App(){
+export default function App() {
+    
+    if (!global.__fetchWrapped) {
+        global.__fetchWrapped = true;
+
+        const originalFetch = global.fetch;
+        let counter = 0;
+
+        global.fetch = async (...args) => {
+            counter++;
+            console.log(`🌐 FETCH #${counter}:`, args[0]);
+            return originalFetch(...args);
+        };
+    }
+
     
     const funMsg = function FunciMSG (){
         return (console.log("Esat es una prueba"));
@@ -49,23 +64,23 @@ export default function App(){
                 {/* <View>
                     <Image source={{ uri: uri }} style={styles.image}/>
                 </View> */}
-            
-            <ReportesProvider>
-                <CategoriasProvider>
-                    <HeladosProvider>
-                        <VentasContextProvider>
-                            <AuthProvider>
-                                <DbaseProvider>
-                                    <CartModalProvider>
-                                        <Navigation style={styles.container}/>
-                                    </CartModalProvider>
-                                </DbaseProvider>
-                            </AuthProvider>
-                        </VentasContextProvider>
-                    </HeladosProvider>
-                </CategoriasProvider>
-            </ReportesProvider>
-
+            <SedeProvider>
+                <ReportesProvider>
+                    <CategoriasProvider>
+                        <HeladosProvider>
+                            <VentasContextProvider>
+                                <AuthProvider>
+                                    <DbaseProvider>
+                                        <CartModalProvider>
+                                            <Navigation style={styles.container}/>
+                                        </CartModalProvider>
+                                    </DbaseProvider>
+                                </AuthProvider>
+                            </VentasContextProvider>
+                        </HeladosProvider>
+                    </CategoriasProvider>
+                </ReportesProvider>
+            </SedeProvider>
         </GestureHandlerRootView>
     )
 }

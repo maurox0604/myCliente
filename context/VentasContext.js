@@ -6,6 +6,7 @@ export const VentaContext = createContext();
 // Hook personalizado
 export const useVentas = () => {
   const context = useContext(VentaContext);
+
   if (!context) {
     throw new Error("useVentas must be used within a VentasContextProvider");
   }
@@ -31,64 +32,72 @@ export const VentasContextProvider = ({ children }) => {
   };
 
   // 🔹 CARGAR VENTAS
-    const loadVentas = async () => {
-      console.log("Cargando ventas...");
-    try {
-      const ventasData = await cargarVentas();
-      if (!ventasData) return;
-      setVentas(ventasData);
-    } catch (error) {
-      console.error("Error al cargar ventas:", error);
-    }
-    };
-    
+const [loadingVentas, setLoadingVentas] = useState(false);
 
-    const loadVentasByDateRange = async (startDate, endDate) => {
-        console.log("cargando ventas por rango.....")
-    try {
-        const start = startDate.toISOString().split("T")[0];
-        const end = endDate.toISOString().split("T")[0];
+const loadVentas = async () => {
+  if (loadingVentas) return; // 🔒 evita duplicados
+  setLoadingVentas(true);
 
-        console.log(`cargando /ventas?start=${start}&end=${end}).....`)
-
-        const response = await fetch(
-            `${process.env.EXPO_PUBLIC_API_URL}/ventas?start=${start}&end=${end}`
-        );
-
-        const data = await response.json();
-        setVentas(data.ventas);
-    } catch (error) {
-        console.error("Error al cargar ventas por rango:", error);
-    }
-    }
-    
+  try {
+    const ventasData = await cargarVentas();
+    if (ventasData) setVentas(ventasData);
+  } catch (error) {
+    console.error("Error al cargar ventas:", error);
+  } finally {
+    setLoadingVentas(false);
+  }
+};
 
     
-     // Ordenar ventas
-  const sortVentas = (criterion) => {
-    const sortedVentas = [...ventas]; // Crear una copia de las ventas
-    console.log("Ventas antes de ordenar:", sortedVentas);
-    if (criterion === "fecha") {
-        sortedVentas.sort((a, b) => {
-            // Convertir las fechas a objetos Date
-            const fechaA = new Date(a.fecha);
-            const fechaB = new Date(b.fecha);
+// ................................................ Cargar ventas por rango de fechas
+const [lastRange, setLastRange] = useState(null);
 
-            // Imprimir para depuración
-            console.log("Comparando fechas:");
-            console.log(a+". Fecha A:", fechaA);
-            console.log(b+". Fecha B:", fechaB);
+const loadVentasByDateRange = async (startDate, endDate) => {
+  const start = startDate.toISOString().split("T")[0];
+  const end = endDate.toISOString().split("T")[0];
 
-            // Restar las fechas para ordenarlas
-            // return fechaB - fechaA; // De más reciente a más antiguo
-            return fechaA - fechaB; // De más reciente a más antiguo
-        });
-    } else if (criterion === "producto") {
-        sortedVentas.sort((a, b) => {
-            // Ordenar por cantidad vendida (descendente)
-            return b.cantidad - a.cantidad;
-        });
-    }
+  console.log("◘◘...Vetas context: fecha ini: ", start, "  y fin: "  ,end)
+
+  const rangeKey = `${start}_${end}`;
+  if (lastRange === rangeKey) return; // 🔒 evita refetch
+
+  setLastRange(rangeKey);
+
+  try {
+    const response = await fetch(
+      `${process.env.EXPO_PUBLIC_API_URL}/ventas?start=${start}&end=${end}`
+    );
+    const data = await response.json();
+    setVentas(data.ventas);
+  } catch (error) {
+    console.error("Error al cargar ventas por rango:", error);
+  }
+};
+
+    
+
+    
+     // ..................................................................... Ordenar ventas
+    const sortVentas = (criterion) => {
+      const sortedVentas = [...ventas]; // Crear una copia de las ventas
+      console.log("Ventas antes de ordenar:", sortedVentas);
+
+      if (criterion === "fecha") {
+          sortedVentas.sort((a, b) => {
+              // Convertir las fechas a objetos Date
+              const fechaA = new Date(a.fecha);
+              const fechaB = new Date(b.fecha);
+
+              // Restar las fechas para ordenarlas
+              // return fechaB - fechaA; // De más reciente a más antiguo
+              return fechaA - fechaB; // De más reciente a más antiguo
+          });
+      } else if (criterion === "producto") {
+          sortedVentas.sort((a, b) => {
+              // Ordenar por cantidad vendida (descendente)
+              return b.cantidad - a.cantidad;
+          });
+      }
 
     // Actualizar el estado
     console.log("Ventas ordenadas:", sortedVentas);

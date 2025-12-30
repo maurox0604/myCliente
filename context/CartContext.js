@@ -9,6 +9,8 @@ export const  CartProvider = ({children}) => {
     const [cartItemCount, setCartItemCount] = useState(0);
     const [cartItemCero, setCartItemCero] = useState(0);
     const [updateHeladoCantidadFunc, setUpdateHeladoCantidadFunc] = useState(null);
+    const [fechaVentaManual, setFechaVentaManual] = useState(null);
+
 
 
     const addToCart = (item) => {
@@ -88,6 +90,7 @@ export const  CartProvider = ({children}) => {
         setCarts([]);
         setTotalPrice(0);
         setCartItemCount(0);
+        setFechaVentaManual(null);
         //settoTalItemCompra(0);
     }
 
@@ -141,6 +144,9 @@ export const  CartProvider = ({children}) => {
         updateHeladoCantidadContext,
         cartItemCero,
         fetchHelados,
+
+        fechaVentaManual,
+        setFechaVentaManual,
     };
     return <CartContext.Provider value={value}>
                 {children}

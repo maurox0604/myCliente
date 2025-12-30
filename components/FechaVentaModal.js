@@ -1,13 +1,17 @@
-import React, { useState } from "react";
+import React, { useState, useContext } from "react";
 import {
     View,
     Text,
     Modal,
     Pressable,
     Platform,
-    StyleSheet,
+  StyleSheet,
+    
 } from "react-native";
-import { useVentas } from "../context/VentasContext";
+
+// import { useVentas } from "../context/VentasContext";
+// import { setFechaVentaManual } from "../context/VentasContext";
+import { CartContext } from "../context/CartContext";
 
 import DateTimePicker from "@react-native-community/datetimepicker";
 
@@ -16,12 +20,21 @@ import DatePicker from "react-datepicker";
 import "react-datepicker/dist/react-datepicker.css";
 
 export default function FechaVentaModal({ visible, onClose }) {
-    const { activarVentaManual } = useVentas();
-    const [fecha, setFecha] = useState(new Date());
-    const [showMobilePicker, setShowMobilePicker] = useState(false);
+    // const { activarVentaManual } = useVentas();
+  const [fecha, setFecha] = useState(new Date());
+  const [showMobilePicker, setShowMobilePicker] = useState(false);
+  const { setFechaVentaManual } = useContext(CartContext);
+
+  
+  // setFechaVentaManual(fecha);
+
+  
 
     const confirmar = () => {
-        activarVentaManual(fecha);
+      // activarVentaManual(fecha);
+      console.log("fecha desde fechaMpdal: ", fecha)
+
+       setFechaVentaManual(fecha); // 🔥 AQUÍ
         onClose();
     };
 

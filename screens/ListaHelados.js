@@ -7,6 +7,7 @@ import { GestureHandlerRootView, ScrollView } from 'react-native-gesture-handler
 import MenuVenta from "../components/MenuVenta";
 import { useNavigation } from '@react-navigation/native';
 import { useCategorias } from "../context/CategoriasContext";
+import { useSede } from '../context/SedeContext';
 
 
 
@@ -33,6 +34,10 @@ export default function ListaHelados({ deletItem = false, editItem = false }) {
     const [showMenuVenta, setShowMenuVenta] = useState(false);// Nuevo estado para mostrar/ocultar el menú
     const navigation = useNavigation();
     const [showFechaModal, setShowFechaModal] = useState(false);
+    const { sedeActiva } = useSede();// Nuevo estado para manejar el modal de sede
+    const [showSedeModal, setShowSedeModal] = useState(false);
+
+
 
 
 
@@ -65,6 +70,8 @@ function onRefresh() {
     return (
         <GestureHandlerRootView style={{flex: 1}}>
             <SafeAreaView style={styles.container}>
+                
+
                 {/* <TextInput
                     style={styles.searchInput}
                     placeholder="Buscar helado por sabor..."
@@ -210,7 +217,25 @@ function onRefresh() {
                             key={isThreeColumns ? "two-column" : "one-column"}
                             refreshing={isFetching}
                             onRefresh={onRefresh}
-                        />{/* end FlatList */}
+                />{/* end FlatList */}
+                    
+                        {/* ........................................................MODAL SEDE */}
+                        {showSedeModal && (
+                            <View style={styles.overlay}>
+                                <Pressable
+                                style={styles.backdrop}
+                                onPress={() => setShowSedeModal(false)}
+                                />
+                                <View style={styles.modal}>
+                                <SelectorSedeModal
+                                    onClose={() => setShowSedeModal(false)}
+                                />
+                                </View>
+                            </View>
+                            )}
+
+                
+                    {/* ........................................................MENÚ VENTA */}
 
                     {showMenuVenta && (
                     <View style={styles.overlay}>
@@ -226,8 +251,6 @@ function onRefresh() {
                         </View>
                     </View>
                     )}
-
-
 
             </SafeAreaView>
         </GestureHandlerRootView>
@@ -357,6 +380,21 @@ categoriaTextActiva: {
         fontSize: 16,
         color: '#333',
     },
+// BOTÓN SEDE
+    sedeButton: {
+        margin: 8,
+        paddingHorizontal: 12,
+        paddingVertical: 6,
+        backgroundColor: "#e70071",
+        borderRadius: 20,
+        },
+
+        sedeText: {
+        color: "#fff",
+        fontSize: 14,
+        fontWeight: "600",
+},
+
 
 });
 

@@ -7,6 +7,8 @@ import MaterialCommunityIcons from 'react-native-vector-icons/MaterialCommunityI
 import { BottomSheetModal, BottomSheetModalProvider } from '@gorhom/bottom-sheet';
 import { BottomSheetBackdrop } from '@gorhom/bottom-sheet';
 
+import SedeSelectorHeader from './components/SedeSelectorHeader';
+
 
 
 // Screens
@@ -31,6 +33,8 @@ import ReportesScreen from './screens/ReportesScreen';
 import { CartContext, CartProvider } from './context/CartContext';
 import LoadingScreen from './screens/LoadingScreen';
 import { AuthContext } from './context/AuthContext';
+import { SedeProvider } from './context/SedeContext';
+import  SedeSelectorSheet  from './components/SedeSelectorSheet';
 
 const Tab = createBottomTabNavigator();
 const MainStack = createNativeStackNavigator();
@@ -42,9 +46,9 @@ const CreateNewPlaceholder = () => (
 );
 
 // ........................................................... configuracion de pestañas ...............................
-function MyTabs({ openCartModal, openMenuVenta, role }) {
+function MyTabs({ openCartModal, openMenuVenta, role, openSedeModal }) {
     const { cartItemCount, cartItemCero } = useContext(CartContext);
-    const menuVentaRef = useRef(null);
+    // const menuVentaRef = useRef(null);
 
 
     return (
@@ -130,28 +134,30 @@ function MyTabs({ openCartModal, openMenuVenta, role }) {
             />
 
             <Tab.Screen
-                name="Sabores"
-                component={ListaHelados}
-                options={{
-                    tabBarLabel: 'Sabores',
-                    headerTitle: 'Sabores',
-                    headerRight: () => (
-                    <Pressable
-                        onPress={openMenuVenta}   // ⬅️ CLAVE
-                        style={{ marginRight: 15 }}
-                    >
-                        <Text style={{ fontSize: 22 }}>☰</Text>
-                    </Pressable>
-                    ),
-                    tabBarIcon: ({ color, size }) => (
-                    <MaterialCommunityIcons
-                        name="flip-vertical"
-                        color={color}
-                        size={size}
-                    />
-                    ),
-                }}
+  name="Sabores"
+  component={ListaHelados}
+  options={{
+    tabBarLabel: "Sabores",
+    headerTitle: "Sabores",
+
+    headerRight: () => (
+        <SedeSelectorHeader
+            onOpenMenu={openMenuVenta} 
+            onOpenSede={openSedeModal}
             />
+    ),
+
+    tabBarIcon: ({ color, size }) => (
+      <MaterialCommunityIcons
+        name="flip-vertical"
+        color={color}
+        size={size}
+      />
+    ),
+  }}
+/>
+
+
 
 
             <Tab.Screen 
@@ -187,12 +193,14 @@ function MyTabs({ openCartModal, openMenuVenta, role }) {
 export default function Navigation() {
     const cartModalRef = useRef(null);// Referencia para el modal del carrito
     const menuVentaRef = useRef(null);// Referencia para el modal del menú de venta manual
+    const sedeModalRef = useRef(null);
+
     const { user, role, loading } = useContext(AuthContext);
     if (loading) {
         return <LoadingScreen />; // Pantalla de carga
     }
 
-    // Función para renderizar el fondo del modal
+    // Función para renderizar el fondo del modal del carrito
     const renderBackdrop = (props) => (
   <BottomSheetBackdrop
     {...props}
@@ -221,10 +229,21 @@ export default function Navigation() {
         menuVentaRef.current?.dismiss();
     };
 
+ // Funciones para abrir y cerrar el selector de sede
+    const openSedeModal = () => {
+        sedeModalRef.current?.present();
+    };
+
+    const closeSedeModal = () => {
+        sedeModalRef.current?.dismiss();
+    };
+
+
 
     return (
 
         <CartProvider>
+            <SedeProvider>
             <BottomSheetModalProvider>
                 <NavigationContainer>
                     <MainStack.Navigator initialRouteName="Welcome">
@@ -326,16 +345,29 @@ export default function Navigation() {
                     </BottomSheetModal>
 
                     {/* Modal del menú de venta manual */}
+                    {/* Modal menú venta */}
                     <BottomSheetModal
                         ref={menuVentaRef}
                         snapPoints={['35%']}
                         backdropComponent={renderBackdrop}
                         handleComponent={null}
-                    >
+                        >
                         <MenuVenta closeModal={closeMenuVenta} />
                     </BottomSheetModal>
+
+                    {/* Modal selector sede */}
+                    <BottomSheetModal
+                        ref={sedeModalRef}
+                        snapPoints={['40%']}
+                        backdropComponent={renderBackdrop}
+                        handleComponent={null}
+                        >
+                        <SedeSelectorSheet closeModal={closeSedeModal} />
+                    </BottomSheetModal>
+
                 </NavigationContainer>
-            </BottomSheetModalProvider>
+                </BottomSheetModalProvider>
+            </SedeProvider>
         </CartProvider>
     );
 }

@@ -9,3 +9,5 @@ export function formatFechaCO(fechaUTC) {
     minute: "2-digit",
   });
 }
+
+

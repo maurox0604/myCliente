@@ -6,12 +6,12 @@ import { ScrollView, TextInput } from "react-native-gesture-handler";
 import { useNavigation } from '@react-navigation/native';
 import { HeladosContext } from "../context/HeladosContext";
 
-export default function EditModalContent({ id, _icon, _sabor, _precio, _cantidad, closeModal, bottomSheetModalRef, _id_categoria }) {
+export default function EditModalContent({ id, _icon, _sabor, _precio, _cantidad,   _id_categoria, closeEditModal }) {
   const [focus, setFocus] = useState(false);
   const [sabor, setSabor] = useState(_sabor);// Campo input
   const [precio, setPrecio] = useState(_precio);// Campo input
   const [cantidad, setCantidad] = useState(_cantidad);// Campo input
-  const { reloadHelados, updateHeladoCantidad, handleSearch } = useContext(HeladosContext);
+  const { updateHeladoCantidad, handleSearch } = useContext(HeladosContext);
   const [categoria, setCategoria] = useState(_id_categoria);
   
   // const bottomSheetModalRef = useRef(null);
@@ -51,10 +51,9 @@ export default function EditModalContent({ id, _icon, _sabor, _precio, _cantidad
       const data = await response.json();
       console.log("Datos actualizados: ", data);
 
-      updateHeladoCantidad(id, cantidad);
+      updateHeladoCantidad(id, Number(cantidad));
       handleSearch("");
-      await reloadHelados(); // Refresca la lista en toda la app
-      closeModal();
+      closeEditModal();
 
     } catch (error) {
       console.error("Error al actualizar el helado:", error);
@@ -66,21 +65,21 @@ export default function EditModalContent({ id, _icon, _sabor, _precio, _cantidad
 
 
 
-  useFocusEffect(
-  useCallback(() => {
-    const timeout = setTimeout(() => {
-      if (bottomSheetModalRef.current) {
-        bottomSheetModalRef.current.dismiss();
-      } else {
-        console.log("bottomSheetModalRef no está disponible aún.");
-      }
-    }, 100); // Retraso de 100ms, ajusta según sea necesario
+//   useFocusEffect(
+//   useCallback(() => {
+//     const timeout = setTimeout(() => {
+//       if (bottomSheetModalRef?.current) {
+//         bottomSheetModalRef.current.dismiss();
+//       } else {
+//         console.log("bottomSheetModalRef no está disponible aún.");
+//       }
+//     }, 100); // Retraso de 100ms, ajusta según sea necesario
 
-    return () => {
-      clearTimeout(timeout);
-    };
-  }, [])
-);
+//     return () => {
+//       clearTimeout(timeout);
+//     };
+//   }, [])
+// );
 
 
 
@@ -88,8 +87,8 @@ export default function EditModalContent({ id, _icon, _sabor, _precio, _cantidad
     <View style={styles.contentContainer}>
       <View style={styles.header}>
         <Text style={[styles.title, { marginBottom: 20 }]}>Ingrese los nuevos datos del helado "SABOR, PRECIO, CANTIDAD"</Text>
-        {/* <Button style={styles.closeButton} title="Close" onPress={closeModal} /> */}
-        <TouchableOpacity onPress={closeModal} style={styles.closeButton}>
+        <Button style={styles.closeButton} title="Close" onPress={closeEditModal} />
+        <TouchableOpacity onPress={closeEditModal} style={styles.closeButton}>
           <Text style={styles.closeButtonText}>X</Text>
         </TouchableOpacity>
       </View>
