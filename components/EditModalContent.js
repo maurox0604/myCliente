@@ -88,9 +88,9 @@ export default function EditModalContent({ id, _icon, _sabor, _precio, _cantidad
       <View style={styles.header}>
         <Text style={[styles.title, { marginBottom: 20 }]}>Ingrese los nuevos datos del helado "SABOR, PRECIO, CANTIDAD"</Text>
         <Button style={styles.closeButton} title="Close" onPress={closeEditModal} />
-        <TouchableOpacity onPress={closeEditModal} style={styles.closeButton}>
+        {/* <TouchableOpacity onPress={closeEditModal} style={styles.closeButton}>
           <Text style={styles.closeButtonText}>X</Text>
-        </TouchableOpacity>
+        </TouchableOpacity> */}
       </View>
     
       <ScrollView automaticallyAdjustKeyboardInsets={true}>

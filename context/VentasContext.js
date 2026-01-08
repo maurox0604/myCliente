@@ -68,6 +68,7 @@ const loadVentasByDateRange = async (startDate, endDate) => {
       `${process.env.EXPO_PUBLIC_API_URL}/ventas?start=${start}&end=${end}`
     );
     const data = await response.json();
+    console.log("------------------♥♥ data: ", data)
     setVentas(data.ventas);
   } catch (error) {
     console.error("Error al cargar ventas por rango:", error);

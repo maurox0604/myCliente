@@ -18,10 +18,15 @@ export function SedeProvider({ children }) {
 
     const cambiarSede = (sede) => {
         setSedeActiva(sede);
+        console.log("SEDE activa: ", sede)
     };
 
     return (
-        <SedeContext.Provider value={{ sedes, sedeActiva, cambiarSede }}>
+        <SedeContext.Provider value={{
+            sedes,
+            sedeActiva,
+            cambiarSede
+        }}>
         {children}
         </SedeContext.Provider>
     );

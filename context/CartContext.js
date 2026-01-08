@@ -24,21 +24,34 @@ export const  CartProvider = ({children}) => {
             updatedCarts = [...carts, item];
         } else {
             // Si el ítem ya existe, actualizamos la cantidad
-            updatedCarts = carts.map((cart, index) => 
-                index === itemIndex
-                    ? { ...cart, cantCompra: item.cantCompra }
-                    : cart
+
+            // IMPORTANTE:
+            // No se acumula aquí.
+            // La calculadora ya resolvió la cantidad final.
+            // El carrito solo sincroniza el estado.
+
+
+            updatedCarts = carts.map((cart) =>
+            cart.id === item.id
+                ? {
+                    ...cart,
+                    cantCompra: Number(item.cantCompra), // 🔒 valor final, no acumulado
+                    totVentaXhelado: Number(item.cantCompra) * Number(cart.precio),// calculo total por helado
+                }
+                : cart
             );
         }
-
+        
         // Actualizamos el estado del carrito
         setCarts(updatedCarts);
     
         // Recalculamos la cantidad total de ítems
         updateCartItemCount(updatedCarts);
+        console.log("🛒 CARTS:", updatedCarts);
     };
 
 
+    // Actualiza la cantidad total de ítems en el carrito 
     const updateCartItemCount = (cartItems) => {
         let totalItems = cartItems.reduce((total, item) => total + item.cantCompra, 0);
         setCartItemCount(totalItems);
@@ -57,12 +70,13 @@ export const  CartProvider = ({children}) => {
         /* carts es cada linea de la lista o array de lista y contiene array item */
         const itemExist = carts.findIndex((cart) => cart.id === item.id );
 
-            return{ 
-                itemObj: carts[itemExist],
-                itemExiste: itemExist
-            };
+        return{ 
+            itemObj: carts[itemExist],
+            itemExiste: itemExist
+        };
     }
 
+    // Calcular el precio total del carrito
     const calculateTotalPrice = () => {
         const totalSum = carts.reduce((total, item) => total + (item.precio * item.cantCompra), 0);
         setTotalPrice(totalSum);
@@ -97,16 +111,16 @@ export const  CartProvider = ({children}) => {
     
 
 
-    // useEffect(() => {
-    //     // fetchData();
-    //     fetchHelados();
-    // },  
-    // [] );
+    useEffect(() => {
+        // fetchData();
+        fetchHelados();
+    },  
+    [] );
 
 
 
    // async function fetchHelados() {
-        const fetchHelados = async () => {
+    const fetchHelados = async () => {
 
         console.log("Esta es fethcData")
         const response = await fetch(`${process.env.EXPO_PUBLIC_API_URL}/productos/all`, {
@@ -122,7 +136,7 @@ export const  CartProvider = ({children}) => {
             },
         });
         const data = await response.json();
-        // console.log("Los datos:  ", data)
+        console.log("Dentro de fetchHelados, Los datos data:  ", data)
         // console.log("//Los datos:  ", data[0].sabor)
 
         // const lowQuantityCount = data.filter(helado => helado.cantidad === 1).length;
@@ -138,7 +152,7 @@ export const  CartProvider = ({children}) => {
         totalPrice,
         existCart,
         clearCart,
-        calculateTotalPrice,
+        calculateTotalPrice,// Recalcula el precio total
         handleRemoveItem,
         cartItemCount,
         updateHeladoCantidadContext,

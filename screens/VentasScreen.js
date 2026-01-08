@@ -4,6 +4,7 @@ import { useVentas } from "../context/VentasContext";
 import { MaterialCommunityIcons } from "@expo/vector-icons";
 import VentasItem from "../components/VentasItem";
 import { formatServerDateForDisplay } from "../utils/formatFechaGlobal";
+import { useSede } from '../context/SedeContext';
 
 
 function VentasScreen() {
@@ -11,37 +12,23 @@ function VentasScreen() {
     const [startDate, setStartDate] = useState(new Date());
     const [endDate, setEndDate] = useState(new Date());
     const [expandedFacturaId, setExpandedFacturaId] = useState(null);
+    const { sedeActiva } = useSede();
 
     // Cargar ventas de los últimos 7 días al montar el componente
     useEffect(() => {
         console.log("cargamdo ventas ultimos 7 dias.....")
         const sevenDaysAgo = new Date();
         sevenDaysAgo.setDate(sevenDaysAgo.getDate() - 7);
+
         setStartDate(sevenDaysAgo);
         setEndDate(new Date());
         console.log("Fecha de inicio: ", startDate )
         loadVentasByDateRange(sevenDaysAgo, new Date());
     }, []);
 
-    // Formatear la hora en formato de 12 horas con AM/PM
-// const formatHora = (fechaISO) => {
-//     if (!fechaISO) return "—";
-
-//     const fecha = new Date(fechaISO);
-//     if (isNaN(fecha)) return "—";
-
-//     // Convertir hora UTC → Colombia (UTC - 5)
-//     fecha.setHours(fecha.getHours() - 5);
-
-//     let horas = fecha.getHours();
-//     const minutos = fecha.getMinutes().toString().padStart(2, "0");
-//     const periodo = horas >= 12 ? "p. m." : "a. m.";
-//     horas = horas % 12 || 12;
-//     console.log("FFFFFECHAS: ", `${horas}:${minutos} ${periodo}`)
-//     return `${horas}:${minutos} ${periodo}`;
-// };
-
-
+    const refresh = () => {
+        loadVentasByDateRange(startDate, endDate);
+    }
 
 
         
@@ -51,11 +38,10 @@ const groupVentasByDateAndFactura = () => {
 
     // Agrupar facturas estrictamente por fecha local y evitar duplicados
     const grouped = ventas.reduce((acc, venta) => {
-        // Convertir la fecha a la zona horaria local
-        const date = new Intl.DateTimeFormat("es-ES", { timeZone: "America/Bogota" })
-        .format(new Date(venta.fecha))
-        .split("T")[0]; // Formato YYYY-MM-DD
+        // ✅ Extraer fecha directamente sin reinterpretar zona horaria
+        const date = venta.fecha.split('T')[0]; // "2026-01-07T15:30:00.000Z" → "2026-01-07"
 
+        console.log("Datos fecha procesada para agrupación:", date);
         if (!acc[date]) acc[date] = {};
         if (!acc[date][venta.id_factura]) acc[date][venta.id_factura] = [];
         acc[date][venta.id_factura].push(venta);
@@ -72,7 +58,8 @@ const groupVentasByDateAndFactura = () => {
         facturas: Object.entries(facturas)
             .map(([id_factura, items]) => ({
             id_factura,
-            items,
+                items,
+            nombre_sede: items[0]?.nombre_sede,
             totalVenta: items.reduce((sum, item) => sum + item.venta_helado, 0),
             totalCantidad: items.reduce((sum, item) => sum + item.cantidad, 0),
                // horaFactura: items.length > 0 ? formatHora(items[0].fecha) : null, // Hora del primer item
@@ -82,12 +69,11 @@ const groupVentasByDateAndFactura = () => {
         }))
         .filter((group) => group.facturas.length > 0); // Filtrar fechas sin facturas
 
-    console.log("Datos finales agrupados por fechas y facturas:", result);
-    console.log("☻Datos finales agrupados por fechas y facturas totalCantidad:", result.totalCantidad);
     return result;
 };
 
     const groupedVentas = groupVentasByDateAndFactura();
+
 
     const handlePress = (facturaId) => {
         setExpandedFacturaId((prevId) => (prevId === facturaId ? null : facturaId));
@@ -102,7 +88,7 @@ const groupVentasByDateAndFactura = () => {
                 <Pressable onPress={() => sortVentas("producto")} style={styles.filterButton}>
                 <Text>Más Vendido</Text>
                 </Pressable>
-                <Pressable onPress={() => loadVentasByDateRange(startDate, endDate)} style={styles.filterButton}>
+                <Pressable onPress={() => refresh()} style={styles.filterButton}>
                 <MaterialCommunityIcons name="update" size={24} color="black" />
                 </Pressable>
             </View>
@@ -130,6 +116,13 @@ const groupVentasByDateAndFactura = () => {
                                     F_No. {factura.id_factura} - Hora: {factura.horaFactura}
                                 </Text>
                                 <Text style={styles.textCantidad}>{factura.totalCantidad}</Text>
+                            </View>
+
+                            <View style={styles.facturaBlockHeader}>
+                                <Text style={ factura.nombre_sede === "Rappi" ? styles.facturaSede : styles.facturaTitle}    onPress={() => handlePress(factura.id_factura)}>
+                                    SEDE: {factura.nombre_sede} 
+                                </Text>
+                                {/* <Text style={styles.textCantidad}>{factura.totalCantidad}</Text> */}
                             </View>
 
                         {expandedFacturaId === factura.id_factura && (
@@ -202,7 +195,16 @@ const styles = StyleSheet.create({
         fontWeight: "bold",
         marginBottom: 5,
     },
-        textCantidad:{
+    facturaSede: {
+        fontSize: 18,
+        backgroundColor: "#ffffffff",
+        fontWeight: "bold",
+        padding: 5,
+        borderRadius: 8,
+        color: "#ff6600ff",
+        marginBottom: 5,
+    },
+    textCantidad:{
     fontSize: 16,
     fontWeight: "600",
     color: "#ffffff",

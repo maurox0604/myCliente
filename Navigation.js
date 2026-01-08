@@ -142,7 +142,7 @@ function MyTabs({ openCartModal, openMenuVenta, role, openSedeModal }) {
 
     headerRight: () => (
         <SedeSelectorHeader
-            onOpenMenu={openMenuVenta} 
+            onOpenMenu={openMenuVenta} // Función para abrir el menú de venta manual
             onOpenSede={openSedeModal}
             />
     ),
@@ -267,8 +267,9 @@ export default function Navigation() {
                         />
                         <MainStack.Screen name="HomeTabs" options={{ headerShown: false }}>
                             {() => <MyTabs
-                                openCartModal={openCartModal}
-                                openMenuVenta={openMenuVenta}
+                                    openCartModal={openCartModal}
+                                    openMenuVenta={openMenuVenta}
+                                    openSedeModal={openSedeModal}
                                 role={role}
 
                             />}

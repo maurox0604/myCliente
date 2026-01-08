@@ -40,7 +40,7 @@ const { fecha, hora } = formatFechaHora(venta.fecha);
             </View>
             {isExpanded && (
                 <View style={styles.expandedContent}>
-                    <Text style={styles.column}>Venta: ${venta.venta_helado}</Text>
+                    <Text style={[styles.column, { fontWeight: "bold",color: "#01111bff" }]}>Venta: ${venta.venta_helado}</Text>
                     {/* <Text style={styles.column}>Unidades: {venta.cantidad}</Text> */}
                     <Text style={styles.column}>Precio: ${venta.precio_helado}</Text>
                     {/* <Text style={styles.column}>Fecha: {fecha + " - " + hora}</Text> */}

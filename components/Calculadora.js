@@ -13,16 +13,8 @@ import { HeladosContext } from "../context/HeladosContext";
 
 
 export default function Calculadora({
-  // id,
-  // sabor,
-  // cantidad,
-  // icon,
-  // precio,
-  // shared_with_id,
   completed,
-  // closeCartModal,
   datosPaCalc,
-  addItemCardModalRef,
 }) {
 
   const { updateHeladoCantidad  } = useContext(HeladosContext);
@@ -43,32 +35,35 @@ export default function Calculadora({
 
   
 
-  const ventaXhelado = () => {
-     let tot = datosPaCalc.precio * cantCompra;
-      return tot
-  }
-  const totVentaXhelado = ventaXhelado();
-  const item = { id:datosPaCalc.id, sabor:datosPaCalc.sabor, cantCompra, cantQueda,  totVentaXhelado, icon:datosPaCalc.icon, precio:datosPaCalc.precio };
- 
+  // const ventaXhelado = () => {
+  //    let tot = datosPaCalc.precio * cantCompra;
+  //     return tot
+  // }
+  // const totVentaXhelado = ventaXhelado();
+
+ const item = {
+  id: datosPaCalc.id,
+  sabor: datosPaCalc.sabor,
+  cantCompra,
+  cantQueda,
+  icon: datosPaCalc.icon,
+  precio: datosPaCalc.precio
+};
+
+
   useEffect(() => {
     revisarItem();
   },[])
   
 
-  // function revisarItem(){
-  //   const { itemObj, itemExiste } = existCart(item);
-  //   if (itemExiste === -1) {
-      
-  //   }else{
-  //     console.log("SI EXISTE.y vamos a actualizarlo........");
-  //     console.log("itemObj: ", itemObj)
-  //     // datosPaCalc.sabor = "CARNE"
-  //     setCantCompra(itemObj.cantCompra);
-  //     setCantQueda(itemObj.cantQueda);
-  //   }
-    
-  //   console.log("revisarItem() itemObj: ", itemObj, "   itemExiste:", itemExiste)
-  // };
+  const sumar = () => {
+    setCantCompra(prev => prev + 1);
+  };
+
+  const restar = () => {
+    setCantCompra(prev => (prev > 1 ? prev - 1 : 1));
+  };
+
 
   const revisarItem = () => {
     console.log("Dentro de Revisaritem()")
@@ -89,7 +84,7 @@ export default function Calculadora({
 
 
   const handleAddToCart = (item) =>{
-    console.log("Dentro de HANDLE ADD TO CART")
+    console.log("Dentro Calculadora de HANDLE ADD TO CART item: ", item);
     if (cantCompra > 0) {
       addToCart(item);
       // updateHeladoCantidad(datosPaCalc.id, cantQueda); // Actualiza la cantidad en ListaHelados no en DB
@@ -99,7 +94,6 @@ export default function Calculadora({
 
     }else
       setActivMensaje(true);
-      console.log('♥ Debes tener al menos 1 helado ');
   }
 
   const anulaPrecio = (sel) =>{
@@ -131,24 +125,6 @@ export default function Calculadora({
         setCantQueda(queda);
       }
   }
-
-
-// useFocusEffect(
-//   useCallback(() => {
-//     const timeout = setTimeout(() => {
-//       if (addItemCardModalRef.current) {
-//         addItemCardModalRef.current.dismiss();
-//       } else {
-//         console.log("addItemCardModalRef no está disponible aún.");
-//       }
-//     }, 100); // Retraso de 100ms, ajusta según sea necesario
-
-//     return () => {
-//       clearTimeout(timeout);
-//     };
-//   }, [])
-// );
-
 
 
   return (

@@ -27,7 +27,7 @@ export const HeladosProvider = ({ children }) => {
         : Array.isArray(data.productos)
             ? data.productos
             : [];
-
+        console.log("Dentro de Heladoscontext productos: ", productos)
         setHelados(productos);
         setFilteredHelados(productos);
     } catch (err) {

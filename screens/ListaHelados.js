@@ -70,6 +70,7 @@ function onRefresh() {
     return (
         <GestureHandlerRootView style={{flex: 1}}>
             <SafeAreaView style={styles.container}>
+            
                 
 
                 {/* <TextInput
@@ -219,7 +220,7 @@ function onRefresh() {
                             onRefresh={onRefresh}
                 />{/* end FlatList */}
                     
-                        {/* ........................................................MODAL SEDE */}
+                        {/* ........................................................MODAL SEDE SELECCIONADA */}
                         {showSedeModal && (
                             <View style={styles.overlay}>
                                 <Pressable

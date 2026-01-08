@@ -161,30 +161,39 @@ export const formatServerDateToLocal = (serverDate) => {
  * @param {string} serverDate 
  * @returns {string} Fecha amigable (ej: "Hoy, 14:30" o "15 Ene 2024")
  */
-export const formatServerDateForDisplay = (serverDate) => {
+export const formatServerDateForDisplay = (serverDate, showDate = false) => {
   if (!serverDate) return '';
   
+  // Extraer componentes directamente del string ISO
   const date = new Date(serverDate);
-  const now = new Date();
-  const today = new Date(now.getFullYear(), now.getMonth(), now.getDate());
-  const yesterday = new Date(today);
-  yesterday.setDate(yesterday.getDate() - 1);
   
-  const dateOnly = new Date(date.getFullYear(), date.getMonth(), date.getDate());
+  // Usar UTC para evitar cambios de zona horaria
+  let hours = date.getUTCHours();
+  const minutes = date.getUTCMinutes();
+  const month = date.getUTCMonth();
+  const day = date.getUTCDate();
+  const year = date.getUTCFullYear();
   
-  if (dateOnly.getTime() === today.getTime()) {
-    return `Hoy, ${String(date.getHours()).padStart(2, '0')}:${String(date.getMinutes()).padStart(2, '0')}`;
-  } else if (dateOnly.getTime() === yesterday.getTime()) {
-    return `Ayer, ${String(date.getHours()).padStart(2, '0')}:${String(date.getMinutes()).padStart(2, '0')}`;
-  } else {
-    return date.toLocaleDateString('es-CO', {
-      day: 'numeric',
-      month: 'short',
-      year: 'numeric'
-    });
+  // Convertir a formato 12h
+  const ampm = hours >= 12 ? 'PM' : 'AM';
+  hours = hours % 12;
+  hours = hours ? hours : 12; // 0 se convierte en 12
+  
+  // Formatear hora
+  const timeStr = `${hours}:${String(minutes).padStart(2, '0')} ${ampm}`;
+  
+  // Si solo se necesita la hora
+  if (!showDate) {
+    return timeStr;
   }
+  
+  // Si también se necesita la fecha
+  const monthNames = ['ene', 'feb', 'mar', 'abr', 'may', 'jun', 
+                     'jul', 'ago', 'sep', 'oct', 'nov', 'dic'];
+  const monthName = monthNames[month];
+  
+  return `${day} ${monthName} ${year}, ${timeStr}`;
 };
-
 // ============================================
 // FUNCIONES DE VALIDACIÓN
 // ============================================

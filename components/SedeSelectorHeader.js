@@ -4,7 +4,7 @@ import { useSede } from "../context/SedeContext";
 
 
 export default function SedeSelectorHeader({ onOpenMenu , onOpenSede }) {
-  const { sedeActiva } = useSede();
+  const { sedeActiva, cambiarSede } = useSede();
 
   return (
     <View style={styles.container}>
@@ -13,6 +13,10 @@ export default function SedeSelectorHeader({ onOpenMenu , onOpenSede }) {
         <Text style={styles.text}>
           🏪 {sedeActiva?.nombre || "Sede"}
         </Text>
+      </Pressable>
+
+      <Pressable onPress={() => setShowSedeModal(true)}>
+        <Text>{sedeActiva?.nombre || "Seleccionar sede"}</Text>
       </Pressable>
 
       <Pressable onPress={onOpenMenu} style={styles.menu}>

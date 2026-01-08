@@ -50,17 +50,18 @@ const CartModalContent = ({ closeModal }) => {
             setIsProcessing(true);
              // Formatear fecha según el caso
             const fechaFormateada = formatFechaVenta(fechaVentaManual);
+            console.log("📦 carts SOLO :", carts);
 
             const response = await fetch(`${process.env.EXPO_PUBLIC_API_URL}/ventas/procesar`, {
                 method: "POST",
                 headers: { "Content-Type": "application/json" },
                 body: JSON.stringify({
-                    items: carts.map(item => ({ ...item, user: emailUser })),
+                    items: carts.map(item => ({ ...item, totVentaXhelado: item.precio * item.cantCompra, user: emailUser })),
                     fecha_manual:fechaFormateada,
                     id_sede: sedeActiva?.id || 1
                 })
-
             });
+        
 
             if (!response.ok) throw new Error(await response.text());
 
@@ -92,10 +93,10 @@ const CartModalContent = ({ closeModal }) => {
                 )}
                 
                 <Text>
-  Fecha carrito: {fechaVentaManual
-    ? new Date(fechaVentaManual).toLocaleString()
-    : "SIN FECHA"}
-</Text>
+                    Fecha: {fechaVentaManual
+                    ? new Date(fechaVentaManual).toLocaleString()
+                    : ""}
+                </Text>
 
 
                 <Text style={styles.textCantidad}>{cartItemCount}</Text>

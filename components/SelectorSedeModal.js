@@ -4,24 +4,26 @@ import { useSede } from "../context/SedeContext";
 const SEDES = [
   { id: 1, nombre: "Local" },
   { id: 2, nombre: "Rappi" },
-  { id: 3, nombre: "Eventos" },
+  { id: 3, nombre: "Eventosss" },
 ];
 
 export default function SelectorSedeModal({ onClose }) {
-  const { sedeActiva, setSede } = useSede();
+  const { sedeActiva, setSede, sedes } = useSede();
+  
 
   return (
     <View style={styles.modal}>
       <Text style={styles.title}>Seleccionar sede</Text>
 
-      {SEDES.map((sede) => {
+      {sedes.map((sede) => {
         const activa = sedeActiva?.id === sede.id;
 
         return (
           <Pressable
             key={sede.id}
             onPress={() => {
-              setSede(sede);
+              // setSede(sede);
+              cambiarSede(sede);
               onClose();
             }}
             style={[
