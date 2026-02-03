@@ -121,103 +121,103 @@ function onRefresh() {
             /> */}
                 
                         <FlatList
-                            style={isThreeColumns ? styles.contFlatListCol : styles.contFlatList}
-                            data={heladosPorCategoria}
-                            keyExtractor={(item) => item.id.toString()}
-                            ListHeaderComponent={
-                                <>
-                                    {/*............................................. barra de búsqueda */}
-                                <View style={styles.searchContainer}>
-                                    <TextInput
-                                        style={styles.searchInput}
-                                        placeholder="Buscar producto..."
-                                        placeholderTextColor="#999"
-                                        onChangeText={handleSearch}
-                                    />                            
-                                    <MaterialCommunityIcons 
-                                        name="magnify" 
-                                        size={22} 
-                                        color="#888" 
-                                        style={styles.searchIcon} 
-                                    />                                   
-                                </View>
+                    style={isThreeColumns ? styles.contFlatListCol : styles.contFlatList}
+                    data={heladosPorCategoria}
+                    keyExtractor={(item) => item.id.toString()}
+                    ListHeaderComponent={
+                        <>
+                            {/*............................................. barra de búsqueda */}
+                            <View style={styles.searchContainer}>
+                                <TextInput
+                                    style={styles.searchInput}
+                                    placeholder="Buscar producto..."
+                                    placeholderTextColor="#999"
+                                    onChangeText={handleSearch}
+                                />
+                                <MaterialCommunityIcons
+                                    name="magnify"
+                                    size={22}
+                                    color="#888"
+                                    style={styles.searchIcon}
+                                />
+                            </View>
 
-                                <ScrollView
-                                    horizontal
-                                    showsHorizontalScrollIndicator={false}
-                                    style={styles.categoriasBar}
-                                >
-                                    {categorias.map(cat => {
+                            <ScrollView
+                                horizontal
+                                showsHorizontalScrollIndicator={false}
+                                style={styles.categoriasBar}
+                            >
+                                {categorias.map(cat => {
                                     const activa = categoriaActiva === cat.id;
                                     return (
                                         <Pressable
-                                        key={cat.id}
-                                        onPress={() => setCategoriaActiva(cat.id)}
-                                        style={[
-                                            styles.categoriaChip,
-                                            activa && styles.categoriaChipActiva
-                                        ]}
-                                        >
-                                        <Text
+                                            key={cat.id}
+                                            onPress={() => setCategoriaActiva(cat.id)}
                                             style={[
-                                            styles.categoriaText,
-                                            activa && styles.categoriaTextActiva
+                                                styles.categoriaChip,
+                                                activa && styles.categoriaChipActiva
                                             ]}
                                         >
-                                            {cat.nombre}
-                                        </Text>
+                                            <Text
+                                                style={[
+                                                    styles.categoriaText,
+                                                    activa && styles.categoriaTextActiva
+                                                ]}
+                                            >
+                                                {cat.nombre}
+                                            </Text>
                                         </Pressable>
                                     );
-                                    })}
-                                </ScrollView>
+                                })}
+                            </ScrollView>
 
-                                <View style={styles.header}>
-                                    <Pressable style={styles.botOrder} onPress={ordenarPorNombre}>
+                            <View style={styles.header}>
+                                <Pressable style={styles.botOrder} onPress={ordenarPorNombre}>
                                     <MaterialCommunityIcons
                                         name="order-alphabetical-ascending"
                                         size={24}
                                         color="white"
                                     />
-                                    </Pressable>
+                                </Pressable>
 
-                                    <Pressable style={styles.botOrder} onPress={ordenarPorCantidad}>
+                                <Pressable style={styles.botOrder} onPress={ordenarPorCantidad}>
                                     <MaterialCommunityIcons
                                         name="order-numeric-descending"
                                         size={24}
                                         color="white"
                                     />
-                                    </Pressable>
+                                </Pressable>
 
-                                    <Pressable style={styles.botOrder} onPress={toggleColumns}>
+                                <Pressable style={styles.botOrder} onPress={toggleColumns}>
                                     <MaterialCommunityIcons
                                         name={isThreeColumns
-                                        ? "drag-horizontal-variant"
-                                        : "view-split-vertical"}
+                                            ? "drag-horizontal-variant"
+                                            : "view-split-vertical"}
                                         size={24}
                                         color="white"
                                     />
-                                    </Pressable>
+                                </Pressable>
 
-                                    <Pressable style={styles.botOrder} onPress={onRefresh}>
+                                <Pressable style={styles.botOrder} onPress={onRefresh}>
                                     <MaterialCommunityIcons name="update" size={24} color="white" />
-                                    </Pressable>
-                                </View>
-                                </>
-                            }
-                            renderItem={({ item }) => (
-                                <Helado
-                                {...item}
-                                activaDeleteItem={deletItem}
-                                onDeleteSuccess={fetchHelados}
-                                editItem={editItem}
-                                columnas={isThreeColumns}
-                                />
-                            )}
-                            numColumns={isThreeColumns ? 2 : 1}
-                            columnWrapperStyle={isThreeColumns ? styles.columnWrapper : null}
-                            key={isThreeColumns ? "two-column" : "one-column"}
-                            refreshing={isFetching}
-                            onRefresh={onRefresh}
+                                </Pressable>
+                            </View>
+                        </>
+                    }
+                    renderItem={({ item }) => (
+                        <Helado
+                            {...item}
+                            activaDeleteItem={deletItem}
+                            onDeleteSuccess={fetchHelados}
+                            editItem={editItem}
+                            columnas={isThreeColumns}
+                        />
+                    )}
+                    numColumns={isThreeColumns ? 2 : 1}
+                    columnWrapperStyle={isThreeColumns ? styles.columnWrapper : null}
+                    key={isThreeColumns ? "two-column" : "one-column"}//<--- key para forzar el re-render
+                    refreshing={isFetching}
+                    onRefresh={onRefresh}  //<--- ahora sí recarga los datos reales  
                 />{/* end FlatList */}
                     
                         {/* ........................................................MODAL SEDE SELECCIONADA */}

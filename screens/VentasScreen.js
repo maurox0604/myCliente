@@ -27,7 +27,14 @@ function VentasScreen() {
     }, []);
 
     const refresh = () => {
-        loadVentasByDateRange(startDate, endDate);
+        // Recalcular las fechas cada vez que se presiona refresh
+        const sevenDaysAgo = new Date();
+        sevenDaysAgo.setDate(sevenDaysAgo.getDate() - 7);
+        const today = new Date();
+        
+        setStartDate(sevenDaysAgo);
+        setEndDate(today);
+        loadVentasByDateRange(sevenDaysAgo, today);
     }
 
 
