@@ -1,4 +1,4 @@
-import { View, Text, Pressable, Animated, StyleSheet, Dimensions, ScrollView, Easing, Alert } from "react-native";
+import { View, Text, Pressable, Animated, StyleSheet, Dimensions, ScrollView, Easing, Alert, Platform } from "react-native";
 // import { ScrollView } from "react-native-gesture-handler";
 import { useEffect, useRef } from "react";
 import { usePublicCart } from "../context/PublicCartContext";
@@ -31,31 +31,43 @@ export default function PublicCartPanel({ visible, onClose, screenHeight }) {
     const handleWhatsApp = () => {
         const mensaje = items
             .map(
-            i => `• ${i.nombre} x${i.cantidad} = $${(i.precio * i.cantidad).toLocaleString()}`
+            i =>
+                `• ${i.nombre} x${i.cantidad} = $${(
+                i.precio * i.cantidad
+                ).toLocaleString()}`
             )
             .join("\n");
 
         const textoFinal =
-            `🛒 *Pedido Ice Queen*\n\n` +
+            `🛒 Pedido Ice Queen\n\n` +
             mensaje +
-            `\n\n*Total:* $${total.toLocaleString()}`;
+            `\n\nTotal: $${total.toLocaleString()}`;
 
+        const url = `https://wa.me/573182091329?text=${encodeURIComponent(
+            textoFinal
+        )}`;
+
+        // 🌐 WEB
+        if (Platform.OS === "web") {
+            const ok = window.confirm(textoFinal + "\n\n¿Enviar por WhatsApp?");
+            if (ok) {
+            window.open(url, "_blank");
+            }
+            return;
+        }
+
+        // 📱 MÓVIL
         Alert.alert(
             "Confirmar pedido",
             textoFinal,
             [
             { text: "Cancelar", style: "cancel" },
-            {
-                text: "Enviar por WhatsApp",
-                onPress: () =>
-                Linking.openURL(
-                    `https://wa.me/573182091329?text=${encodeURIComponent(textoFinal)}`
-                ),
-            },
+            { text: "Enviar", onPress: () => Linking.openURL(url) },
             ],
             { cancelable: true }
         );
-    };
+        };
+
 
 
     if (!visible) return null;
@@ -176,7 +188,7 @@ const styles = StyleSheet.create({
         borderBottomWidth: 1,
         borderColor: "#eee",
         flexDirection: "row",
-        alignItems: "center",
+        alignItems: "end",
         justifyContent: "space-between",
         backgroundColor: "#fff",
         borderTopLeftRadius: 30,
