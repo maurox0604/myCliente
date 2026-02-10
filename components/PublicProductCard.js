@@ -3,25 +3,29 @@ import { View, Text, Image, Pressable, StyleSheet } from "react-native";
 export default function PublicProductCard({ producto, onPress }) {
 
     console.log("PRODUCTO PUBLICO 👉", producto);
-  return (
-    <Pressable style={styles.card} onPress={onPress}>
-      {/* Imagen */}
-      <View style={styles.imageWrapper}>
-        <Image
-          source={{ uri: producto.icon }}
-          style={styles.image}
-          resizeMode="cover"
-        />
-      </View>
+    return (
+        <Pressable style={styles.card} onPress={onPress}>
+        {/* Imagen */}
+        <View style={styles.imageWrapper}>
+            <Image
+            source={{ uri: producto.icon }}
+            style={styles.image}
+            resizeMode="cover"
+            />
+        </View>
 
-      {/* Info */}
-      <View style={styles.info}>
-        <Text style={styles.name} numberOfLines={2}>
-          {producto.nombre}
-        </Text>
-      </View>
-    </Pressable>
-  );
+        {/* Info */}
+        <View style={styles.info}>
+            <Text style={styles.name} numberOfLines={2}>
+                {producto.nombre}
+                </Text>
+            <Text style={styles.precio} numberOfLines={2}>
+                {producto.precio} 
+            </Text>
+                
+        </View>
+        </Pressable>
+    );
 }
 
 const styles = StyleSheet.create({
@@ -51,11 +55,18 @@ const styles = StyleSheet.create({
   },
 
 name: {
-  fontSize: 14,
-  fontWeight: "600",
+  fontSize: 16,
+  fontWeight: "800",
   textAlign: "center",
   lineHeight: 18,
   minHeight: 36, // 🔑 mantiene altura uniforme
+    },
+precio: {
+  fontSize: 14,
+  fontWeight: "600",
+  textAlign: "center",
+//   lineHeight: 18,
+//   minHeight: 36, // 🔑 mantiene altura uniforme
 },
 
 });

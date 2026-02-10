@@ -7,115 +7,159 @@ import {
   StyleSheet,
   Animated,
 } from "react-native";
-import { useEffect, useRef } from "react";
- import * as Linking from "expo-linking";
+import { useEffect, useRef, useState } from "react";
+import * as Linking from "expo-linking";
+import { usePublicCart } from "../context/PublicCartContext";
 
 export default function PublicProductModal({ visible, producto, onClose }) {
-  const scale = useRef(new Animated.Value(0.9)).current;
-  const opacity = useRef(new Animated.Value(0)).current;
-
-  useEffect(() => {
-    if (visible) {
-      Animated.parallel([
-        Animated.spring(scale, {
-          toValue: 1,
-          useNativeDriver: true,
-        }),
-        Animated.timing(opacity, {
-          toValue: 1,
-          duration: 200,
-          useNativeDriver: true,
-        }),
-      ]).start();
-    }
-  }, [visible]);
+    const scale = useRef(new Animated.Value(0.9)).current;
+    const opacity = useRef(new Animated.Value(0)).current;
     
-    // Función para abrir WhatsApp con un mensaje predefinido
-    const enviarWhatsApp = () => {
-    const mensaje = `Hola 👋, me interesa el producto: ${producto.nombre}`;
-    const url = `https://wa.me/573182091329?text=${encodeURIComponent(mensaje)}`;
-    Linking.openURL(url);
-    };
+    const { addItem } = usePublicCart();
+    const [cantidad, setCantidad] = useState(1);
 
-  if (!producto) return null;
 
-  return (
-    <Modal transparent visible={visible} animationType="fade">
-      <View style={styles.overlay}>
-        <Animated.View
-          style={[
-            styles.container,
-            { transform: [{ scale }], opacity },
-          ]}
-        >
-          <Image
-            source={{ uri: producto.icon }}
-            style={styles.image}
-            resizeMode="contain"
-          />
+    useEffect(() => {
+        if (visible) {
+        Animated.parallel([
+            Animated.spring(scale, {
+            toValue: 1,
+            useNativeDriver: true,
+            }),
+            Animated.timing(opacity, {
+            toValue: 1,
+            duration: 200,
+            useNativeDriver: true,
+            }),
+        ]).start();
+        }
+    }, [visible]);
+        
+        // Función para abrir WhatsApp con un mensaje predefinido
+        const enviarWhatsApp = () => {
+        const mensaje = `Hola 👋, me interesa el producto: ${producto.nombre}`;
+        const url = `https://wa.me/573182091329?text=${encodeURIComponent(mensaje)}`;
+        Linking.openURL(url);
+        };
 
-          <Text style={styles.title}>{producto.nombre}</Text>
+    if (!producto) return null;
 
-          {/* WhatsApp (futuro pedido) */}
-          
-          <Pressable style={styles.whatsapp}>
-            <Text style={styles.whatsappText}>Pedir por WhatsApp</Text>
-          </Pressable>
+    return (
+        <Modal transparent visible={visible} animationType="fade">
+        <View style={styles.overlay}>
+            <Animated.View
+                style={[
+                    styles.container,
+                    { transform: [{ scale }], opacity },
+                ]}
+                >
+                    {/* HEADER */}
+                    <View style={styles.header}>                             
+                        {/* <Pressable onPress={onClose} hitSlop={10}> */}
+                        {/* <View>
+                            <Text style={styles.title}>{producto.nombre}</Text>
+                        </View>  */}
+                        <Pressable onPress={onClose} hitSlop={10}>
+                            <Text style={styles.close}>✕</Text>
+                        </Pressable>               
+                    </View>
 
-          <Pressable onPress={onClose} style={styles.close}>
-            <Text>Cerrar</Text>
-          </Pressable>
-        </Animated.View>
-      </View>
-    </Modal>
-  );
-}
+                    <Image
+                        source={{ uri: producto.icon }}
+                        style={styles.image}
+                        resizeMode="contain"
+                    />
+
+                    <Text style={styles.title}>{producto.nombre}</Text>
+                    
+                    <Pressable
+                        onPress={() => {
+                            addItem(producto, cantidad);
+                            onClose();
+                        }}
+                        style={styles.whatsapp}
+                    >
+                        <Text style={styles.addText}>Agregar al pedido</Text>
+                    </Pressable>
+
+            {/* WhatsApp (futuro pedido) */}
+            
+            {/* <Pressable style={styles.whatsapp}>
+                <Text style={styles.whatsappText}>Pedir por WhatsApp</Text>
+            </Pressable> */}
+
+            <Pressable onPress={onClose} style={styles.close}>
+                <Text>Cerrar</Text>
+            </Pressable>
+            </Animated.View>
+        </View>
+        </Modal>
+    );
+    }
 
 const styles = StyleSheet.create({
-  overlay: {
-    flex: 1,
-    backgroundColor: "rgba(0,0,0,0.6)",
-    justifyContent: "center",
-    alignItems: "center",
-    padding: 20,
-  },
+    overlay: {
+        flex: 1,
+        backgroundColor: "rgba(0,0,0,0.6)",
+        justifyContent: "center",
+        alignItems: "center",
+        padding: 20,
+    },
 
-  container: {
-    width: "100%",
-    maxWidth: 420,
-    backgroundColor: "#fff",
-    borderRadius: 20,
-    padding: 20,
-    alignItems: "center",
-  },
+    container: {
+        width: "100%",
+        maxWidth: 420,
+        backgroundColor: "#fff",
+        borderRadius: 20,
+        padding: 20,
+        alignItems: "center",
+    },
 
-  image: {
-    width: "100%",
-    height: 260,
-    borderRadius: 12,
-  },
+    image: {
+        width: "100%",
+        height: 260,
+        borderRadius: 12,
+    },
 
-  title: {
-    marginTop: 15,
-    fontSize: 18,
-    fontWeight: "700",
-    textAlign: "center",
-  },
+    title: {
+        marginTop: 15,
+        fontSize: 18,
+        fontWeight: "700",
+        textAlign: "center",
+    },
 
-  whatsapp: {
-    marginTop: 20,
-    backgroundColor: "#25D366",
-    paddingVertical: 12,
-    paddingHorizontal: 30,
-    borderRadius: 30,
-  },
+    whatsapp: {
+        marginTop: 20,
+        backgroundColor: "#25D366",
+        paddingVertical: 12,
+        paddingHorizontal: 30,
+        borderRadius: 30,
+    },
 
-  whatsappText: {
-    color: "#fff",
-    fontWeight: "700",
-  },
+    whatsappText: {
+        color: "#fff",
+        fontWeight: "700",
+        },
+    
+        addText: {
+            color: "#fff",
+        fontWeight: "700",
+        },
 
-  close: {
-    marginTop: 15,
-  },
+    close: {
+        marginTop: 15,
+    },
+    
+    header: {
+        flex: 1,
+        // flexDirection: "row",
+        width: "100%",
+        // justifyContent: "",
+        alignItems: "right",
+        padding: 16,
+        borderBottomWidth: 1,
+        borderColor: "#ff0000",
+        justifyContent: "space-between",
+        alignItems: "center",
+        },
 });
