@@ -12,6 +12,7 @@ import RegisterScreen from "../screens/RegisterScreen";
 import CrearProducto from "../screens/CreaHeladoScreen";
 import CrearCategoria from "../screens/CrearCategoria";
 import MenuCrear from "../screens/MenuCrear";
+import HeladosAdminScreen from "../screens/HeladosAdminScreen";
 
 // =======================
 // Tabs
@@ -116,6 +117,13 @@ export default function MainStack() {
           component={CrearProducto}
           options={{ title: "Nuevo Producto" }}
         />
+
+        <Stack.Screen
+          name="HeladosAdmin"
+          component={HeladosAdminScreen}
+          options={{ title: "Administrar Productos" }}
+        />
+
       </Stack.Navigator>
 
       {/* ======================= */}

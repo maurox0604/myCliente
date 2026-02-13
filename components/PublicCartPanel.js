@@ -1,8 +1,8 @@
-import { View, Text, Pressable, Animated, StyleSheet, Dimensions, ScrollView, Easing, Alert, Platform } from "react-native";
+import { View, Text, Pressable, Animated, StyleSheet, Dimensions, ScrollView, Easing, Platform, Linking } from "react-native";
 // import { ScrollView } from "react-native-gesture-handler";
 import { useEffect, useRef } from "react";
 import { usePublicCart } from "../context/PublicCartContext";
-import { Linking } from "react-native";
+import Alert from '@blazejkustra/react-native-alert';
 
 export default function PublicCartPanel({ visible, onClose, screenHeight }) {
 
@@ -27,6 +27,68 @@ export default function PublicCartPanel({ visible, onClose, screenHeight }) {
     }, [visible]);
 
 
+    const sendToWhatsApp = async () => {
+        const mensaje = items
+            .map(i => `• ${i.nombre} x${i.cantidad}`)
+            .join("\n");
+
+        // const url = `https://wa.me/573182091329?text=${encodeURIComponent(
+        //     `Hola 👋, quisiera pedir:\n\n${mensaje}\n\nTotal: $${total.toLocaleString()}`
+        // )}`;
+
+        // Linking.openURL(url);
+
+
+        const texto = encodeURIComponent(
+        `Hola 👋, quisiera pedir:\n\n${mensaje}\n\nTotal: $${total.toLocaleString()}`
+            );
+
+        const phone = "573182091329";
+
+        const appUrl = `whatsapp://send?phone=${phone}&text=${texto}`;
+        const webUrl = `https://wa.me/${phone}?text=${texto}`;
+        
+        // Intentar abrir la app de WhatsApp
+        if (Platform.OS !== "web") {
+            // Android / iOS (APK futura)
+            const supported = await Linking.canOpenURL(appUrl);
+            if (supported) {
+            Linking.openURL(appUrl);
+            return;
+            }
+        }
+
+        // Web o fallback
+        Linking.openURL(webUrl);
+    };
+
+    // Función para confirmar el envío del pedido por WhatsApp
+    const confirmWhatsApp = () => {
+        if (items.length === 0) {
+            Alert.alert("Carrito vacío", "Agrega productos antes de enviar el pedido.");
+            return;
+        }
+
+        const resumen = items
+            .map(i => `• ${i.nombre} x${i.cantidad}`)
+            .join("\n");
+
+        Alert.alert(
+            "Confirmar pedido",
+            `${resumen}\n\nTotal: $${total.toLocaleString()}`,
+            [
+            { text: "Cancelar", style: "cancel" },
+            {
+                text: "Enviar por WhatsApp",
+                onPress: sendToWhatsApp,
+            },
+            ]
+        );
+    };
+
+
+
+/*
     // Función para manejar el envío del pedido por WhatsApp
     const handleWhatsApp = () => {
         const mensaje = items
@@ -66,7 +128,26 @@ export default function PublicCartPanel({ visible, onClose, screenHeight }) {
             ],
             { cancelable: true }
         );
-        };
+    };
+    */
+    
+// Función para confirmar el vaciado del carrito
+    const confirmClearCart = () => {
+        Alert.alert(
+            "Vaciar carrito",
+            "¿Seguro que deseas eliminar todos los productos?",
+            [
+            { text: "Cancelar", style: "cancel" },
+            {
+                text: "Vaciar",
+                style: "destructive",
+                onPress: clearCart,
+            },
+            ]
+        );
+    };
+
+
 
 
 
@@ -131,37 +212,23 @@ export default function PublicCartPanel({ visible, onClose, screenHeight }) {
 
             {/* FOOTER FIJO */}
             <View style={styles.footer}>
+                <Pressable onPress={confirmClearCart} style={styles.clearBtn}>
+                    <Text style={styles.clearText}>Vaciar carrito</Text>
+                </Pressable>
+
                 <Text style={styles.total}>
                     Total: ${total.toLocaleString()}
                 </Text>
 
-                <Pressable
-                    onPress={() =>
-                        Alert.alert(
-                        "Vaciar carrito",
-                        "¿Seguro que deseas eliminar todos los productos?",
-                        [
-                            { text: "Cancelar", style: "cancel" },
-                            { text: "Vaciar", style: "destructive", onPress: clearCart },
-                        ]
-                        )
-                    }
-                    >
-                    <Text style={{ color: "#ff3b30", textAlign: "center", marginBottom: 10 }}>
-                        Vaciar carrito
-                    </Text>
-                </Pressable>
-
-                    
-                {/* BOTÓN WHATSAPP */}
-                <Pressable style={styles.whatsappBtn} onPress={handleWhatsApp}>
+                <Pressable style={styles.whatsappBtn} onPress={confirmWhatsApp}>
                     <Text style={styles.whatsappText}>
                     Enviar pedido por WhatsApp
                     </Text>
                 </Pressable>
             </View>
-        </Animated.View>
-);
+
+            </Animated.View>
+    );
 }
 
 
@@ -297,6 +364,17 @@ const styles = StyleSheet.create({
         marginHorizontal: 8,
         fontSize: 15,
         fontWeight: "600",
+    },
+
+    clearBtn: {
+    alignSelf: "flex-end",
+    marginBottom: 8,
+    },
+
+    clearText: {
+    color: "#d32f2f",
+    fontSize: 14,
+    fontWeight: "500",
     },
 
 

@@ -7,24 +7,19 @@ export function PublicProductosProvider({ children }) {
   const [loading, setLoading] = useState(true);
 
   useEffect(() => {
-    fetch("https://backend-de-prueba-delta.vercel.app/productos/all")
-      .then(res => res.json())
-      .then(data => {
-        console.log("🔥 RESPUESTA BACKEND:", data);
+  fetch("https://backend-de-prueba-delta.vercel.app/api/public/productos")
+    .then(res => res.json())
+    .then(data => {
+      console.log("🔥 RESPUESTA BACKEND:", data);
+      setProductos(data);
+    })
+    .catch(err => {
+      console.error("❌ Error cargando catálogo público", err);
+      setProductos([]);
+    })
+    .finally(() => setLoading(false));
+}, []);
 
-        setProductos(
-          data.productos.map(p => ({
-            ...p,
-            nombre: p.sabor, // normalización temporal
-          }))
-        );
-      })
-      .catch(err => {
-        console.error("❌ Error cargando catálogo público", err);
-        setProductos([]);
-      })
-      .finally(() => setLoading(false));
-  }, []);
 
   return (
     <PublicProductosContext.Provider value={{ productos, loading }}>

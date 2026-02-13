@@ -6,11 +6,15 @@ export const HeladosContext = createContext();
 export const HeladosProvider = ({ children }) => {
   const [helados, setHelados] = useState([]);
   const [filteredHelados, setFilteredHelados] = useState([]);
+  const [loadingId, setLoadingId] = useState(null);
 
-  /* ================= FETCH ================= */
+
+  /* ================= FETCH PRODUCTOS ACTIVOS ================= */
     const fetchHelados = async () => {
     try {
-        const res = await fetch(`${process.env.EXPO_PUBLIC_API_URL}/productos/all`);
+      const res = await fetch(`${process.env.EXPO_PUBLIC_API_URL}/productos/all`);
+      
+      console.log("SOLO FFFFETCH SOLO ACTIVOS")
 
         if (!res.ok) {
         console.error("❌ Error HTTP:", res.status);
@@ -35,7 +39,29 @@ export const HeladosProvider = ({ children }) => {
         setHelados([]);
         setFilteredHelados([]);
     }
-    };
+  };
+  
+  /* ================= FETCH PRODUCTOS ADMIN (ACTIVOS E INACTIVOS) ================= */
+  const fetchHeladosAdmin = async () => {
+  try {
+    const res = await fetch(
+      `${process.env.EXPO_PUBLIC_API_URL}/productos/admin` );
+      console.log("SOLO FFFFETCH SOLO ADMIN")
+    const data = await res.json();
+
+    const productos = Array.isArray(data.productos)
+      ? data.productos
+      : [];
+
+    setHelados(productos);
+    setFilteredHelados(productos);
+
+  } catch (err) {
+    console.error("❌ fetchHeladosAdmin falló:", err);
+  }
+};
+
+  
   /* ================= BUSCADOR ================= */
   const handleSearch = (text) => {
     if (!text) {
@@ -84,6 +110,64 @@ export const HeladosProvider = ({ children }) => {
     fetchHelados();
   }, []);
 
+  //================= ACTIVAR Y DESACTIVAR PRODUCTOS =================
+  // Activar producto
+  const activarProducto = async (id) => {
+  try {
+    await fetch(
+      `${process.env.EXPO_PUBLIC_API_URL}/productos/${id}/activar`,
+      { method: "PUT" }
+    );
+
+    setHelados(prev =>
+      prev.map(h =>
+        h.id === id ? { ...h, activo: 1 } : h
+      )
+    );
+
+    setFilteredHelados(prev =>
+      prev.map(h =>
+        h.id === id ? { ...h, activo: 1 } : h
+      )
+    );
+
+  } catch (err) {
+    console.error("❌ Error activando producto:", err);
+  }finally {
+    setLoadingId(null);
+  }
+};
+
+
+  // Desactivar producto
+const desactivarProducto = async (id) => {
+  try {
+    await fetch(
+      `${process.env.EXPO_PUBLIC_API_URL}/productos/${id}/desactivar`,
+      { method: "PUT" }
+    );
+
+    setHelados(prev =>
+      prev.map(h =>
+        h.id === id ? { ...h, activo: 0 } : h
+      )
+    );
+
+    setFilteredHelados(prev =>
+      prev.map(h =>
+        h.id === id ? { ...h, activo: 0 } : h
+      )
+    );
+
+  } catch (err) {
+    console.error("❌ Error desactivando producto:", err);
+  }finally {
+    setLoadingId(null);
+  }
+};
+
+
+
   return (
     <HeladosContext.Provider
       value={{
@@ -94,6 +178,10 @@ export const HeladosProvider = ({ children }) => {
         updateHeladoCantidad,
         ordenarPorNombre,
         ordenarPorCantidad,
+        activarProducto,
+        desactivarProducto,
+        loadingId,
+        fetchHeladosAdmin,
       }}
     >
       {children}

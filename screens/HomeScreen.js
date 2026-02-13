@@ -98,7 +98,7 @@ const HomeScreen = () => {
                 </TouchableOpacity>
 
                 <TouchableOpacity 
-                    onPress={() => navigation.navigate("GuardaFoto")}
+                    onPress={() => navigation.navigate("HeladosAdmin")}
                     style={[styles.boton,{
                         backgroundColor: "purple",
                     }]}
@@ -111,7 +111,7 @@ const HomeScreen = () => {
                             color:"white"
                         }}
                     >
-                        Guardar foto
+                        Admin helados
                     </Text>
                 </TouchableOpacity>
             </View>
