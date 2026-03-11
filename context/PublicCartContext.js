@@ -7,35 +7,66 @@ export const PublicCartContext = createContext();
 export function PublicCartProvider({ children }) {
   const [items, setItems] = useState([]);
 
+  /* ================= FUNCIONES DE CARRITO ================= */
+  // Agregar producto al carrito
   const addItem = (producto, cantidad = 1) => {
-    setItems(prev => {
-      const existe = prev.find(p => p.id === producto.id);
+  setItems(prev => {
+    const existe = prev.find(p => p.id === producto.id);
 
-      if (existe) {
-        return prev.map(p =>
-          p.id === producto.id
-            ? { ...p, cantidad: p.cantidad + cantidad }
-            : p
-        );
+    const cantidadEnCarrito = existe ? existe.cantidad : 0;
+    const nuevaCantidad = cantidadEnCarrito + cantidad;
+
+    // 🔒 Validación de stock
+    if (nuevaCantidad > producto.cantidad) {
+      alert(`Solo quedan ${producto.cantidad} en existencia`);
+      return prev; // No modifica el carrito
+    }
+
+    if (existe) {
+      return prev.map(p =>
+        p.id === producto.id
+          ? { ...p, cantidad: nuevaCantidad }
+          : p
+      );
+    }
+
+    return [
+      ...prev,
+      {
+        ...producto,
+        stock: producto.cantidad, // guardamos stock separado
+        cantidad
       }
-
-      return [...prev, { ...producto, cantidad }];
-    });
-  };
+    ];
+  });
+};
 
   const removeItem = (id) => {
     setItems(prev => prev.filter(p => p.id !== id));
   };
 
-  const updateCantidad = (id, cantidad) => {
-    if (cantidad <= 0) return removeItem(id);
+  // Actualizar cantidad de un producto en el carrito
+const updateCantidad = (id, cantidadNueva) => {
+  setItems(prev => {
+    const item = prev.find(p => p.id === id);
+    if (!item) return prev;
 
-    setItems(prev =>
-      prev.map(p =>
-        p.id === id ? { ...p, cantidad } : p
-      )
+    if (cantidadNueva <= 0) {
+      return prev.filter(p => p.id !== id);
+    }
+
+    if (cantidadNueva > item.stock) {
+      alert(`Por HOY Solo quedan ${item.stock} en existencia`);
+      return prev;
+    }
+
+    return prev.map(p =>
+      p.id === id ? { ...p, cantidad: cantidadNueva } : p
     );
-  };
+  });
+};
+
+
 
   const total = items.reduce(
   (sum, item) => sum + item.precio * item.cantidad,

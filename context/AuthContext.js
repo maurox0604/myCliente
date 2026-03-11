@@ -36,11 +36,21 @@ const AuthProvider = ({ children }) => {
 
             // Obtener el rol desde la base de datos
             try {
-                // const response = await axios.post('http://localhost:3001/getUserRole', {
-                const response = await axios.post(`${process.env.EXPO_PUBLIC_API_URL}/users/getUserRole`, {
+                const token = await currentUser.getIdToken();
+
+                // const response = await axios.post(`${process.env.EXPO_PUBLIC_API_URL}/users/getUserRole`, {
                     
-                    email: currentUser.email, // Enviar el email en el cuerpo de la solicitud
-                });
+                //     email: currentUser.email, // Enviar el email en el cuerpo de la solicitud
+                // });
+                const response = await axios.get(
+                    `${process.env.EXPO_PUBLIC_API_URL}/users/me/role`,
+                    {
+                        headers: {
+                        Authorization: `Bearer ${token}`,
+                        },
+                    }
+                );
+
                 setRole(response.data.rol); // Asignar el rol recibido
                 console.log("Rol response: ", response);
                 console.log("Rol data: ", response.data);

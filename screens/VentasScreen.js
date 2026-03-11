@@ -33,7 +33,10 @@ function VentasScreen() {
         
         setStartDate(sevenDaysAgo);
         setEndDate(new Date());
-        loadVentasByDateRange(sevenDaysAgo, new Date());
+
+        console.log("REFRESH ejecutado");
+        console.log("Nuevo rango:", sevenDaysAgo, new Date());
+        loadVentasByDateRange(sevenDaysAgo, new Date(), true);
     }
 
 
@@ -89,13 +92,15 @@ const groupVentasByDateAndFactura = () => {
         <View style={styles.container}>
             <View style={styles.filterBar}>
                 <Pressable onPress={() => sortVentas("fecha")} style={styles.filterButton}>
-                <Text>Ordenar por Fecha</Text>
+                    <Text>Ordenar por Fecha</Text>
                 </Pressable>
+
                 <Pressable onPress={() => sortVentas("producto")} style={styles.filterButton}>
-                <Text>Más Vendido</Text>
+                    <Text>Más Vendido</Text>
                 </Pressable>
+
                 <Pressable onPress={() => refresh()} style={styles.filterButton}>
-                <MaterialCommunityIcons name="update" size={24} color="black" />
+                    <MaterialCommunityIcons name="update" size={24} color="black" />
                 </Pressable>
             </View>
 

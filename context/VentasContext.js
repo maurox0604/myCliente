@@ -52,32 +52,34 @@ const loadVentas = async () => {
 // ................................................ Cargar ventas por rango de fechas
 const [lastRange, setLastRange] = useState(null);
 
-const loadVentasByDateRange = async (startDate, endDate) => {
+const loadVentasByDateRange = async (startDate, endDate, force = false) => {
   const start = startDate.toISOString().split("T")[0];
   const end = endDate.toISOString().split("T")[0];
 
-  console.log("◘◘...Vetas context: fecha ini: ", start, "  y fin: "  ,end)
-
   const rangeKey = `${start}_${end}`;
-  if (lastRange === rangeKey) return; // 🔒 evita refetch
 
-  setLastRange(rangeKey);
+  console.log("Recibido en load:", startDate, endDate);
+  if (loadingVentas) return;// 🔒 evita duplicados
+  if (!force && lastRange === rangeKey) return;// 🔒 evita recargas innecesarias
+
+  setLastRange(rangeKey);// Actualiza el rango actual
+  setLoadingVentas(true);// Activa el loading
 
   try {
     const response = await fetch(
       `${process.env.EXPO_PUBLIC_API_URL}/ventas?start=${start}&end=${end}`
     );
     const data = await response.json();
-    console.log("------------------♥♥ data: ", data)
     setVentas(data.ventas);
-  } catch (error) {
-    console.error("Error al cargar ventas por rango:", error);
-  }
+    } catch (error) {
+      console.error("Error al cargar ventas por rango:", error);
+    } finally {
+      setLoadingVentas(false);
+    }
 };
 
     
-
-    
+  
      // ..................................................................... Ordenar ventas
     const sortVentas = (criterion) => {
       const sortedVentas = [...ventas]; // Crear una copia de las ventas
