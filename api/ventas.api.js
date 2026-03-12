@@ -10,7 +10,8 @@ export const cargarVentas = async (startDate = null, endDate = null) => {
         const start = startDate ? new Date(startDate).toISOString().split('T')[0] : null;
         const end = endDate ? new Date(endDate).toISOString().split('T')[0] : null;
 
-        let url = `https://backend-de-prueba-delta.vercel.app/ventas`;
+        let url = `${process.env.EXPO_PUBLIC_API_URL}/ventas`;
+        // const res = await fetch(`${process.env.EXPO_PUBLIC_API_URL}/productos/all`);
         // let url = `http://localhost:3001/ventas`;
         console.log("Fecha ini y fin: ", start, end)
 

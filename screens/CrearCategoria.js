@@ -18,7 +18,9 @@ export default function CrearCategoria({ navigation }) {
         console.log("API:", process.env.EXPO_PUBLIC_API_URL);
       //const API = process.env.EXPO_PUBLIC_API_URL;
 
-      const response = await fetch(`https://backend-de-prueba-delta.vercel.app/categorias/create`,{
+      const response = await fetch(`${process.env.EXPO_PUBLIC_API_URL}/categorias/create`, {
+        // const response = await fetch(`https://backend-de-prueba-delta.vercel.app/categorias/create`, {
+        
 
       // const response = await fetch(`${API}/categorias/create`, {
         method: "POST",
