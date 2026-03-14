@@ -1,7 +1,9 @@
 import React, { useContext } from "react";
-import { View, Text } from "react-native";
+import { View, Text, TouchableOpacity } from "react-native";
 import { createBottomTabNavigator } from "@react-navigation/bottom-tabs";
 import MaterialCommunityIcons from "react-native-vector-icons/MaterialCommunityIcons";
+import { AuthContext } from "../context/AuthContext";
+import { useNavigation } from "@react-navigation/native";
 
 // =======================
 // Screens
@@ -37,13 +39,25 @@ const Tab = createBottomTabNavigator();
  * - Vive dentro de MainStack
  * - Recibe funciones desde arriba para abrir modales
  */
+
 export default function HomeTabs({
   openCartModal,
   openMenuVenta,
   openSedeModal,
-  role,
 }) {
   const { cartItemCount, cartItemCero } = useContext(CartContext);
+  const { logout, role } = useContext(AuthContext);
+  const navigation = useNavigation(); // ✅ NUEVO: hook de navegación
+
+
+  const handleLogout = async () => {
+  await logout();
+  navigation.reset({         // ✅ NUEVO: resetea el stack y navega al Welcome
+    index: 0,
+    routes: [{ name: "Welcome" }],
+  });
+};
+
 
   return (
     <Tab.Navigator
@@ -51,6 +65,18 @@ export default function HomeTabs({
       screenOptions={{
         tabBarActiveTintColor: "#e91e63",
         headerTitleAlign: "center",
+        headerRight: () => (
+        <TouchableOpacity
+          onPress={handleLogout}
+          style={{ marginRight: 15, flexDirection: "row", alignItems: "center", gap: 4 }}
+        >
+          <MaterialCommunityIcons name="logout" size={22} color="#e91e63" />
+          {/* ✅ Muestra "..." mientras carga, y el rol cuando está disponible */}
+          <Text style={{ color: "#e91e63", fontSize: 12 }}>
+            {role ?? "..."}
+          </Text>
+        </TouchableOpacity>
+      ),
       }}
     >
       {/* ================= HOME ================= */}

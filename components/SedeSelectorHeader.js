@@ -8,16 +8,16 @@ export default function SedeSelectorHeader({ onOpenMenu , onOpenSede }) {
 
   return (
     <View style={styles.container}>
-     <Pressable onPress={onOpenSede} style={styles.sede}>
+      <Pressable onPress={onOpenSede} style={styles.sede}>
 
         <Text style={styles.text}>
           🏪 {sedeActiva?.nombre || "Sede"}
         </Text>
       </Pressable>
 
-      <Pressable onPress={() => setShowSedeModal(true)}>
+      {/* <Pressable onPress={() => setShowSedeModal(true)}>
         <Text>{sedeActiva?.nombre || "Seleccionar sede"}</Text>
-      </Pressable>
+      </Pressable> */}
 
       <Pressable onPress={onOpenMenu} style={styles.menu}>
         <Text style={styles.menuText}>☰</Text>

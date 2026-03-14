@@ -11,13 +11,7 @@ import {
     View,
     Dimensions,
 } from 'react-native';
-import { getAuth, createUserWithEmailAndPassword, signInWithEmailAndPassword } from 'firebase/auth';
-import { initializeApp } from 'firebase/app';
-import { firebaseConfig } from '../firebase-config.js';
 import { AuthContext } from '../context/AuthContext.js';
-// import MyBlur from '../../components/MyBlur';
-
-
 
 const uri = '../assets/images/fondLogin.png';
 
@@ -33,49 +27,32 @@ const LoginScreen = ({ navigation, route }) => {
     const [password, setPassword] = React.useState('');
     const { login } = useContext(AuthContext);
 
-    
-    const app = initializeApp(firebaseConfig);
-    const auth = getAuth(app);
 
-    // const  handleCreateAccount = () => {
-    //     createUserWithEmailAndPassword(auth, email, password)
+
+    // const handleSignIn = () => {
+    //     signInWithEmailAndPassword(auth, email, password)
     //     .then((userCredential) => {
     //         // Signed in
     //         const user = userCredential.user;
-    //         console.log("usuario creado: ", user);
-    //         // ...
+    //         console.log("usuario logeado: ", user);
+    //         navigation.navigate('HomeTabs')
     //     })
     //     .catch((error) => {
     //         const errorCode = error.code;
     //         const errorMessage = error.message;
+    //         alert("Error al iniciar sesión: "+ errorMessage)
     //         // ..
     //     });
     // }
-
-    const handleSignIn = () => {
-        signInWithEmailAndPassword(auth, email, password)
-        .then((userCredential) => {
-            // Signed in
-            const user = userCredential.user;
-            console.log("usuario logeado: ", user);
-            navigation.navigate('HomeTabs')
-        })
-        .catch((error) => {
-            const errorCode = error.code;
-            const errorMessage = error.message;
-            alert("Error al iniciar sesión: "+ errorMessage)
-            // ..
-        });
-    }
     
 
     const handleLogin = async () => {
         try {
             await login(email, password);
-            navigation.navigate('HomeTabs')
+            navigation.navigate('HomeTabs');
         } catch (error) {
             console.error(error);
-            alert("Error al iniciar sesión: "+ errorMessage)
+            alert("Error al iniciar sesión: " + error.message); // ✅ era "errorMessage" (variable inexistente)
         }
     };
 

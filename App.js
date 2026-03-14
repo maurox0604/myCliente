@@ -61,26 +61,25 @@ export default function App() {
     return (
         
         <GestureHandlerRootView >
-                {/* <View>
-                    <Image source={{ uri: uri }} style={styles.image}/>
-                </View> */}
-            <SedeProvider>
-                <ReportesProvider>
-                    <CategoriasProvider>
-                        <HeladosProvider>
-                            <VentasContextProvider>
-                                <AuthProvider>
-                                    <DbaseProvider>
-                                        <CartModalProvider>
-                                            <Navigation style={styles.container}/>
-                                        </CartModalProvider>
-                                    </DbaseProvider>
-                                </AuthProvider>
-                            </VentasContextProvider>
-                        </HeladosProvider>
-                    </CategoriasProvider>
-                </ReportesProvider>
-            </SedeProvider>
+            <AuthProvider>
+                <SedeProvider>
+                    <ReportesProvider>
+                        <CategoriasProvider>
+                            <HeladosProvider>
+                                <VentasContextProvider>
+                                    
+                                        <DbaseProvider>
+                                            <CartModalProvider>
+                                                <Navigation style={styles.container}/>
+                                            </CartModalProvider>
+                                        </DbaseProvider>
+                                    
+                                </VentasContextProvider>
+                            </HeladosProvider>
+                        </CategoriasProvider>
+                    </ReportesProvider>
+                </SedeProvider>
+            </AuthProvider>
         </GestureHandlerRootView>
     )
 }

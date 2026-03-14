@@ -6,6 +6,8 @@ import VentasItem from "../components/VentasItem";
 import { formatServerDateForDisplay } from "../utils/formatFechaGlobal";
 import { useSede } from '../context/SedeContext';
 
+import RequireRole from "../components/RequireRole";
+
 
 function VentasScreen() {
     const { ventas, loadVentasByDateRange, sortVentas } = useVentas();
@@ -41,27 +43,28 @@ function VentasScreen() {
 
 
         
-// Agrupar ventas por fecha y factura    
-const groupVentasByDateAndFactura = () => {
-    console.log("Datos crudos de ventas:", ventas); // Verificar los datos iniciales
+    // Agrupar ventas por fecha y factura    
+    const groupVentasByDateAndFactura = () => {
+        console.log("Datos crudos de ventas:", ventas); // Verificar los datos iniciales
 
-    // Agrupar facturas estrictamente por fecha local y evitar duplicados
-    const grouped = ventas.reduce((acc, venta) => {
-        // ✅ Extraer fecha directamente sin reinterpretar zona horaria
-        const date = venta.fecha.split('T')[0]; // "2026-01-07T15:30:00.000Z" → "2026-01-07"
+        // Agrupar facturas estrictamente por fecha local y evitar duplicados
+        const grouped = ventas.reduce((acc, venta) => {
+            if (!ventas || ventas.length === 0) return []; // ← blindaje para evitar errores
+            // ✅ Extraer fecha directamente sin reinterpretar zona horaria
+            const date = venta.fecha.split('T')[0]; // "2026-01-07T15:30:00.000Z" → "2026-01-07"
 
-        console.log("Datos fecha procesada para agrupación:", date);
-        if (!acc[date]) acc[date] = {};
-        if (!acc[date][venta.id_factura]) acc[date][venta.id_factura] = [];
-        acc[date][venta.id_factura].push(venta);
+            console.log("Datos fecha procesada para agrupación:", date);
+            if (!acc[date]) acc[date] = {};
+            if (!acc[date][venta.id_factura]) acc[date][venta.id_factura] = [];
+            acc[date][venta.id_factura].push(venta);
 
-        return acc;
-    }, {});
+            return acc;
+        }, {});
 
-    console.log("Datos agrupados por fecha y factura (antes de procesar):", grouped);
+        console.log("Datos agrupados por fecha y factura (antes de procesar):", grouped);
 
-    // Procesar las agrupaciones para generar los totales
-    const result = Object.entries(grouped)
+        // Procesar las agrupaciones para generar los totales
+        const result = Object.entries(grouped)
         .map(([date, facturas]) => ({
         date,
         facturas: Object.entries(facturas)
@@ -78,8 +81,8 @@ const groupVentasByDateAndFactura = () => {
         }))
         .filter((group) => group.facturas.length > 0); // Filtrar fechas sin facturas
 
-    return result;
-};
+        return result;
+    };
 
     const groupedVentas = groupVentasByDateAndFactura();
 
@@ -89,76 +92,78 @@ const groupVentasByDateAndFactura = () => {
         };
 
     return (
-        <View style={styles.container}>
-            <View style={styles.filterBar}>
-                <Pressable onPress={() => sortVentas("fecha")} style={styles.filterButton}>
-                    <Text>Ordenar por Fecha</Text>
-                </Pressable>
+        <RequireRole allowedRoles={["superadmin", "vendedor"]}>
+            <View style={styles.container}>
+                <View style={styles.filterBar}>
+                    <Pressable onPress={() => sortVentas("fecha")} style={styles.filterButton}>
+                        <Text>Ordenar por Fecha</Text>
+                    </Pressable>
 
-                <Pressable onPress={() => sortVentas("producto")} style={styles.filterButton}>
-                    <Text>Más Vendido</Text>
-                </Pressable>
+                    <Pressable onPress={() => sortVentas("producto")} style={styles.filterButton}>
+                        <Text>Más Vendido</Text>
+                    </Pressable>
 
-                <Pressable onPress={() => refresh()} style={styles.filterButton}>
-                    <MaterialCommunityIcons name="update" size={24} color="black" />
-                </Pressable>
+                    <Pressable onPress={() => refresh()} style={styles.filterButton}>
+                        <MaterialCommunityIcons name="update" size={24} color="black" />
+                    </Pressable>
+                </View>
+
+                <FlatList
+                    data={groupedVentas}
+                    keyExtractor={(item) => item.date}
+                    renderItem={({ item }) => {
+                    const { date, facturas } = item;
+                    const totalDiaVentas = facturas.reduce((sum, factura) => sum + factura.totalVenta, 0);
+                    const totalDiaCantidad = facturas.reduce((sum, factura) => sum + factura.totalCantidad, 0);
+
+                    return (
+                        <View style={styles.dateBlock}>
+                            <View style={styles.dateLine} >
+                                <Text style={styles.dateTitle}>
+                                    {date} - Total Ventas: ${totalDiaVentas}, Total Helados: {totalDiaCantidad}
+                                </Text>
+                            </View>
+                        
+                        {facturas.map((factura) => (
+                            <View key={factura.id_factura} style={styles.facturaBlock}>
+                                <View style={styles.facturaBlockHeader}>
+                                    <Text style={styles.facturaTitle}    onPress={() => handlePress(factura.id_factura)}>
+                                        F_No. {factura.id_factura} - Hora: {factura.horaFactura}
+                                    </Text>
+                                    <Text style={styles.textCantidad}>{factura.totalCantidad}</Text>
+                                </View>
+
+                                <View style={styles.facturaBlockHeader}>
+                                    <Text style={ factura.nombre_sede === "Rappi" ? styles.facturaSede : styles.facturaTitle}    onPress={() => handlePress(factura.id_factura)}>
+                                        SEDE: {factura.nombre_sede} 
+                                    </Text>
+                                    {/* <Text style={styles.textCantidad}>{factura.totalCantidad}</Text> */}
+                                </View>
+
+                            {expandedFacturaId === factura.id_factura && (
+                                <View>
+                                {factura.items.map((venta) => (
+                                    <VentasItem
+                                    key={venta.id}
+                                    venta={venta}
+                                    isExpanded={true}
+                                        onPress={() => { }}
+                                        
+                                        // isExpanded={item.id === expandedId}
+                                        // onPress={() => handlePress(item.id)}
+                                    />
+                                ))}
+                                </View>
+                            )}
+                            </View>
+                        ))}
+                        </View>
+                    );
+                    }}
+                />
+                {/* {sortVentas("fecha")} */}
             </View>
-
-            <FlatList
-                data={groupedVentas}
-                keyExtractor={(item) => item.date}
-                renderItem={({ item }) => {
-                const { date, facturas } = item;
-                const totalDiaVentas = facturas.reduce((sum, factura) => sum + factura.totalVenta, 0);
-                const totalDiaCantidad = facturas.reduce((sum, factura) => sum + factura.totalCantidad, 0);
-
-                return (
-                    <View style={styles.dateBlock}>
-                        <View style={styles.dateLine} >
-                            <Text style={styles.dateTitle}>
-                                {date} - Total Ventas: ${totalDiaVentas}, Total Helados: {totalDiaCantidad}
-                            </Text>
-                        </View>
-                    
-                    {facturas.map((factura) => (
-                        <View key={factura.id_factura} style={styles.facturaBlock}>
-                            <View style={styles.facturaBlockHeader}>
-                                <Text style={styles.facturaTitle}    onPress={() => handlePress(factura.id_factura)}>
-                                    F_No. {factura.id_factura} - Hora: {factura.horaFactura}
-                                </Text>
-                                <Text style={styles.textCantidad}>{factura.totalCantidad}</Text>
-                            </View>
-
-                            <View style={styles.facturaBlockHeader}>
-                                <Text style={ factura.nombre_sede === "Rappi" ? styles.facturaSede : styles.facturaTitle}    onPress={() => handlePress(factura.id_factura)}>
-                                    SEDE: {factura.nombre_sede} 
-                                </Text>
-                                {/* <Text style={styles.textCantidad}>{factura.totalCantidad}</Text> */}
-                            </View>
-
-                        {expandedFacturaId === factura.id_factura && (
-                            <View>
-                            {factura.items.map((venta) => (
-                                <VentasItem
-                                key={venta.id}
-                                venta={venta}
-                                isExpanded={true}
-                                    onPress={() => { }}
-                                    
-                                    // isExpanded={item.id === expandedId}
-                                    // onPress={() => handlePress(item.id)}
-                                />
-                            ))}
-                            </View>
-                        )}
-                        </View>
-                    ))}
-                    </View>
-                );
-                }}
-            />
-            {/* {sortVentas("fecha")} */}
-        </View>
+        </RequireRole>
     );
 }
 

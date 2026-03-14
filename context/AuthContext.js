@@ -1,15 +1,17 @@
 import React, { createContext, useState, useEffect } from "react";
 import { getAuth, onAuthStateChanged, signInWithEmailAndPassword, signOut } from "firebase/auth";
-import { firebaseConfig } from '../firebase-config.js';
-import { initializeApp } from "firebase/app";
+// import { firebaseConfig } from '../firebase-config.js';
+// import { initializeApp } from "firebase/app";
+import { auth } from '../firebase-config.js'; // ✅ importa el auth ya inicializado
 import axios from "axios";
 // import app from '../firebase-config.js';
 
 const AuthContext = createContext();
-
+// const app = initializeApp(firebaseConfig);
+// const auth = getAuth(app);
+    
 const AuthProvider = ({ children }) => {
-    const app = initializeApp(firebaseConfig);
-    const auth = getAuth(app);
+    
     
     const [user, setUser] = useState(null); // Datos básicos del usuario
     const [role, setRole] = useState(null); // Rol del usuario
@@ -51,7 +53,14 @@ const AuthProvider = ({ children }) => {
                     }
                 );
 
+                // 🔍 LOGS TEMPORALES DE DIAGNÓSTICO
+                console.log("📦 response.data completo:", JSON.stringify(response.data));
+                console.log("📦 response.data.rol:", response.data.rol);
+                console.log("📦 response.data.role:", response.data.role);
+
+
                 setRole(response.data.rol); // Asignar el rol recibido
+                console.log("rol role setRole: ", role)
                 console.log("Rol response: ", response);
                 console.log("Rol data: ", response.data);
                 console.log("Rol: ", response.data.rol);
@@ -65,7 +74,7 @@ const AuthProvider = ({ children }) => {
         setLoading(false);
     });
         return () => unsubscribe();
-    }, [auth]);
+    }, []);
 
     const login = async (email, password) => {
         await signInWithEmailAndPassword(auth, email, password);
@@ -77,7 +86,7 @@ const AuthProvider = ({ children }) => {
 
     return (
         <AuthContext.Provider value={{ user, role, authContextValue, emailUser, loading, login, logout }}>
-        {children}
+            {children}
         </AuthContext.Provider>
     );
 };
