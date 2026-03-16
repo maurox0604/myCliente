@@ -4,6 +4,7 @@ import { createBottomTabNavigator } from "@react-navigation/bottom-tabs";
 import MaterialCommunityIcons from "react-native-vector-icons/MaterialCommunityIcons";
 import { AuthContext } from "../context/AuthContext";
 import { useNavigation } from "@react-navigation/native";
+import RegisterScreen from "../screens/RegisterScreen";
 
 // =======================
 // Screens
@@ -199,6 +200,22 @@ export default function HomeTabs({
           ),
         }}
       />
+
+      {/* ================= USUARIOS — solo superadmin ================= */}
+     {/* ================= USUARIOS ================= */}
+      <Tab.Screen
+          name="Usuarios"
+          component={RegisterScreen}
+          options={{
+              tabBarLabel: "Usuarios",
+              tabBarIcon: ({ color, size }) => (
+                  <MaterialCommunityIcons name="account-plus" color={color} size={size} />
+              ),
+              // ✅ Oculta la tab si no es superadmin
+              tabBarButton: role === "superadmin" ? undefined : () => null,
+          }}
+      />
+      
     </Tab.Navigator>
   );
 }

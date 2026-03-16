@@ -9,6 +9,7 @@ import { HeladosContext } from '../context/HeladosContext';
 import { useVentas } from '../context/VentasContext';
 import { useSede } from '../context/SedeContext';
 import { formatFechaVenta } from '../utils/formatFechaGlobal';
+import { auth } from '../firebase-config.js';
 
 
 
@@ -52,9 +53,15 @@ const CartModalContent = ({ closeModal }) => {
             const fechaFormateada = formatFechaVenta(fechaVentaManual);
             console.log("📦 carts SOLO :", carts);
 
+            const token = await auth.currentUser?.getIdToken();
+
             const response = await fetch(`${process.env.EXPO_PUBLIC_API_URL}/ventas/procesar`, {
                 method: "POST",
-                headers: { "Content-Type": "application/json" },
+                headers: {
+                    "Content-Type": "application/json", 
+                    "Authorization": `Bearer ${token}`, // ✅ token agregado
+                },
+
                 body: JSON.stringify({
                     items: carts.map(item => ({ ...item, totVentaXhelado: item.precio * item.cantCompra, user: emailUser })),
                     fecha_manual:fechaFormateada,

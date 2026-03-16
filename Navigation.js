@@ -23,25 +23,23 @@ import LoadingScreen from "./screens/LoadingScreen";
 // =======================
 // Deep Linking config
 // =======================
-const linking = {
-  prefixes: ["http://localhost:8081", "https://my-cliente.vercel.app"],
-  config: {
-    screens: {
-      Main: {
-        path: "",
-        screens: {
-          HomeTabs: "",
-        },
-      },
-      Public: {
-        path: "public",
-        screens: {
-          PublicProductos: "productos",
-        },
-      },
-    },
-  },
-};
+// const linking = {
+//   prefixes: ["http://localhost:8081", "https://my-cliente.vercel.app"],
+//   config: {
+//     screens: {
+//       // ✅ Solo Public tiene ruta especial para el QR/URL
+//       Public: {
+//         path: "public",
+//         screens: {
+//           PublicProductos: "productos",
+//         },
+//       },
+//       // ✅ Login y Main no tienen ruta deep link — son privados
+//       LoginScreen: "login",
+//       Main: "home",
+//     },
+//   },
+// };
 
 
 /**
@@ -56,10 +54,14 @@ const linking = {
  * - Providers envuelven la navegación
  */
 export default function Navigation() {
-  const { loading } = useContext(AuthContext);
+  const { loading, role, user } = useContext(AuthContext);
 
-  // Mientras se valida sesión
-  if (loading) {
+  // 🔍 LOG TEMPORAL
+  console.log("🧭 Navigation — loading:", loading, "| user:", !!user, "| role:", role);
+
+
+   // ✅ Espera tanto el loading de Firebase como que el rol esté disponible
+  if (loading || (user && role === null)) {
     return <LoadingScreen />;
   }
 
@@ -68,7 +70,8 @@ export default function Navigation() {
       <CartProvider>
         <SedeProvider>
           <BottomSheetModalProvider>
-            <NavigationContainer linking={linking}>
+            {/* <NavigationContainer linking={linking}> */}
+              <NavigationContainer>
               <RootNavigator />
             </NavigationContainer>
           </BottomSheetModalProvider>

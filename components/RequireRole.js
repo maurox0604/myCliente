@@ -41,16 +41,15 @@ export default function RequireRole({ allowedRoles, children }) {
     if (!allowedRoles.includes(role)) {
         return (
         <View style={styles.container}>
-        <MaterialCommunityIcons name="lock" size={60} color="#e91e63" />
-        <Text style={styles.title}>Acceso Restringido</Text>
-        <Text style={styles.subtitle}>
-          Tu rol <Text style={styles.role}>"{role}"</Text> no tiene permisos para esta sección.
-        </Text>
-      </View>
+            <MaterialCommunityIcons name="lock" size={60} color="#e91e63" />
+            <Text style={styles.title}>Acceso Restringido</Text>
+            <Text style={styles.subtitle}>
+            Tu rol <Text style={styles.role}>"{role}"</Text> no tiene permisos para esta sección.
+            </Text>
+        </View>
         );
     }
 
 
-   
     return children;
 }

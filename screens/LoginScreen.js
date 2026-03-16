@@ -49,7 +49,7 @@ const LoginScreen = ({ navigation, route }) => {
     const handleLogin = async () => {
         try {
             await login(email, password);
-            navigation.navigate('HomeTabs');
+            // navigation.navigate('HomeTabs');
         } catch (error) {
             console.error(error);
             alert("Error al iniciar sesión: " + error.message); // ✅ era "errorMessage" (variable inexistente)
