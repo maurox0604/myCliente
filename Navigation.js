@@ -59,6 +59,26 @@ export default function Navigation() {
   // 🔍 LOG TEMPORAL
   console.log("🧭 Navigation — loading:", loading, "| user:", !!user, "| role:", role);
 
+  // ✅ Si aún estamos cargando el estado de autenticación o el rol, mostramos pantalla de carga
+  const linking = {
+  prefixes: ["http://localhost:8081", "https://my-cliente.vercel.app"],
+  config: {
+    screens: {
+      // ✅ Login no tiene ruta pública
+      LoginScreen: "login",
+      // ✅ Main no tiene ruta pública  
+      Main: "home",
+      // ✅ Public sí tiene ruta accesible por URL/QR
+      Public: {
+        path: "public",
+        screens: {
+          PublicProductos: "",
+        },
+      },
+    },
+  },
+};
+
 
    // ✅ Espera tanto el loading de Firebase como que el rol esté disponible
   if (loading || (user && role === null)) {
@@ -70,8 +90,8 @@ export default function Navigation() {
       <CartProvider>
         <SedeProvider>
           <BottomSheetModalProvider>
-            {/* <NavigationContainer linking={linking}> */}
-              <NavigationContainer>
+            <NavigationContainer linking={linking}>
+              {/* <NavigationContainer> */}
               <RootNavigator />
             </NavigationContainer>
           </BottomSheetModalProvider>

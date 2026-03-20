@@ -1,86 +1,73 @@
 import React, { useContext } from "react";
-import { View, Text, TouchableOpacity } from "react-native";
+import { View, Text, TouchableOpacity, StyleSheet, Platform } from "react-native";
 import { createBottomTabNavigator } from "@react-navigation/bottom-tabs";
 import MaterialCommunityIcons from "react-native-vector-icons/MaterialCommunityIcons";
 import { AuthContext } from "../context/AuthContext";
 import { useNavigation } from "@react-navigation/native";
 import RegisterScreen from "../screens/RegisterScreen";
 
-// =======================
-// Screens
-// =======================
 import HomeScreen from "../screens/HomeScreen";
 import StackEdit from "../screens/StackEdit";
 import ListaHelados from "../screens/ListaHelados";
 import VentasScreen from "../screens/VentasScreen";
 import ReportesScreen from "../screens/ReportesScreen";
-
-// =======================
-// Components
-// =======================
 import SedeSelectorHeader from "../components/SedeSelectorHeader";
-
-// =======================
-// Contexts
-// =======================
 import { CartContext } from "../context/CartContext";
 
-// =======================
-// Navigator
-// =======================
 const Tab = createBottomTabNavigator();
 
-/**
- * HomeTabs
- * ----------
- * Navegación principal por pestañas de la app (zona privada).
- *
- * ⚠️ IMPORTANTE:
- * - Este navigator NO maneja NavigationContainer
- * - Vive dentro de MainStack
- * - Recibe funciones desde arriba para abrir modales
- */
+// ✅ NUEVO: Botón flotante del carrito
+function CartTabButton({ children, onPress, cartItemCount }) {
+  return (
+    <TouchableOpacity
+      onPress={onPress}
+      activeOpacity={0.85}
+      style={styles.cartButtonWrapper}
+    >
+      <View style={styles.cartButton}>
+        <MaterialCommunityIcons name="cart" color="#fff" size={28} />
+        {cartItemCount > 0 && (
+          <View style={styles.cartBadge}>
+            <Text style={styles.cartBadgeText}>{cartItemCount}</Text>
+          </View>
+        )}
+      </View>
+    </TouchableOpacity>
+  );
+}
 
-export default function HomeTabs({
-  openCartModal,
-  openMenuVenta,
-  openSedeModal,
-}) {
+export default function HomeTabs({ openCartModal, openMenuVenta, openSedeModal }) {
   const { cartItemCount, cartItemCero } = useContext(CartContext);
   const { logout, role } = useContext(AuthContext);
-  const navigation = useNavigation(); // ✅ NUEVO: hook de navegación
-
+  const navigation = useNavigation();
 
   const handleLogout = async () => {
-  await logout();
-  navigation.reset({         // ✅ NUEVO: resetea el stack y navega al Welcome
-    index: 0,
-    routes: [{ name: "Welcome" }],
-  });
-};
-
+    await logout();
+  };
 
   return (
     <Tab.Navigator
       initialRouteName="Home"
       screenOptions={{
         tabBarActiveTintColor: "#e91e63",
+        tabBarInactiveTintColor: "#aaa",
+        tabBarStyle: styles.tabBar,
+        tabBarLabelStyle: styles.tabLabel,
         headerTitleAlign: "center",
+        headerStyle: { backgroundColor: "#fff" },
+        headerTintColor: "#333",
         headerRight: () => (
-        <TouchableOpacity
-          onPress={handleLogout}
-          style={{ marginRight: 15, flexDirection: "row", alignItems: "center", gap: 4 }}
-        >
-          <MaterialCommunityIcons name="logout" size={22} color="#e91e63" />
-          {/* ✅ Muestra "..." mientras carga, y el rol cuando está disponible */}
-          <Text style={{ color: "#e91e63", fontSize: 12 }}>
-            {role ?? "..."}
-          </Text>
-        </TouchableOpacity>
-      ),
+          <TouchableOpacity
+            onPress={handleLogout}
+            style={styles.logoutButton}
+          >
+            <MaterialCommunityIcons name="logout" size={22} color="#e91e63" />
+            <Text style={styles.logoutText}>{role ?? "..."}</Text>
+          </TouchableOpacity>
+        ),
       }}
     >
-      {/* ================= HOME ================= */}
+      {/* HOME */}
       <Tab.Screen
         name="Home"
         component={HomeScreen}
@@ -92,7 +79,7 @@ export default function HomeTabs({
         }}
       />
 
-      {/* ================= EDITAR ================= */}
+      {/* EDITAR */}
       <Tab.Screen
         name="Editar"
         component={StackEdit}
@@ -101,52 +88,11 @@ export default function HomeTabs({
           tabBarIcon: ({ color, size }) => (
             <MaterialCommunityIcons name="ice-pop" color={color} size={size} />
           ),
-          // Badge con cantidad (ej: pendientes)
           tabBarBadge: cartItemCero > 0 ? cartItemCero : undefined,
         }}
       />
 
-      {/* ================= CARRITO =================
-           No navega a pantalla, abre modal */}
-      <Tab.Screen
-        name="Carrito"
-        component={() => null} // no se renderiza pantalla
-        options={{
-          tabBarLabel: "Carrito",
-          tabBarIcon: ({ color }) => (
-            <View style={{ top: -10 }}>
-              <MaterialCommunityIcons name="cart" color={color} size={28} />
-              {cartItemCount > 0 && (
-                <View
-                  style={{
-                    position: "absolute",
-                    right: -6,
-                    top: -4,
-                    backgroundColor: "red",
-                    borderRadius: 10,
-                    width: 18,
-                    height: 18,
-                    justifyContent: "center",
-                    alignItems: "center",
-                  }}
-                >
-                  <Text style={{ color: "#fff", fontSize: 10 }}>
-                    {cartItemCount}
-                  </Text>
-                </View>
-              )}
-            </View>
-          ),
-        }}
-        listeners={{
-          tabPress: (e) => {
-            e.preventDefault();
-            openCartModal(); // abre BottomSheet
-          },
-        }}
-      />
-
-      {/* ================= SABORES ================= */}
+      {/* SABORES */}
       <Tab.Screen
         name="Sabores"
         component={ListaHelados}
@@ -160,62 +106,149 @@ export default function HomeTabs({
             />
           ),
           tabBarIcon: ({ color, size }) => (
-            <MaterialCommunityIcons
-              name="flip-vertical"
-              color={color}
-              size={size}
-            />
+            <MaterialCommunityIcons name="flip-vertical" color={color} size={size} />
           ),
         }}
       />
 
-      {/* ================= VENTAS ================= */}
+      {/* ✅ CARRITO — botón flotante central */}
+      <Tab.Screen
+        name="Carrito"
+        component={() => null}
+        options={{
+          tabBarLabel: () => null, // ✅ Sin label debajo del botón flotante
+          tabBarButton: (props) => (
+            <CartTabButton
+              {...props}
+              cartItemCount={cartItemCount}
+              onPress={openCartModal}
+            />
+          ),
+        }}
+        listeners={{
+          tabPress: (e) => {
+            e.preventDefault();
+            openCartModal();
+          },
+        }}
+      />
+
+      {/* VENTAS */}
       <Tab.Screen
         name="Ventas"
         component={VentasScreen}
         options={{
           tabBarLabel: "Ventas",
           tabBarIcon: ({ color, size }) => (
-            <MaterialCommunityIcons
-              name="cash-register"
-              color={color}
-              size={size}
-            />
+            <MaterialCommunityIcons name="cash-register" color={color} size={size} />
           ),
         }}
       />
 
-      {/* ================= REPORTES ================= */}
+      {/* REPORTES */}
       <Tab.Screen
         name="Reportes"
         component={ReportesScreen}
         options={{
           tabBarLabel: "Reportes",
           tabBarIcon: ({ color, size }) => (
-            <MaterialCommunityIcons
-              name="chart-pie"
-              color={color}
-              size={size}
-            />
+            <MaterialCommunityIcons name="chart-pie" color={color} size={size} />
           ),
         }}
       />
 
-      {/* ================= USUARIOS — solo superadmin ================= */}
-     {/* ================= USUARIOS ================= */}
+      {/* USUARIOS — solo superadmin */}
       <Tab.Screen
-          name="Usuarios"
-          component={RegisterScreen}
-          options={{
-              tabBarLabel: "Usuarios",
-              tabBarIcon: ({ color, size }) => (
-                  <MaterialCommunityIcons name="account-plus" color={color} size={size} />
-              ),
-              // ✅ Oculta la tab si no es superadmin
-              tabBarButton: role === "superadmin" ? undefined : () => null,
-          }}
+        name="Usuarios"
+        component={RegisterScreen}
+        options={{
+          tabBarLabel: "Usuarios",
+          tabBarIcon: ({ color, size }) => (
+            <MaterialCommunityIcons name="account-plus" color={color} size={size} />
+          ),
+          tabBarButton: role === "superadmin" ? undefined : () => null,
+        }}
       />
-      
     </Tab.Navigator>
   );
 }
+
+const styles = StyleSheet.create({
+  // ✅ Barra inferior con sombra y bordes redondeados
+  tabBar: {
+    backgroundColor: "#fff",
+    borderTopWidth: 0,
+    height: 65,
+    paddingBottom: 8,
+    paddingTop: 4,
+    borderRadius: 20,
+    marginHorizontal: 10,
+    marginBottom: Platform.OS === "ios" ? 20 : 8,
+    position: "absolute",
+    left: 0,
+    right: 0,
+    bottom: 0,
+    elevation: 12,
+    shadowColor: "#e91e63",
+    shadowOffset: { width: 0, height: -2 },
+    shadowOpacity: 0.12,
+    shadowRadius: 12,
+  },
+  tabLabel: {
+    fontSize: 10,
+    fontWeight: "600",
+  },
+  // ✅ Wrapper del botón flotante — eleva el botón sobre la barra
+  cartButtonWrapper: {
+    top: -22,
+    justifyContent: "center",
+    alignItems: "center",
+    width: 70,
+  },
+  // ✅ Botón circular con gradiente rosa → cian como sombra
+  cartButton: {
+    width: 60,
+    height: 60,
+    borderRadius: 30,
+    backgroundColor: "#e91e63",
+    justifyContent: "center",
+    alignItems: "center",
+    shadowColor: "#00bcd4", // ✅ sombra cian como acento
+    shadowOffset: { width: 0, height: 4 },
+    shadowOpacity: 0.5,
+    shadowRadius: 8,
+    elevation: 10,
+    borderWidth: 3,
+    borderColor: "#fff",
+  },
+  // ✅ Badge de cantidad en el carrito
+  cartBadge: {
+    position: "absolute",
+    right: -2,
+    top: -2,
+    backgroundColor: "#00bcd4", // ✅ cian como color del badge
+    borderRadius: 10,
+    width: 20,
+    height: 20,
+    justifyContent: "center",
+    alignItems: "center",
+    borderWidth: 1.5,
+    borderColor: "#fff",
+  },
+  cartBadgeText: {
+    color: "#fff",
+    fontSize: 10,
+    fontWeight: "bold",
+  },
+  logoutButton: {
+    marginRight: 15,
+    flexDirection: "row",
+    alignItems: "center",
+    gap: 4,
+  },
+  logoutText: {
+    color: "#e91e63",
+    fontSize: 12,
+    fontWeight: "600",
+  },
+});
