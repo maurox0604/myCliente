@@ -9,6 +9,7 @@ export function PublicProductosProvider({ children }) {
   useEffect(() => {
     // fetch("https://backend-de-prueba-delta.vercel.app/api/public/productos")
     fetch(`${process.env.EXPO_PUBLIC_API_URL}/api/public/productos`)
+      
     
     .then(res => res.json())
     .then(data => {

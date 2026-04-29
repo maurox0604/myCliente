@@ -218,7 +218,7 @@ const styles = StyleSheet.create({
     shadowOpacity: 0.5,
     shadowRadius: 8,
     elevation: 10,
-    borderWidth: 3,
+    borderWidth: 6,
     borderColor: "#fff",
   },
   // ✅ Badge de cantidad en el carrito
