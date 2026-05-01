@@ -100,8 +100,34 @@ function VentasScreen() {
             id_factura,
             items,
             nombre_sede: items[0]?.nombre_sede,
-            totalVenta: items.reduce((sum, item) => sum + item.venta_helado, 0),
+            // ✅ Total ingresos — solo ventas reales
+            totalVenta: items.reduce(
+              (sum, item) =>
+                item.motivo === "venta" || !item.motivo
+                  ? sum + item.venta_helado
+                  : sum,
+              0,
+            ),
+            // ✅ Cantidad total incluye todo (para saber cuántos salieron)
             totalCantidad: items.reduce((sum, item) => sum + item.cantidad, 0),
+            // ✅ Cantidad solo de ventas reales
+            // ✅ Cantidad vendida — solo ventas reales
+            totalCantidad: items.reduce(
+              (sum, item) =>
+                item.motivo === "venta" || !item.motivo
+                  ? sum + item.cantidad
+                  : sum,
+              0,
+            ),
+
+            // ✅ Cantidad obsequios/muestras/derretidos — para mostrar aparte
+            totalNoVenta: items.reduce(
+              (sum, item) =>
+                item.motivo !== "venta" && item.motivo
+                  ? sum + item.cantidad
+                  : sum,
+              0,
+            ),
             horaFactura:
               items.length > 0
                 ? formatServerDateForDisplay(items[0].fecha)
@@ -298,6 +324,7 @@ function VentasScreen() {
           keyExtractor={(item) => item.date}
           renderItem={({ item }) => {
             const { date, facturas } = item;
+            // ✅ Totales del día
             const totalDiaVentas = facturas.reduce(
               (sum, f) => sum + f.totalVenta,
               0,
@@ -306,13 +333,28 @@ function VentasScreen() {
               (sum, f) => sum + f.totalCantidad,
               0,
             );
+            const totalDiaNoVenta = facturas.reduce(
+              (sum, f) => sum + f.totalNoVenta,
+              0,
+            );
 
             return (
               <View style={styles.dateBlock}>
                 <View style={styles.dateLine}>
+                  {/* <Text style={styles.dateTitle}>
+                    {date} — ${totalDiaVentas.toLocaleString("es-CO")} ·{" "}
+                    {totalDiaCantidad} und
+                  </Text> */}
+
                   <Text style={styles.dateTitle}>
                     {date} — ${totalDiaVentas.toLocaleString("es-CO")} ·{" "}
                     {totalDiaCantidad} und
+                    {totalDiaNoVenta > 0 && (
+                      <Text style={{ fontSize: 13, opacity: 0.8 }}>
+                        {" "}
+                        · 🎁 {totalDiaNoVenta} obsequios/muestras
+                      </Text>
+                    )}
                   </Text>
                 </View>
 
