@@ -13,11 +13,8 @@ import VentasItem from "../components/VentasItem";
 import { formatServerDateForDisplay } from "../utils/formatFechaGlobal";
 import { useSede } from "../context/SedeContext";
 import RequireRole from "../components/RequireRole";
+import { useWindowDimensions } from "react-native";
 
-// ✅ Date picker según plataforma
-import DateTimePicker from "@react-native-community/datetimepicker";
-
-// Para web usamos react-datepicker
 let DatePicker;
 if (Platform.OS === "web") {
   DatePicker = require("react-datepicker").default;
@@ -28,29 +25,48 @@ function VentasScreen() {
   const { ventas, loadVentasByDateRange, sortVentas } = useVentas();
   useSede();
 
+  const { width } = useWindowDimensions();
+  const isMobile = width < 600;
+
   const [expandedFacturaId, setExpandedFacturaId] = useState(null);
-
-  // ✅ Agrega este mapeo (referencia los estilos globales de abajo)
-  const sedeStyleMap = {
-    Local: styles.sedeLocal,
-    Rappi: styles.sedeRappi,
-    Evento: styles.sedeEvento,
-  };
-
-  // ✅ Fechas — por defecto últimos 7 días
   const [startDate, setStartDate] = useState(() => {
     const d = new Date();
     d.setDate(d.getDate() - 7);
     return d;
   });
   const [endDate, setEndDate] = useState(new Date());
-
-  // ✅ Control de pickers en móvil
-  const [showStartPicker, setShowStartPicker] = useState(false);
-  const [showEndPicker, setShowEndPicker] = useState(false);
-
-  // ✅ Modo: "7dias" | "custom"
   const [modo, setModo] = useState("7dias");
+
+  const sedeStyleMap = {
+    Local: styles.sedeLocal,
+    Rappi: styles.sedeRappi,
+    Evento: styles.sedeEvento,
+  };
+
+  // ✅ Crea el portal en el DOM para react-datepicker
+  useEffect(() => {
+    if (Platform.OS === "web") {
+      if (!document.getElementById("datepicker-portal")) {
+        const portal = document.createElement("div");
+        portal.id = "datepicker-portal";
+        portal.style.cssText =
+          "position:fixed;z-index:99999;top:0;left:0;pointer-events:none;";
+        document.body.appendChild(portal);
+      }
+      // ✅ CSS global para el popper
+      const style = document.createElement("style");
+      style.id = "datepicker-style";
+      if (!document.getElementById("datepicker-style")) {
+        style.innerHTML = `
+          #datepicker-portal { pointer-events: none; }
+          #datepicker-portal > * { pointer-events: all; }
+          .react-datepicker-popper { z-index: 99999 !important; }
+          .react-datepicker { z-index: 99999 !important; }
+        `;
+        document.head.appendChild(style);
+      }
+    }
+  }, []);
 
   useEffect(() => {
     const sevenDaysAgo = new Date();
@@ -58,17 +74,7 @@ function VentasScreen() {
     loadVentasByDateRange(sevenDaysAgo, new Date());
   }, []);
 
-  // ✅ Fijamos el z-index de los pickers en 9999 para que siempre estén por encima, especialmente en web
-  useEffect(() => {
-    const style = document.createElement("style");
-    style.innerHTML = `.react-datepicker-popper { z-index: 9999 !important; }`;
-    document.head.appendChild(style);
-    return () => document.head.removeChild(style);
-  }, []);
-
-  const aplicarFiltro = () => {
-    loadVentasByDateRange(startDate, endDate, true);
-  };
+  const aplicarFiltro = () => loadVentasByDateRange(startDate, endDate, true);
 
   const volverA7Dias = () => {
     const sevenDaysAgo = new Date();
@@ -81,7 +87,6 @@ function VentasScreen() {
 
   const formatDateLabel = (date) => date.toISOString().split("T")[0];
 
-  // ✅ Agrupación igual que antes
   const groupVentasByDateAndFactura = () => {
     const grouped = ventas.reduce((acc, venta) => {
       if (!ventas || ventas.length === 0) return [];
@@ -100,7 +105,6 @@ function VentasScreen() {
             id_factura,
             items,
             nombre_sede: items[0]?.nombre_sede,
-            // ✅ Total ingresos — solo ventas reales
             totalVenta: items.reduce(
               (sum, item) =>
                 item.motivo === "venta" || !item.motivo
@@ -108,10 +112,6 @@ function VentasScreen() {
                   : sum,
               0,
             ),
-            // ✅ Cantidad total incluye todo (para saber cuántos salieron)
-            totalCantidad: items.reduce((sum, item) => sum + item.cantidad, 0),
-            // ✅ Cantidad solo de ventas reales
-            // ✅ Cantidad vendida — solo ventas reales
             totalCantidad: items.reduce(
               (sum, item) =>
                 item.motivo === "venta" || !item.motivo
@@ -119,8 +119,6 @@ function VentasScreen() {
                   : sum,
               0,
             ),
-
-            // ✅ Cantidad obsequios/muestras/derretidos — para mostrar aparte
             totalNoVenta: items.reduce(
               (sum, item) =>
                 item.motivo !== "venta" && item.motivo
@@ -144,17 +142,11 @@ function VentasScreen() {
     setExpandedFacturaId((prev) => (prev === facturaId ? null : facturaId));
   };
 
-  // ✅ Render del selector de fechas según plataforma
   const renderDatePickers = () => {
-    if (Platform.OS === "web") {
+    if (!isMobile) {
       return (
         <View style={styles.datePickerRow}>
-          <View
-            style={[
-              styles.datePickerItem,
-              { zIndex: 9999, position: "relative" },
-            ]}
-          >
+          <View style={styles.datePickerItem}>
             <Text style={styles.dateLabel}>Desde:</Text>
             <DatePicker
               selected={startDate}
@@ -164,15 +156,10 @@ function VentasScreen() {
               }}
               dateFormat="yyyy-MM-dd"
               maxDate={endDate}
+              portalId="datepicker-portal"
             />
           </View>
-
-          <View
-            style={[
-              styles.datePickerItem,
-              { zIndex: 9998, position: "relative" },
-            ]}
-          >
+          <View style={styles.datePickerItem}>
             <Text style={styles.dateLabel}>Hasta:</Text>
             <DatePicker
               selected={endDate}
@@ -183,9 +170,9 @@ function VentasScreen() {
               dateFormat="yyyy-MM-dd"
               minDate={startDate}
               maxDate={new Date()}
+              portalId="datepicker-portal"
             />
           </View>
-
           <Pressable onPress={aplicarFiltro} style={styles.buscarButton}>
             <MaterialCommunityIcons name="magnify" size={20} color="#fff" />
             <Text style={styles.buscarButtonText}>Buscar</Text>
@@ -194,72 +181,64 @@ function VentasScreen() {
       );
     }
 
-    // móvil — igual que antes + botón buscar
     return (
-      <View style={styles.datePickerRow}>
-        <Pressable
-          style={styles.dateButton}
-          onPress={() => setShowStartPicker(true)}
-        >
-          <MaterialCommunityIcons
-            name="calendar-start"
-            size={18}
-            color="#e91e63"
-          />
-          <Text style={styles.dateButtonText}>
-            {formatDateLabel(startDate)}
-          </Text>
-        </Pressable>
-
-        <Pressable
-          style={styles.dateButton}
-          onPress={() => setShowEndPicker(true)}
-        >
-          <MaterialCommunityIcons
-            name="calendar-end"
-            size={18}
-            color="#e91e63"
-          />
-          <Text style={styles.dateButtonText}>{formatDateLabel(endDate)}</Text>
-        </Pressable>
-
-        {/* ✅ Botón buscar en móvil */}
-        <Pressable onPress={aplicarFiltro} style={styles.buscarButton}>
-          <MaterialCommunityIcons name="magnify" size={20} color="#fff" />
-          <Text style={styles.buscarButtonText}>Buscar</Text>
-        </Pressable>
-
-        {showStartPicker && (
-          <DateTimePicker
-            value={startDate}
-            mode="date"
-            display="default"
-            maximumDate={endDate}
-            onChange={(e, date) => {
-              setShowStartPicker(false);
-              if (date) {
-                setStartDate(date);
-                setModo("custom");
-              }
+      <View style={styles.datePickerRowMobile}>
+        <View style={{ flex: 1 }}>
+          <Text style={styles.dateLabel}>Desde:</Text>
+          <DatePicker
+            selected={startDate}
+            onChange={(date) => {
+              setStartDate(date);
+              setModo("custom");
             }}
+            dateFormat="yyyy-MM-dd"
+            maxDate={endDate}
+            portalId="datepicker-portal"
+            customInput={
+              <Pressable style={styles.dateButtonMobile}>
+                <MaterialCommunityIcons
+                  name="calendar-start"
+                  size={16}
+                  color="#e91e63"
+                />
+                <Text style={styles.dateButtonText} numberOfLines={1}>
+                  {formatDateLabel(startDate)}
+                </Text>
+              </Pressable>
+            }
           />
-        )}
-        {showEndPicker && (
-          <DateTimePicker
-            value={endDate}
-            mode="date"
-            display="default"
-            minimumDate={startDate}
-            maximumDate={new Date()}
-            onChange={(e, date) => {
-              setShowEndPicker(false);
-              if (date) {
-                setEndDate(date);
-                setModo("custom");
-              }
+        </View>
+
+        <View style={{ flex: 1 }}>
+          <Text style={styles.dateLabel}>Hasta:</Text>
+          <DatePicker
+            selected={endDate}
+            onChange={(date) => {
+              setEndDate(date);
+              setModo("custom");
             }}
+            dateFormat="yyyy-MM-dd"
+            minDate={startDate}
+            maxDate={new Date()}
+            portalId="datepicker-portal"
+            customInput={
+              <Pressable style={styles.dateButtonMobile}>
+                <MaterialCommunityIcons
+                  name="calendar-end"
+                  size={16}
+                  color="#e91e63"
+                />
+                <Text style={styles.dateButtonText} numberOfLines={1}>
+                  {formatDateLabel(endDate)}
+                </Text>
+              </Pressable>
+            }
           />
-        )}
+        </View>
+
+        <Pressable onPress={aplicarFiltro} style={styles.buscarButtonMobile}>
+          <MaterialCommunityIcons name="magnify" size={18} color="#fff" />
+        </Pressable>
       </View>
     );
   };
@@ -267,64 +246,63 @@ function VentasScreen() {
   return (
     <RequireRole allowedRoles={["superadmin", "vendedor"]}>
       <View style={styles.container}>
-        {/* ✅ BARRA DE FILTROS */}
-        <View style={styles.filterBar}>
-          {/* Botones de ordenamiento */}
-          <Pressable
-            onPress={() => sortVentas("fecha")}
-            style={styles.filterButton}
-          >
-            <Text style={styles.filterButtonText}>📅 Fecha</Text>
-          </Pressable>
-          <Pressable
-            onPress={() => sortVentas("producto")}
-            style={styles.filterButton}
-          >
-            <Text style={styles.filterButtonText}>🏆 Top</Text>
-          </Pressable>
-          <Pressable
-            onPress={volverA7Dias}
-            style={[
-              styles.filterButton,
-              modo === "7dias" && styles.filterButtonActive,
-            ]}
-          >
-            <Text
+        {/* ✅ Controles superiores */}
+        <View style={styles.controls}>
+          <View style={styles.filterBar}>
+            <Pressable
+              onPress={() => sortVentas("fecha")}
+              style={styles.filterButton}
+            >
+              <Text style={styles.filterButtonText}>📅 Fecha</Text>
+            </Pressable>
+            <Pressable
+              onPress={() => sortVentas("producto")}
+              style={styles.filterButton}
+            >
+              <Text style={styles.filterButtonText}>🏆 Top</Text>
+            </Pressable>
+            <Pressable
+              onPress={volverA7Dias}
               style={[
-                styles.filterButtonText,
-                modo === "7dias" && styles.filterButtonTextActive,
+                styles.filterButton,
+                modo === "7dias" && styles.filterButtonActive,
               ]}
             >
-              7 días
-            </Text>
-          </Pressable>
-          <Pressable onPress={aplicarFiltro} style={styles.filterButton}>
-            <MaterialCommunityIcons name="update" size={20} color="#333" />
-          </Pressable>
-        </View>
-
-        {/* ✅ SELECTOR DE FECHAS */}
-        {renderDatePickers()}
-
-        {/* ✅ RESUMEN DEL RANGO ACTIVO */}
-        <View style={styles.rangeInfo}>
-          <Text style={styles.rangeText}>
-            {formatDateLabel(startDate)} → {formatDateLabel(endDate)}
-          </Text>
-          {modo === "custom" && (
-            <Pressable onPress={volverA7Dias}>
-              <Text style={styles.resetText}>× Últimos 7 días</Text>
+              <Text
+                style={[
+                  styles.filterButtonText,
+                  modo === "7dias" && styles.filterButtonTextActive,
+                ]}
+              >
+                7 días
+              </Text>
             </Pressable>
-          )}
+            <Pressable onPress={aplicarFiltro} style={styles.filterButton}>
+              <MaterialCommunityIcons name="update" size={20} color="#333" />
+            </Pressable>
+          </View>
+
+          {renderDatePickers()}
+
+          <View style={styles.rangeInfo}>
+            <Text style={styles.rangeText}>
+              {formatDateLabel(startDate)} → {formatDateLabel(endDate)}
+            </Text>
+            {modo === "custom" && (
+              <Pressable onPress={volverA7Dias}>
+                <Text style={styles.resetText}>× Últimos 7 días</Text>
+              </Pressable>
+            )}
+          </View>
         </View>
 
-        {/* ✅ LISTA DE VENTAS — igual que antes */}
+        {/* ✅ FlatList completamente separado de los controles */}
         <FlatList
+          style={styles.list}
           data={groupedVentas}
           keyExtractor={(item) => item.date}
           renderItem={({ item }) => {
             const { date, facturas } = item;
-            // ✅ Totales del día
             const totalDiaVentas = facturas.reduce(
               (sum, f) => sum + f.totalVenta,
               0,
@@ -341,11 +319,6 @@ function VentasScreen() {
             return (
               <View style={styles.dateBlock}>
                 <View style={styles.dateLine}>
-                  {/* <Text style={styles.dateTitle}>
-                    {date} — ${totalDiaVentas.toLocaleString("es-CO")} ·{" "}
-                    {totalDiaCantidad} und
-                  </Text> */}
-
                   <Text style={styles.dateTitle}>
                     {date} — ${totalDiaVentas.toLocaleString("es-CO")} ·{" "}
                     {totalDiaCantidad} und
@@ -375,8 +348,8 @@ function VentasScreen() {
                     <View style={styles.facturaBlockHeader}>
                       <Text
                         style={[
-                          styles.facturaSedeBadge, // El estilo base con padding, bordes, etc.
-                          sedeStyleMap[factura.nombre_sede] || styles.sedeLocal, // El color dinámico (con fallback)
+                          styles.facturaSedeBadge,
+                          sedeStyleMap[factura.nombre_sede] || styles.sedeLocal,
                         ]}
                       >
                         SEDE: {factura.nombre_sede}
@@ -412,6 +385,14 @@ const styles = StyleSheet.create({
     padding: 10,
     backgroundColor: "#fff",
   },
+  // ✅ Controles sin zIndex — el portal maneja el calendario
+  controls: {
+    backgroundColor: "#fff",
+    marginBottom: 4,
+  },
+  list: {
+    flex: 1,
+  },
   filterBar: {
     flexDirection: "row",
     justifyContent: "space-between",
@@ -425,72 +406,67 @@ const styles = StyleSheet.create({
     borderRadius: 8,
     alignItems: "center",
   },
-  filterButtonActive: {
-    backgroundColor: "#e91e63",
-  },
-  filterButtonText: {
-    fontSize: 12,
-    fontWeight: "600",
-    color: "#333",
-  },
-  filterButtonTextActive: {
-    color: "#fff",
-  },
+  filterButtonActive: { backgroundColor: "#e91e63" },
+  filterButtonText: { fontSize: 12, fontWeight: "600", color: "#333" },
+  filterButtonTextActive: { color: "#fff" },
 
-  // ✅ Date pickers
   datePickerRow: {
     flexDirection: "row",
-    gap: 10,
+    gap: 8,
     marginBottom: 8,
-    alignItems: "center",
-    zIndex: 9999, // ✅ clave
-    position: "relative", // ✅ necesario para que zIndex funcione en web
+    alignItems: "flex-end",
   },
-  datePickerItem: {
-    flex: 1,
+  datePickerItem: { flex: 1 },
+  dateLabel: { fontSize: 11, color: "#888", marginBottom: 2 },
+
+  datePickerRowMobile: {
+    flexDirection: "row",
+    alignItems: "flex-end",
+    marginBottom: 8,
+    gap: 6,
   },
-  dateLabel: {
-    fontSize: 11,
-    color: "#888",
-    marginBottom: 2,
-  },
-  dateButton: {
-    flex: 1,
+  dateButtonMobile: {
     flexDirection: "row",
     alignItems: "center",
-    gap: 6,
-    padding: 8,
+    gap: 4,
+    padding: 7,
     backgroundColor: "#fff0f5",
     borderRadius: 8,
     borderWidth: 1,
     borderColor: "#e91e63",
   },
-  dateButtonText: {
-    fontSize: 13,
-    color: "#e91e63",
-    fontWeight: "600",
+  dateButtonText: { fontSize: 12, color: "#e91e63", fontWeight: "600" },
+
+  buscarButton: {
+    flexDirection: "row",
+    alignItems: "center",
+    gap: 4,
+    backgroundColor: "#e91e63",
+    paddingHorizontal: 12,
+    paddingVertical: 8,
+    borderRadius: 8,
+  },
+  buscarButtonText: { color: "#fff", fontWeight: "700", fontSize: 13 },
+  buscarButtonMobile: {
+    backgroundColor: "#e91e63",
+    padding: 8,
+    borderRadius: 8,
+    justifyContent: "center",
+    alignItems: "center",
+    width: 36,
+    height: 36,
   },
 
-  // ✅ Rango activo
   rangeInfo: {
     flexDirection: "row",
     justifyContent: "space-between",
     alignItems: "center",
-    marginBottom: 10,
+    marginBottom: 8,
     paddingHorizontal: 4,
   },
-  rangeText: {
-    fontSize: 12,
-    color: "#666",
-    fontWeight: "500",
-  },
-  resetText: {
-    fontSize: 12,
-    color: "#e91e63",
-    fontWeight: "600",
-  },
+  rangeText: { fontSize: 12, color: "#666", fontWeight: "500" },
+  resetText: { fontSize: 12, color: "#e91e63", fontWeight: "600" },
 
-  // ✅ Lista — igual que antes
   dateBlock: {
     marginBottom: 20,
     padding: 10,
@@ -515,20 +491,7 @@ const styles = StyleSheet.create({
     flexDirection: "row",
     justifyContent: "space-between",
   },
-  facturaTitle: {
-    fontSize: 16,
-    fontWeight: "bold",
-    marginBottom: 5,
-  },
-  facturaSede: {
-    fontSize: 16,
-    backgroundColor: "#fff",
-    fontWeight: "bold",
-    padding: 5,
-    borderRadius: 8,
-    color: "#ff6600",
-    marginBottom: 5,
-  },
+  facturaTitle: { fontSize: 16, fontWeight: "bold", marginBottom: 5 },
   textCantidad: {
     fontSize: 14,
     fontWeight: "600",
@@ -541,38 +504,20 @@ const styles = StyleSheet.create({
     alignContent: "center",
     justifyContent: "center",
   },
-  buscarButton: {
-    flexDirection: "row",
-    alignItems: "center",
-    gap: 4,
-    backgroundColor: "#e91e63",
-    paddingHorizontal: 12,
-    paddingVertical: 8,
-    borderRadius: 8,
-    alignSelf: "flex-end", // ✅ se alinea con los inputs
-  },
-  buscarButtonText: {
-    color: "#fff",
-    fontWeight: "700",
-    fontSize: 13,
-  },
-
-  // 1. Estilos base y específicos por sede
-  // Estilo base para la sede (si no quieres usar facturaTitle base)
   facturaSedeBadge: {
     paddingVertical: 4,
     paddingHorizontal: 8,
     borderRadius: 6,
     fontSize: 14,
     fontWeight: "bold",
-    color: "#FFFFFF",
+    color: "#fff",
     textAlign: "center",
     overflow: "hidden",
+    marginBottom: 5,
   },
-  // Colores específicos por sede
-  sedeLocal: { backgroundColor: "#4CAF50" }, // Verde
-  sedeRappi: { backgroundColor: "#FF5722" }, // Naranja
-  sedeEvento: { backgroundColor: "#2196F3" }, // Azul
+  sedeLocal: { backgroundColor: "#4CAF50" },
+  sedeRappi: { backgroundColor: "#FF5722" },
+  sedeEvento: { backgroundColor: "#2196F3" },
 });
 
 export default VentasScreen;
