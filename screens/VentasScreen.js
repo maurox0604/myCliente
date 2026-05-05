@@ -53,16 +53,31 @@ function VentasScreen() {
           "position:fixed;z-index:99999;top:0;left:0;pointer-events:none;";
         document.body.appendChild(portal);
       }
-      // ✅ CSS global para el popper
-      const style = document.createElement("style");
-      style.id = "datepicker-style";
       if (!document.getElementById("datepicker-style")) {
+        const style = document.createElement("style");
+        style.id = "datepicker-style";
         style.innerHTML = `
-          #datepicker-portal { pointer-events: none; }
-          #datepicker-portal > * { pointer-events: all; }
-          .react-datepicker-popper { z-index: 99999 !important; }
-          .react-datepicker { z-index: 99999 !important; }
-        `;
+        #datepicker-portal { pointer-events: none; }
+        #datepicker-portal > * { pointer-events: all; }
+        .react-datepicker-popper { z-index: 99999 !important; }
+        .react-datepicker { z-index: 99999 !important; }
+        
+        /* ✅ NUEVO: ajuste para pantallas angostas */
+        @media (max-width: 600px) {
+          .react-datepicker {
+            font-size: 11px !important;
+          }
+          .react-datepicker__day-name,
+          .react-datepicker__day {
+            width: 1.4rem !important;
+            line-height: 1.6rem !important;
+            margin: 1px !important;
+          }
+          .react-datepicker__month-container {
+            width: 100% !important;
+          }
+        }
+      `;
         document.head.appendChild(style);
       }
     }
