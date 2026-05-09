@@ -1,7 +1,13 @@
 import { useRef, useEffect, useState } from "react";
 import {
-  Animated, View, Text, StyleSheet, Pressable,
-  TouchableOpacity, Image, Alert,
+  Animated,
+  View,
+  Text,
+  StyleSheet,
+  Pressable,
+  TouchableOpacity,
+  Image,
+  Alert,
 } from "react-native";
 import { Feather, MaterialCommunityIcons } from "@expo/vector-icons";
 import { BottomSheetModal } from "@gorhom/bottom-sheet";
@@ -9,9 +15,16 @@ import Calculadora from "./Calculadora";
 import EditModalContent from "./EditModalContent";
 
 export default function Helado({
-  id, sabor, precio, icon, cantidad,
-  editItem, activaDeleteItem, columnas,
-  onDeleteSuccess, id_categoria,
+  id,
+  sabor,
+  precio,
+  icon,
+  cantidad,
+  editItem,
+  activaDeleteItem,
+  columnas,
+  onDeleteSuccess,
+  id_categoria,
 }) {
   const [isDeleteActive, setIsDeleteActive] = useState(false);
   const [imageSource, setImageSource] = useState({ uri: icon });
@@ -45,68 +58,87 @@ export default function Helado({
   const handleImageError = () =>
     setImageSource(require("../assets/images/productoDefault.png"));
 
-  const datosPaCalc = { id, sabor, cantidad, icon, precio, closeCartModal: closeCalcModal };
+  const datosPaCalc = {
+    id,
+    sabor,
+    cantidad,
+    icon,
+    precio,
+    closeCartModal: closeCalcModal,
+  };
   const isEmpty = cantidad === 0;
 
   // ✅ MODO COLUMNA — tarjeta compacta horizontal
-if (columnas) {
-  return (
-    <TouchableOpacity
-      onLongPress={() => activaDeleteItem && setIsDeleteActive(true)}
-      onPress={() => setIsDeleteActive(false)}
-      activeOpacity={0.9}
-      style={[styles.cardCompact, isEmpty && styles.cardEmpty]}
-    >
-      {/* Imagen pequeña */}
-      <Image
-        style={styles.imgCompact}
-        source={imageSource}
-        onError={handleImageError}
-      />
-
-      {/* Badge cantidad sobre imagen */}
-      <View style={styles.badgeCompact}>
-        <Text style={styles.badgeTextCompact}>{cantidad}</Text>
-      </View>
-
-      {/* Nombre + precio */}
-      <View style={styles.dataCompact}>
-        <Text style={styles.titleCompact} numberOfLines={1}>{sabor}</Text>
-        <Text style={styles.priceCompact}>${precio.toLocaleString('es-CO')}</Text>
-      </View>
-
-      {/* Botón + */}
-      {editItem ? (
-        <Pressable onPress={openEditModal} style={styles.btnEditCompact}>
-          <Feather name="edit" size={13} color="#fff" />
-        </Pressable>
-      ) : (
-        <Pressable onPress={openCalcModal} style={styles.btnAddCompact}>
-          <Feather name="plus" size={16} color="#fff" />
-        </Pressable>
-      )}
-
-      {/* Delete overlay */}
-      {isDeleteActive && (
-        <Pressable onPress={handleDelete} style={styles.deleteOverlayCompact}>
-          <MaterialCommunityIcons name="trash-can-outline" size={22} color="white" />
-        </Pressable>
-      )}
-
-      {/* Modales */}
-      <BottomSheetModal ref={calcModalRef} snapPoints={["80%"]}>
-        <Calculadora datosPaCalc={datosPaCalc} />
-      </BottomSheetModal>
-      <BottomSheetModal ref={editModalRef} snapPoints={["95%", "90%"]}>
-        <EditModalContent
-          id={id} _icon={icon} _sabor={sabor} _precio={precio}
-          _cantidad={cantidad} _id_categoria={id_categoria}
-          closeEditModal={closeEditModal}
+  if (columnas) {
+    return (
+      <TouchableOpacity
+        onLongPress={() => activaDeleteItem && setIsDeleteActive(true)}
+        onPress={() => setIsDeleteActive(false)}
+        activeOpacity={0.9}
+        style={[styles.cardCompact, isEmpty && styles.cardEmpty]}
+      >
+        {/* Imagen pequeña */}
+        <Image
+          style={styles.imgCompact}
+          source={imageSource}
+          onError={handleImageError}
         />
-      </BottomSheetModal>
-    </TouchableOpacity>
-  );
-}
+
+        {/* Badge cantidad sobre imagen */}
+        <View style={styles.badgeCompact}>
+          <Text style={styles.badgeTextCompact}>{cantidad}</Text>
+        </View>
+
+        {/* Nombre + precio */}
+        <View style={styles.dataCompact}>
+          <Text style={styles.titleCompact} numberOfLines={1}>
+            {sabor}
+          </Text>
+          <Text style={styles.priceCompact}>
+            ${precio.toLocaleString("es-CO")}
+          </Text>
+        </View>
+
+        {/* Botón + */}
+        {editItem ? (
+          <Pressable onPress={openEditModal} style={styles.btnEditCompact}>
+            <Feather name="edit" size={13} color="#fff" />
+          </Pressable>
+        ) : (
+          <Pressable onPress={openCalcModal} style={styles.btnAddCompact}>
+            <Feather name="plus" size={16} color="#fff" />
+          </Pressable>
+        )}
+
+        {/* Delete overlay */}
+        {isDeleteActive && (
+          <Pressable onPress={handleDelete} style={styles.deleteOverlayCompact}>
+            <MaterialCommunityIcons
+              name="trash-can-outline"
+              size={22}
+              color="white"
+            />
+          </Pressable>
+        )}
+
+        {/* Modales */}
+        <BottomSheetModal ref={calcModalRef} snapPoints={["80%"]}>
+          <Calculadora datosPaCalc={datosPaCalc} />
+        </BottomSheetModal>
+        <BottomSheetModal ref={editModalRef} snapPoints={["95%", "90%"]}>
+          <EditModalContent
+            id={id}
+            _icon={icon}
+            _sabor={sabor}
+            _precio={precio}
+            _cantidad={cantidad}
+            _id_categoria={id_categoria}
+            closeEditModal={closeEditModal}
+          />
+        </BottomSheetModal>
+      </TouchableOpacity>
+    );
+  }
 
   // ✅ MODO LISTA — fila horizontal (igual que antes pero limpio)
   return (
@@ -124,14 +156,16 @@ if (columnas) {
           onError={handleImageError}
         />
         <View style={styles.badgeRow}>
-          <Text style={styles.badgeText}>{cantidad}</Text>
+          <Text style={styles.badgeTextRow}>{cantidad}</Text>
         </View>
       </View>
 
       {/* Datos */}
       <View style={styles.dataRow}>
-        <Text style={styles.titleRow} numberOfLines={1}>{sabor}</Text>
-        <Text style={styles.priceRow}>${precio.toLocaleString('es-CO')}</Text>
+        <Text style={styles.titleRow} numberOfLines={1}>
+          {sabor}
+        </Text>
+        <Text style={styles.priceRow}>${precio.toLocaleString("es-CO")}</Text>
       </View>
 
       {/* Botón */}
@@ -149,7 +183,11 @@ if (columnas) {
       {isDeleteActive && (
         <Animated.View style={[styles.deleteBtn, { width: widthAnim }]}>
           <Pressable onPress={handleDelete} style={styles.deletePressable}>
-            <MaterialCommunityIcons name="trash-can-outline" size={24} color="white" />
+            <MaterialCommunityIcons
+              name="trash-can-outline"
+              size={24}
+              color="white"
+            />
           </Pressable>
         </Animated.View>
       )}
@@ -160,8 +198,12 @@ if (columnas) {
       </BottomSheetModal>
       <BottomSheetModal ref={editModalRef} snapPoints={["95%", "90%"]}>
         <EditModalContent
-          id={id} _icon={icon} _sabor={sabor} _precio={precio}
-          _cantidad={cantidad} _id_categoria={id_categoria}
+          id={id}
+          _icon={icon}
+          _sabor={sabor}
+          _precio={precio}
+          _cantidad={cantidad}
+          _id_categoria={id_categoria}
           closeEditModal={closeEditModal}
         />
       </BottomSheetModal>
@@ -196,11 +238,17 @@ const styles = StyleSheet.create({
     top: 0,
     left: 0,
     backgroundColor: "#09aef5",
+    color: "#ffffff !important",
     borderRadius: 12,
-    width: 24,
-    height: 24,
+    width: 26,
+    height: 26,
     justifyContent: "center",
     alignItems: "center",
+  },
+  badgeTextRow: {
+    color: "#ffffff",
+    fontSize: 16,
+    fontWeight: "800",
   },
   dataRow: {
     flex: 1,
@@ -220,90 +268,95 @@ const styles = StyleSheet.create({
   },
 
   // ============ MODO COLUMNA COMPACTO ============
-cardCompact: {
-  flex: 1,
-  flexDirection: "row",
-  alignItems: "center",
-  backgroundColor: "#fff",
-  borderRadius: 12,
-  margin: 4,
-  padding: 6,
-  height: 64,          // ✅ altura fija pequeña — caben ~8 por pantalla
-  position: "relative",
-  overflow: "hidden",
-  shadowColor: "rgba(38,43,48,0.3)",
-  shadowOpacity: 0.6,
-  elevation: 4,
-  shadowRadius: 6,
-  shadowOffset: { width: 0, height: 2 },
-},
-imgCompact: {
-  width: 48,
-  height: 48,
-  resizeMode: "contain",
-  borderRadius: 8,
-  flexShrink: 0,
-},
-badgeCompact: {
-  position: "absolute",
-  top: 4,
-  left: 4,
-  backgroundColor: "#09aef5",
-  borderRadius: 10,
-  width: 20,
-  height: 20,
-  justifyContent: "center",
-  alignItems: "center",
-  zIndex: 2,
-},
-badgeTextCompact: {
-  color: "#fff",
-  fontSize: 10,
-  fontWeight: "700",
-},
-dataCompact: {
-  flex: 1,
-  paddingHorizontal: 6,
-  justifyContent: "center",
-},
-titleCompact: {
-  fontSize: 12,
-  fontWeight: "700",
-  color: "#222",
-  marginBottom: 2,
-},
-priceCompact: {
-  fontSize: 11,
-  color: "#56636F",
-  fontWeight: "600",
-},
-btnAddCompact: {
-  backgroundColor: "#e91e63",
-  width: 30,
-  height: 30,
-  borderRadius: 15,
-  justifyContent: "center",
-  alignItems: "center",
-  flexShrink: 0,
-},
-btnEditCompact: {
-  backgroundColor: "#352dc9",
-  width: 28,
-  height: 28,
-  borderRadius: 8,
-  justifyContent: "center",
-  alignItems: "center",
-  flexShrink: 0,
-},
-deleteOverlayCompact: {
-  position: "absolute",
-  top: 0, left: 0, right: 0, bottom: 0,
-  backgroundColor: "rgba(229,57,53,0.9)",
-  justifyContent: "center",
-  alignItems: "center",
-  borderRadius: 12,
-  zIndex: 10,
-},
+  cardCompact: {
+    flex: 1,
+    flexDirection: "row",
+    alignItems: "center",
+    backgroundColor: "#fff",
+    borderRadius: 12,
+    margin: 4,
+    padding: 6,
+    height: 64, // ✅ altura fija pequeña — caben ~8 por pantalla
+    position: "relative",
+    overflow: "hidden",
+    shadowColor: "rgba(38,43,48,0.3)",
+    shadowOpacity: 0.6,
+    elevation: 4,
+    shadowRadius: 6,
+    shadowOffset: { width: 0, height: 2 },
+  },
+  imgCompact: {
+    width: 48,
+    height: 48,
+    resizeMode: "contain",
+    borderRadius: 8,
+    flexShrink: 0,
+  },
+  badgeCompact: {
+    position: "absolute",
+    top: 4,
+    left: 4,
+    backgroundColor: "#09aef5",
+    borderRadius: 10,
+    width: 22,
+    height: 22,
+    justifyContent: "center",
+    alignItems: "center",
+    color: "#ffffff !important",
+    fontWeight: "800",
+    zIndex: 2,
+  },
+  badgeTextCompact: {
+    color: "#ffffff",
+    fontSize: 12,
+    fontWeight: "800",
+  },
+  dataCompact: {
+    flex: 1,
+    paddingHorizontal: 6,
+    justifyContent: "center",
+  },
+  titleCompact: {
+    fontSize: 12,
+    fontWeight: "700",
+    color: "#222",
+    marginBottom: 2,
+  },
+  priceCompact: {
+    fontSize: 11,
+    color: "#56636F",
+    fontWeight: "600",
+  },
+  btnAddCompact: {
+    backgroundColor: "#e91e63",
+    width: 30,
+    height: 30,
+    borderRadius: 15,
+    justifyContent: "center",
+    alignItems: "center",
+    flexShrink: 0,
+  },
+  btnEditCompact: {
+    backgroundColor: "#352dc9",
+    width: 28,
+    height: 28,
+    borderRadius: 8,
+    justifyContent: "center",
+    alignItems: "center",
+    flexShrink: 0,
+  },
+  deleteOverlayCompact: {
+    position: "absolute",
+    top: 0,
+    left: 0,
+    right: 0,
+    bottom: 0,
+    backgroundColor: "rgba(229,57,53,0.9)",
+    justifyContent: "center",
+    alignItems: "center",
+    borderRadius: 12,
+    zIndex: 10,
+  },
 
   // ============ COMPARTIDOS ============
   btnAdd: {
@@ -353,7 +406,10 @@ deleteOverlayCompact: {
   },
   deleteOverlay: {
     position: "absolute",
-    top: 0, left: 0, right: 0, bottom: 0,
+    top: 0,
+    left: 0,
+    right: 0,
+    bottom: 0,
     backgroundColor: "rgba(229,57,53,0.92)",
     justifyContent: "center",
     alignItems: "center",

@@ -1,5 +1,11 @@
 import React, { useContext } from "react";
-import { View, Text, TouchableOpacity, StyleSheet, Platform } from "react-native";
+import {
+  View,
+  Text,
+  TouchableOpacity,
+  StyleSheet,
+  Platform,
+} from "react-native";
 import { createBottomTabNavigator } from "@react-navigation/bottom-tabs";
 import MaterialCommunityIcons from "react-native-vector-icons/MaterialCommunityIcons";
 import { AuthContext } from "../context/AuthContext";
@@ -11,12 +17,12 @@ import StackEdit from "../screens/StackEdit";
 import ListaHelados from "../screens/ListaHelados";
 import VentasScreen from "../screens/VentasScreen";
 import ReportesScreen from "../screens/ReportesScreen";
+import DashboardScreen from "../screens/DashboardScreen";
 import SedeSelectorHeader from "../components/SedeSelectorHeader";
 import { CartContext } from "../context/CartContext";
 
 const Tab = createBottomTabNavigator();
 
-// ✅ NUEVO: Botón flotante del carrito
 function CartTabButton({ children, onPress, cartItemCount }) {
   return (
     <TouchableOpacity
@@ -36,7 +42,11 @@ function CartTabButton({ children, onPress, cartItemCount }) {
   );
 }
 
-export default function HomeTabs({ openCartModal, openMenuVenta, openSedeModal }) {
+export default function HomeTabs({
+  openCartModal,
+  openMenuVenta,
+  openSedeModal,
+}) {
   const { cartItemCount, cartItemCero } = useContext(CartContext);
   const { logout, role } = useContext(AuthContext);
   const navigation = useNavigation();
@@ -57,10 +67,7 @@ export default function HomeTabs({ openCartModal, openMenuVenta, openSedeModal }
         headerStyle: { backgroundColor: "#fff" },
         headerTintColor: "#333",
         headerRight: () => (
-          <TouchableOpacity
-            onPress={handleLogout}
-            style={styles.logoutButton}
-          >
+          <TouchableOpacity onPress={handleLogout} style={styles.logoutButton}>
             <MaterialCommunityIcons name="logout" size={22} color="#e91e63" />
             <Text style={styles.logoutText}>{role ?? "..."}</Text>
           </TouchableOpacity>
@@ -106,17 +113,21 @@ export default function HomeTabs({ openCartModal, openMenuVenta, openSedeModal }
             />
           ),
           tabBarIcon: ({ color, size }) => (
-            <MaterialCommunityIcons name="flip-vertical" color={color} size={size} />
+            <MaterialCommunityIcons
+              name="flip-vertical"
+              color={color}
+              size={size}
+            />
           ),
         }}
       />
 
-      {/* ✅ CARRITO — botón flotante central */}
+      {/* CARRITO — botón flotante central */}
       <Tab.Screen
         name="Carrito"
         component={() => null}
         options={{
-          tabBarLabel: () => null, // ✅ Sin label debajo del botón flotante
+          tabBarLabel: () => null,
           tabBarButton: (props) => (
             <CartTabButton
               {...props}
@@ -140,8 +151,29 @@ export default function HomeTabs({ openCartModal, openMenuVenta, openSedeModal }
         options={{
           tabBarLabel: "Ventas",
           tabBarIcon: ({ color, size }) => (
-            <MaterialCommunityIcons name="cash-register" color={color} size={size} />
+            <MaterialCommunityIcons
+              name="cash-register"
+              color={color}
+              size={size}
+            />
           ),
+        }}
+      />
+
+      {/* DASHBOARD — solo superadmin */}
+      <Tab.Screen
+        name="Dashboard"
+        component={DashboardScreen}
+        options={{
+          tabBarLabel: "Dashboard",
+          tabBarIcon: ({ color, size }) => (
+            <MaterialCommunityIcons
+              name="chart-bar"
+              color={color}
+              size={size}
+            />
+          ),
+          tabBarButton: role === "superadmin" ? undefined : () => null,
         }}
       />
 
@@ -152,7 +184,11 @@ export default function HomeTabs({ openCartModal, openMenuVenta, openSedeModal }
         options={{
           tabBarLabel: "Reportes",
           tabBarIcon: ({ color, size }) => (
-            <MaterialCommunityIcons name="chart-pie" color={color} size={size} />
+            <MaterialCommunityIcons
+              name="chart-pie"
+              color={color}
+              size={size}
+            />
           ),
         }}
       />
@@ -164,7 +200,11 @@ export default function HomeTabs({ openCartModal, openMenuVenta, openSedeModal }
         options={{
           tabBarLabel: "Usuarios",
           tabBarIcon: ({ color, size }) => (
-            <MaterialCommunityIcons name="account-plus" color={color} size={size} />
+            <MaterialCommunityIcons
+              name="account-plus"
+              color={color}
+              size={size}
+            />
           ),
           tabBarButton: role === "superadmin" ? undefined : () => null,
         }}
@@ -174,7 +214,6 @@ export default function HomeTabs({ openCartModal, openMenuVenta, openSedeModal }
 }
 
 const styles = StyleSheet.create({
-  // ✅ Barra inferior con sombra y bordes redondeados
   tabBar: {
     backgroundColor: "#fff",
     borderTopWidth: 0,
@@ -194,18 +233,13 @@ const styles = StyleSheet.create({
     shadowOpacity: 0.12,
     shadowRadius: 12,
   },
-  tabLabel: {
-    fontSize: 10,
-    fontWeight: "600",
-  },
-  // ✅ Wrapper del botón flotante — eleva el botón sobre la barra
+  tabLabel: { fontSize: 10, fontWeight: "600" },
   cartButtonWrapper: {
     top: -22,
     justifyContent: "center",
     alignItems: "center",
     width: 70,
   },
-  // ✅ Botón circular con gradiente rosa → cian como sombra
   cartButton: {
     width: 60,
     height: 60,
@@ -213,7 +247,7 @@ const styles = StyleSheet.create({
     backgroundColor: "#e91e63",
     justifyContent: "center",
     alignItems: "center",
-    shadowColor: "#00bcd4", // ✅ sombra cian como acento
+    shadowColor: "#00bcd4",
     shadowOffset: { width: 0, height: 4 },
     shadowOpacity: 0.5,
     shadowRadius: 8,
@@ -221,12 +255,11 @@ const styles = StyleSheet.create({
     borderWidth: 6,
     borderColor: "#fff",
   },
-  // ✅ Badge de cantidad en el carrito
   cartBadge: {
     position: "absolute",
     right: -2,
     top: -2,
-    backgroundColor: "#00bcd4", // ✅ cian como color del badge
+    backgroundColor: "#00bcd4",
     borderRadius: 10,
     width: 20,
     height: 20,
@@ -235,20 +268,12 @@ const styles = StyleSheet.create({
     borderWidth: 1.5,
     borderColor: "#fff",
   },
-  cartBadgeText: {
-    color: "#fff",
-    fontSize: 10,
-    fontWeight: "bold",
-  },
+  cartBadgeText: { color: "#fff", fontSize: 10, fontWeight: "bold" },
   logoutButton: {
     marginRight: 15,
     flexDirection: "row",
     alignItems: "center",
     gap: 4,
   },
-  logoutText: {
-    color: "#e91e63",
-    fontSize: 12,
-    fontWeight: "600",
-  },
+  logoutText: { color: "#e91e63", fontSize: 12, fontWeight: "600" },
 });

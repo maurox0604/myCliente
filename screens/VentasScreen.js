@@ -6,14 +6,18 @@ import {
   StyleSheet,
   Pressable,
   Platform,
+  TouchableOpacity,
 } from "react-native";
 import { useVentas } from "../context/VentasContext";
 import { MaterialCommunityIcons } from "@expo/vector-icons";
 import VentasItem from "../components/VentasItem";
+import FacturaDetailModal from "../components/FacturaDetailModal";
 import { formatServerDateForDisplay } from "../utils/formatFechaGlobal";
 import { useSede } from "../context/SedeContext";
 import RequireRole from "../components/RequireRole";
 import { useWindowDimensions } from "react-native";
+import { AuthContext } from "../context/AuthContext";
+import { useContext } from "react";
 
 let DatePicker;
 if (Platform.OS === "web") {
@@ -23,12 +27,18 @@ if (Platform.OS === "web") {
 
 function VentasScreen() {
   const { ventas, loadVentasByDateRange, sortVentas } = useVentas();
+  const { role } = useContext(AuthContext);
   useSede();
 
   const { width } = useWindowDimensions();
   const isMobile = width < 600;
 
   const [expandedFacturaId, setExpandedFacturaId] = useState(null);
+
+  // ── Modal de edición ──
+  const [modalFactura, setModalFactura] = useState(null); // factura seleccionada
+  const [modalVisible, setModalVisible] = useState(false);
+
   const [startDate, setStartDate] = useState(() => {
     const d = new Date();
     d.setDate(d.getDate() - 7);
@@ -43,7 +53,6 @@ function VentasScreen() {
     Evento: styles.sedeEvento,
   };
 
-  // ✅ Crea el portal en el DOM para react-datepicker
   useEffect(() => {
     if (Platform.OS === "web") {
       if (!document.getElementById("datepicker-portal")) {
@@ -57,27 +66,18 @@ function VentasScreen() {
         const style = document.createElement("style");
         style.id = "datepicker-style";
         style.innerHTML = `
-        #datepicker-portal { pointer-events: none; }
-        #datepicker-portal > * { pointer-events: all; }
-        .react-datepicker-popper { z-index: 99999 !important; }
-        .react-datepicker { z-index: 99999 !important; }
-        
-        /* ✅ NUEVO: ajuste para pantallas angostas */
-        @media (max-width: 600px) {
-          .react-datepicker {
-            font-size: 11px !important;
+          #datepicker-portal { pointer-events: none; }
+          #datepicker-portal > * { pointer-events: all; }
+          .react-datepicker-popper { z-index: 99999 !important; }
+          .react-datepicker { z-index: 99999 !important; }
+          @media (max-width: 600px) {
+            .react-datepicker { font-size: 11px !important; }
+            .react-datepicker__day-name, .react-datepicker__day {
+              width: 1.4rem !important; line-height: 1.6rem !important; margin: 1px !important;
+            }
+            .react-datepicker__month-container { width: 100% !important; }
           }
-          .react-datepicker__day-name,
-          .react-datepicker__day {
-            width: 1.4rem !important;
-            line-height: 1.6rem !important;
-            margin: 1px !important;
-          }
-          .react-datepicker__month-container {
-            width: 100% !important;
-          }
-        }
-      `;
+        `;
         document.head.appendChild(style);
       }
     }
@@ -101,6 +101,22 @@ function VentasScreen() {
   };
 
   const formatDateLabel = (date) => date.toISOString().split("T")[0];
+
+  // ── Abrir modal de edición ──
+  const abrirModalFactura = (factura) => {
+    setModalFactura(factura);
+    setModalVisible(true);
+  };
+
+  const cerrarModal = () => {
+    setModalVisible(false);
+    setModalFactura(null);
+  };
+
+  // Recargar el rango actual después de editar
+  const recargarVentas = () => {
+    loadVentasByDateRange(startDate, endDate, true);
+  };
 
   const groupVentasByDateAndFactura = () => {
     const grouped = ventas.reduce((acc, venta) => {
@@ -223,7 +239,6 @@ function VentasScreen() {
             }
           />
         </View>
-
         <View style={{ flex: 1 }}>
           <Text style={styles.dateLabel}>Hasta:</Text>
           <DatePicker
@@ -250,7 +265,6 @@ function VentasScreen() {
             }
           />
         </View>
-
         <Pressable onPress={aplicarFiltro} style={styles.buscarButtonMobile}>
           <MaterialCommunityIcons name="magnify" size={18} color="#fff" />
         </Pressable>
@@ -261,7 +275,7 @@ function VentasScreen() {
   return (
     <RequireRole allowedRoles={["superadmin", "vendedor"]}>
       <View style={styles.container}>
-        {/* ✅ Controles superiores */}
+        {/* Controles superiores */}
         <View style={styles.controls}>
           <View style={styles.filterBar}>
             <Pressable
@@ -311,7 +325,7 @@ function VentasScreen() {
           </View>
         </View>
 
-        {/* ✅ FlatList completamente separado de los controles */}
+        {/* Lista de ventas */}
         <FlatList
           style={styles.list}
           data={groupedVentas}
@@ -348,6 +362,7 @@ function VentasScreen() {
 
                 {facturas.map((factura) => (
                   <View key={factura.id_factura} style={styles.facturaBlock}>
+                    {/* Header de factura: título + ícono editar (solo superadmin) */}
                     <View style={styles.facturaBlockHeader}>
                       <Text
                         style={styles.facturaTitle}
@@ -355,9 +370,23 @@ function VentasScreen() {
                       >
                         F_No. {factura.id_factura} · {factura.horaFactura}
                       </Text>
-                      <Text style={styles.textCantidad}>
-                        {factura.totalCantidad}
-                      </Text>
+                      <View style={styles.facturaHeaderRight}>
+                        {role === "superadmin" && (
+                          <TouchableOpacity
+                            style={styles.editBtn}
+                            onPress={() => abrirModalFactura(factura)}
+                          >
+                            <MaterialCommunityIcons
+                              name="pencil-outline"
+                              size={16}
+                              color="#e91e63"
+                            />
+                          </TouchableOpacity>
+                        )}
+                        <Text style={styles.textCantidad}>
+                          {factura.totalCantidad}
+                        </Text>
+                      </View>
                     </View>
 
                     <View style={styles.facturaBlockHeader}>
@@ -390,24 +419,23 @@ function VentasScreen() {
           }}
         />
       </View>
+
+      {/* Modal de edición — solo se monta si hay factura seleccionada */}
+      <FacturaDetailModal
+        visible={modalVisible}
+        factura={modalFactura}
+        onClose={cerrarModal}
+        onRefresh={recargarVentas}
+      />
     </RequireRole>
   );
 }
 
 const styles = StyleSheet.create({
-  container: {
-    flex: 1,
-    padding: 10,
-    backgroundColor: "#fff",
-  },
-  // ✅ Controles sin zIndex — el portal maneja el calendario
-  controls: {
-    backgroundColor: "#fff",
-    marginBottom: 4,
-  },
-  list: {
-    flex: 1,
-  },
+  container: { flex: 1, padding: 10, backgroundColor: "#fff" },
+  controls: { backgroundColor: "#fff", marginBottom: 4 },
+  list: { flex: 1 },
+
   filterBar: {
     flexDirection: "row",
     justifyContent: "space-between",
@@ -495,6 +523,7 @@ const styles = StyleSheet.create({
     marginBottom: 10,
     color: "#fff",
   },
+
   facturaBlock: {
     marginBottom: 10,
     padding: 10,
@@ -506,7 +535,17 @@ const styles = StyleSheet.create({
     flexDirection: "row",
     justifyContent: "space-between",
   },
-  facturaTitle: { fontSize: 16, fontWeight: "bold", marginBottom: 5 },
+  facturaTitle: { fontSize: 16, fontWeight: "bold", marginBottom: 5, flex: 1 },
+
+  facturaHeaderRight: { flexDirection: "row", alignItems: "center", gap: 8 },
+  editBtn: {
+    padding: 4,
+    backgroundColor: "#fff0f5",
+    borderRadius: 6,
+    borderWidth: 1,
+    borderColor: "#e91e63",
+  },
+
   textCantidad: {
     fontSize: 14,
     fontWeight: "600",
