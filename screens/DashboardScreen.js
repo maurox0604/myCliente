@@ -21,19 +21,13 @@ if (Platform.OS === "web") {
 
 const API = process.env.EXPO_PUBLIC_API_URL;
 
-const SEDE_COLORS = {
-  Local: "#4CAF50",
-  Rappi: "#FF5722",
-  Evento: "#2196F3",
-};
-
+const SEDE_COLORS = { Local: "#4CAF50", Rappi: "#FF5722", Evento: "#2196F3" };
 const MOTIVO_COLORS = {
   venta: "#e91e63",
   obsequio: "#9c27b0",
   muestra: "#00bcd4",
   derretido: "#ff9800",
 };
-
 const MOTIVO_ICONS = {
   venta: "cash",
   obsequio: "gift",
@@ -55,15 +49,52 @@ export default function DashboardScreen() {
 
   const formatLabel = (d) => d.toISOString().split("T")[0];
 
-  // ── Portal para datepicker ──
+  // ── Reutiliza el mismo portal y CSS que VentasScreen ──
   useEffect(() => {
     if (Platform.OS !== "web") return;
-    if (!document.getElementById("dp-portal-dash")) {
+    if (!document.getElementById("datepicker-portal")) {
       const el = document.createElement("div");
-      el.id = "dp-portal-dash";
+      el.id = "datepicker-portal";
       el.style.cssText =
         "position:fixed;z-index:99999;top:0;left:0;pointer-events:none;";
       document.body.appendChild(el);
+    }
+    if (!document.getElementById("datepicker-style")) {
+      const style = document.createElement("style");
+      style.id = "datepicker-style";
+      style.innerHTML = `
+        #datepicker-portal { pointer-events: none; }
+        #datepicker-portal > * { pointer-events: all; }
+        .react-datepicker-popper { z-index: 99999 !important; }
+        .react-datepicker { z-index: 99999 !important; }
+        .react-datepicker__navigation { z-index: 1 !important; }
+        .react-datepicker__navigation-icon::before { border-color: #e91e63 !important; }
+        .react-datepicker__input-container input {
+          width: 100%;
+          padding: 7px 10px;
+          border: 1.5px solid #e91e63;
+          border-radius: 8px;
+          font-size: 13px;
+          color: #e91e63;
+          font-weight: 600;
+          background: #fff0f5;
+          outline: none;
+          cursor: pointer;
+          box-sizing: border-box;
+        }
+        .react-datepicker__input-container input:focus {
+          border-color: #c2185b;
+          background: #fce4ec;
+        }
+        @media (max-width: 600px) {
+          .react-datepicker { font-size: 11px !important; }
+          .react-datepicker__day-name, .react-datepicker__day {
+            width: 1.4rem !important; line-height: 1.6rem !important; margin: 1px !important;
+          }
+          .react-datepicker__month-container { width: 100% !important; }
+        }
+      `;
+      document.head.appendChild(style);
     }
   }, []);
 
@@ -71,11 +102,10 @@ export default function DashboardScreen() {
     setLoading(true);
     try {
       const token = await getAuth().currentUser?.getIdToken();
-      const s = start.toISOString().split("T")[0];
-      const e = end.toISOString().split("T")[0];
-      const res = await fetch(`${API}/reportes/dashboard?start=${s}&end=${e}`, {
-        headers: { Authorization: `Bearer ${token}` },
-      });
+      const res = await fetch(
+        `${API}/reportes/dashboard?start=${formatLabel(start)}&end=${formatLabel(end)}`,
+        { headers: { Authorization: `Bearer ${token}` } },
+      );
       const json = await res.json();
       setData(json);
     } catch (err) {
@@ -103,33 +133,37 @@ export default function DashboardScreen() {
     fetchDashboard(s, new Date());
   };
 
-  // ── Totales generales ──
-  const renderTotales = () => {
-    if (!data) return null;
-    return (
-      <View style={styles.row}>
-        <View style={[styles.card, styles.cardPink]}>
-          <MaterialCommunityIcons name="cash-multiple" size={28} color="#fff" />
-          <Text style={styles.cardValue}>
-            ${data.totalIngresos?.toLocaleString("es-CO") ?? 0}
-          </Text>
-          <Text style={styles.cardLabel}>Ingresos</Text>
+  const renderTotales = () => (
+    <View style={styles.row}>
+      {[
+        {
+          icon: "cash-multiple",
+          value: `$${data.totalIngresos?.toLocaleString("es-CO") ?? 0}`,
+          label: "Ingresos",
+          style: styles.cardPink,
+        },
+        {
+          icon: "ice-cream",
+          value: data.totalUnidades ?? 0,
+          label: "Unidades vendidas",
+          style: styles.cardCyan,
+        },
+        {
+          icon: "receipt",
+          value: data.totalFacturas ?? 0,
+          label: "Facturas",
+          style: styles.cardPurple,
+        },
+      ].map((c) => (
+        <View key={c.label} style={[styles.card, c.style]}>
+          <MaterialCommunityIcons name={c.icon} size={28} color="#fff" />
+          <Text style={styles.cardValue}>{c.value}</Text>
+          <Text style={styles.cardLabel}>{c.label}</Text>
         </View>
-        <View style={[styles.card, styles.cardCyan]}>
-          <MaterialCommunityIcons name="ice-cream" size={28} color="#fff" />
-          <Text style={styles.cardValue}>{data.totalUnidades ?? 0}</Text>
-          <Text style={styles.cardLabel}>Unidades vendidas</Text>
-        </View>
-        <View style={[styles.card, styles.cardPurple]}>
-          <MaterialCommunityIcons name="receipt" size={28} color="#fff" />
-          <Text style={styles.cardValue}>{data.totalFacturas ?? 0}</Text>
-          <Text style={styles.cardLabel}>Facturas</Text>
-        </View>
-      </View>
-    );
-  };
+      ))}
+    </View>
+  );
 
-  // ── Top productos ──
   const renderTopProductos = () => {
     if (!data?.topProductos?.length) return null;
     const max = data.topProductos[0]?.cantidad ?? 1;
@@ -161,7 +195,6 @@ export default function DashboardScreen() {
     );
   };
 
-  // ── Por sede ──
   const renderSedes = () => {
     if (!data?.porSede?.length) return null;
     return (
@@ -188,7 +221,6 @@ export default function DashboardScreen() {
     );
   };
 
-  // ── Por motivo ──
   const renderMotivos = () => {
     if (!data?.porMotivo?.length) return null;
     return (
@@ -232,7 +264,7 @@ export default function DashboardScreen() {
   return (
     <RequireRole allowedRoles={["superadmin"]}>
       <View style={styles.container}>
-        {/* ── Controles de fecha ── */}
+        {/* Controles de fecha */}
         <View style={styles.controls}>
           <View style={styles.filterBar}>
             <Pressable
@@ -268,7 +300,8 @@ export default function DashboardScreen() {
                   }}
                   dateFormat="yyyy-MM-dd"
                   maxDate={endDate}
-                  portalId="dp-portal-dash"
+                  portalId="datepicker-portal"
+                  popperPlacement="bottom-start"
                 />
               </View>
               <View style={styles.dateItem}>
@@ -282,7 +315,8 @@ export default function DashboardScreen() {
                   dateFormat="yyyy-MM-dd"
                   minDate={startDate}
                   maxDate={new Date()}
-                  portalId="dp-portal-dash"
+                  portalId="datepicker-portal"
+                  popperPlacement="bottom-start"
                 />
               </View>
               <Pressable onPress={aplicar} style={styles.buscarBtn}>
@@ -297,7 +331,6 @@ export default function DashboardScreen() {
           </Text>
         </View>
 
-        {/* ── Contenido ── */}
         {loading ? (
           <View style={styles.loadingBox}>
             <ActivityIndicator size="large" color="#e91e63" />
@@ -309,11 +342,14 @@ export default function DashboardScreen() {
             contentContainerStyle={{ paddingBottom: 120 }}
             showsVerticalScrollIndicator={false}
           >
-            {renderTotales()}
-            {renderTopProductos()}
-            {renderSedes()}
-            {renderMotivos()}
-            {!data && (
+            {data ? (
+              <>
+                {renderTotales()}
+                {renderTopProductos()}
+                {renderSedes()}
+                {renderMotivos()}
+              </>
+            ) : (
               <Text style={styles.emptyText}>Sin datos para este período</Text>
             )}
           </ScrollView>
@@ -357,7 +393,6 @@ const styles = StyleSheet.create({
     borderRadius: 8,
   },
   buscarBtnText: { color: "#fff", fontWeight: "700", fontSize: 13 },
-
   rangeText: { fontSize: 12, color: "#888", marginBottom: 4 },
 
   scroll: { flex: 1 },
@@ -370,7 +405,6 @@ const styles = StyleSheet.create({
   loadingText: { color: "#888", fontSize: 14 },
   emptyText: { textAlign: "center", color: "#aaa", marginTop: 40 },
 
-  // Cards totales
   row: { flexDirection: "row", flexWrap: "wrap", gap: 10, marginBottom: 16 },
   card: {
     flex: 1,
@@ -390,7 +424,6 @@ const styles = StyleSheet.create({
     textAlign: "center",
   },
 
-  // Sección
   section: {
     backgroundColor: "#fafafa",
     borderRadius: 14,
@@ -404,7 +437,6 @@ const styles = StyleSheet.create({
     color: "#111",
   },
 
-  // Barras top productos
   barRow: {
     flexDirection: "row",
     alignItems: "center",
@@ -423,7 +455,6 @@ const styles = StyleSheet.create({
   barBg: { height: 8, backgroundColor: "#f0f0f0", borderRadius: 4 },
   barFill: { height: 8, backgroundColor: "#e91e63", borderRadius: 4 },
 
-  // Sedes
   sedeCard: {
     flex: 1,
     minWidth: 80,
@@ -436,7 +467,6 @@ const styles = StyleSheet.create({
   sedeValor: { color: "#fff", fontSize: 16, fontWeight: "800" },
   sedeUnidades: { color: "rgba(255,255,255,0.8)", fontSize: 11 },
 
-  // Motivos
   motivoCard: {
     flex: 1,
     minWidth: 80,

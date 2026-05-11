@@ -160,7 +160,7 @@ export default function HomeTabs({
         }}
       />
 
-      {/* DASHBOARD — solo superadmin */}
+      {/* DASHBOARD — accesible solo desde HomeScreen, oculto en tab bar */}
       <Tab.Screen
         name="Dashboard"
         component={DashboardScreen}
@@ -173,7 +173,7 @@ export default function HomeTabs({
               size={size}
             />
           ),
-          tabBarButton: role === "superadmin" ? undefined : () => null,
+          tabBarButton: () => null,
         }}
       />
 

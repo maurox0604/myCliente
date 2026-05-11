@@ -1,210 +1,188 @@
-import { useNavigation } from '@react-navigation/native';
-import React, { useState } from 'react';
-import { Text, StyleSheet, View, TouchableOpacity, Alert, Button, TextInput, Image, ImageBackground,Pressable } from 'react-native';
-import Welcome from './Welcome';
-import { SafeAreaView, SafeAreaProvider } from 'react-native-safe-area-context';
-import HomeFondo from '../assets/images/HomeFondo.png'; // Importa la imagen
+// screens/HomeScreen.js
+import React, { useContext } from "react";
+import {
+  View,
+  Text,
+  StyleSheet,
+  TouchableOpacity,
+  Image,
+  SafeAreaView,
+  Platform,
+} from "react-native";
+import { useNavigation } from "@react-navigation/native";
+import { MaterialCommunityIcons } from "@expo/vector-icons";
+import { AuthContext } from "../context/AuthContext";
+import HomeFondo from "../assets/images/HomeFondo.png";
 
+const BOTONES = [
+  { label: "Sabores", screen: "Sabores", icon: "ice-cream", color: "#e91e63" },
+  {
+    label: "Editar helados",
+    screen: "Editar",
+    icon: "ice-pop",
+    color: "#9c27b0",
+  },
+  {
+    label: "Ventas",
+    screen: "Ventas",
+    icon: "cash-register",
+    color: "#00897b",
+  },
+  {
+    label: "Reportes",
+    screen: "Reportes",
+    icon: "chart-pie",
+    color: "#1565c0",
+  },
+];
 
-// import {Welcome} from './Welcome';
+export default function HomeScreen() {
+  const navigation = useNavigation();
+  const { role } = useContext(AuthContext);
 
-//import logo from '../assets/images/LogoQueen.png'
-const HomeScreen = () => {
-    const navigation = useNavigation();
-    const uri = '../assets/images/HomeFondo.png';
+  return (
+    <SafeAreaView style={styles.safe}>
+      {/* Fondo */}
+      <Image source={HomeFondo} style={styles.fondo} />
 
-    
+      {/* Overlay oscuro para legibilidad */}
+      <View style={styles.overlay} />
 
+      {/* Contenido */}
+      <View style={styles.content}>
+        {/* Logo / título */}
+        <View style={styles.header}>
+          <MaterialCommunityIcons name="crown" size={40} color="#e91e63" />
+          <Text style={styles.titulo}>Ice Queen</Text>
+          <Text style={styles.subtitulo}>Panel de control</Text>
+        </View>
 
-    return (
-        <SafeAreaView style={styles.container}>
-            <View style={{flex: 1, alignContent: 'center', justifyContent: 'center', backgroundColor: 'purple', position: 'static'}}>
-                <Image source={HomeFondo} style={[styles.image, StyleSheet.absoluteFill]} />
-                 {/* <Image source={HomeFondo} style={styles.image} /> */}
-            </View>
+        {/* Grid de botones principales */}
+        <View style={styles.grid}>
+          {BOTONES.map((b) => (
+            <TouchableOpacity
+              key={b.screen}
+              style={[styles.boton, { borderColor: b.color }]}
+              onPress={() => navigation.navigate(b.screen)}
+              activeOpacity={0.8}
+            >
+              <MaterialCommunityIcons name={b.icon} size={28} color={b.color} />
+              <Text style={[styles.botonLabel, { color: b.color }]}>
+                {b.label}
+              </Text>
+            </TouchableOpacity>
+          ))}
+        </View>
 
-            {/* <Pressable
-                onPress={() => navigation.navigate("VentaManual")}
-                style={{
-                    position: "absolute",
-                    top: 10,
-                    right: 10,
-                    padding: 8,
-                    zIndex: 999,
-                }}
-                >
-                <Text style={{ fontSize: 24 }}>☰</Text>
-                </Pressable> */}
-
-            
-            <View style={[styles.container, { flex: 2 }]}>
-                {/* view vacio */}
-            </View>
-
-            <View  style={[styles.menu, { flex: 1 }]}>
-                <TouchableOpacity
-                    onPress={() => navigation.navigate("Sabores")}
-                    style={[styles.boton, {
-                        backgroundColor: "#e91e63",
-                    }]}
-                    >
-                    <Text
-                        style={{
-                            fontWeight: "800",
-                            fontSize: 15,
-                            textAlign:"center",
-                            color:"white"
-                        }}
-                    >
-                        Sabores
-                    </Text>
-                </TouchableOpacity>
-            
-                <TouchableOpacity 
-                    onPress={() => navigation.navigate("Editar")}
-                    style={[styles.boton,{
-                        backgroundColor: "purple",
-                    }]}
-                    >
-                    <Text
-                        style={{
-                            fontWeight: "800",
-                            fontSize: 15,
-                            textAlign:"center",
-                            color:"white"
-                        }}
-                    >
-                        Edit helados
-                    </Text>
-                </TouchableOpacity>
-
-                {/* boton de reportes */}
-                <TouchableOpacity 
-                    onPress={() => navigation.navigate("Reportes")}
-                    style={[styles.boton,{
-                        backgroundColor: "purple",
-                    }]}
-                    >
-                    <Text
-                        style={{
-                            fontWeight: "800",
-                            fontSize: 15,
-                            textAlign:"center",
-                            color:"white"
-                        }}
-                    >
-                        Generar reportes
-                    </Text>
-                </TouchableOpacity>
-
-                <TouchableOpacity 
-                    onPress={() => navigation.navigate("HeladosAdmin")}
-                    style={[styles.boton,{
-                        backgroundColor: "purple",
-                    }]}
-                    >
-                    <Text
-                        style={{
-                            fontWeight: "800",
-                            fontSize: 15,
-                            textAlign:"center",
-                            color:"white"
-                        }}
-                    >
-                        Admin helados
-                    </Text>
-                </TouchableOpacity>
-            </View>
-                    
-
-                    {/* <Button title="☻.: TEST3 :..♥♥" onPress={request} /> */}
-                    
-                
-            {/* </ImageBackground> */}
-            
-        </SafeAreaView>
-        )
+        {/* Botón Dashboard — solo superadmin */}
+        {role === "superadmin" && (
+          <TouchableOpacity
+            style={styles.dashboardBtn}
+            onPress={() => navigation.navigate("Dashboard")}
+            activeOpacity={0.85}
+          >
+            <MaterialCommunityIcons name="chart-bar" size={22} color="#fff" />
+            <Text style={styles.dashboardBtnText}>Ver Dashboard</Text>
+            <MaterialCommunityIcons
+              name="arrow-right"
+              size={18}
+              color="rgba(255,255,255,0.7)"
+            />
+          </TouchableOpacity>
+        )}
+      </View>
+    </SafeAreaView>
+  );
 }
-export default HomeScreen;
 
 const styles = StyleSheet.create({
-    container: {
-        // flexWrap: 'wrap',
-        flex: 1,
-        // backgroundColor: "#11eeff",
-        
-        alignItems: "center",
-        justifyContent : "center",
-        fontWeight: "400",
-        fontSize: 29,
-        width: "100%",
-        
+  safe: { flex: 1, backgroundColor: "#111" },
 
+  fondo: {
+    ...StyleSheet.absoluteFillObject,
+    width: "100%",
+    height: "100%",
+    resizeMode: "cover",
+  },
 
-    backgroundColor: 'transparent',
+  overlay: {
+    ...StyleSheet.absoluteFillObject,
+    backgroundColor: "rgba(0,0,0,0.45)",
+  },
 
-    },
-    menu: {
-        flexWrap: 'wrap',
-        flexDirection: 'row',
-        alignItems: 'center',
-        columnGap:10,
-        // borderCurve:10,
-        borderRadius: 10,
-        
-        flex: 1,
-        // backgroundColor: "#dee9eb",
-        alignItems: "center",
-        justifyContent : "center",
-        fontWeight: "400",
-        fontSize: 29,
-        width: "100%",
-        height: "40%",
-        marginTop:40,
-    },
-    boton:{
-        padding:10,
-        alignSelf:"center",
-        alignItems: "center",
-        justifyContent : "center",
-        borderRadius:10,
-        marginBottom:10,
-        width: "25%",
-        height: 100,
+  content: {
+    flex: 1,
+    justifyContent: "center",
+    alignItems: "center",
+    paddingHorizontal: 24,
+    paddingBottom: 100, // espacio para la tab bar flotante
+  },
 
-        shadowColor: 'rgba(0, 0, 0, 0.4)',
-        shadowOpacity: 0.8,
-        elevation: 6,
-        shadowRadius: 7 ,
-        shadowOffset : { width: 1, height: 7},
-    },
-    contentContainerStyle: {
-        padding: 18,
-    },
-    input: {
-        borderWidth: 2,
-        borderColor: "#00000020",
-        padding: 15,
-        borderRadius: 15,
-        marginVertical: 15,
-        backgroundColor: "gray"
-    },
-    
-    title: {
-        fontWeight: "800",
-        fontSize: 28,
-        marginBottom: 15,
-    },
-    imagen: {
-        flex: 1,
-        justifyContent: 'center',
-        width: "100%",
-        height: "100%",
-    },
-    image: {
-        width: '100%',
-        height: '100%',	
-        resizeMode: 'cover',
-        position: 'absolute',
-    },
+  header: {
+    alignItems: "center",
+    marginBottom: 36,
+  },
+  titulo: {
+    fontSize: 32,
+    fontWeight: "900",
+    color: "#fff",
+    letterSpacing: 1,
+    marginTop: 8,
+  },
+  subtitulo: {
+    fontSize: 14,
+    color: "rgba(255,255,255,0.6)",
+    marginTop: 4,
+  },
+
+  // Grid 2x2
+  grid: {
+    flexDirection: "row",
+    flexWrap: "wrap",
+    justifyContent: "center",
+    gap: 14,
+    width: "100%",
+    maxWidth: 420,
+    marginBottom: 24,
+  },
+
+  boton: {
+    width: "45%",
+    backgroundColor: "rgba(255,255,255,0.1)",
+    borderWidth: 1.5,
+    borderRadius: 16,
+    paddingVertical: 20,
+    alignItems: "center",
+    gap: 8,
+    backdropFilter: "blur(10px)",
+  },
+  botonLabel: {
+    fontSize: 13,
+    fontWeight: "700",
+    textAlign: "center",
+  },
+
+  // Botón Dashboard destacado
+  dashboardBtn: {
+    flexDirection: "row",
+    alignItems: "center",
+    gap: 10,
+    backgroundColor: "#e91e63",
+    paddingHorizontal: 24,
+    paddingVertical: 14,
+    borderRadius: 14,
+    width: "100%",
+    maxWidth: 420,
+    shadowColor: "#e91e63",
+    shadowOffset: { width: 0, height: 4 },
+    shadowOpacity: 0.5,
+    shadowRadius: 10,
+    elevation: 8,
+  },
+  dashboardBtnText: {
+    flex: 1,
+    color: "#fff",
+    fontSize: 15,
+    fontWeight: "800",
+  },
 });

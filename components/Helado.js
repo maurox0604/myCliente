@@ -13,6 +13,7 @@ import { Feather, MaterialCommunityIcons } from "@expo/vector-icons";
 import { BottomSheetModal } from "@gorhom/bottom-sheet";
 import Calculadora from "./Calculadora";
 import EditModalContent from "./EditModalContent";
+import { STOCK_BAJO_UMBRAL } from "../config";
 
 export default function Helado({
   id,
@@ -66,16 +67,24 @@ export default function Helado({
     precio,
     closeCartModal: closeCalcModal,
   };
-  const isEmpty = cantidad === 0;
 
-  // ✅ MODO COLUMNA — tarjeta compacta horizontal
+  const isEmpty = cantidad === 0;
+  const isLowStock = cantidad > 0 && cantidad < STOCK_BAJO_UMBRAL;
+
+  // ─────────────────────────────────────────────
+  // MODO COLUMNA — tarjeta compacta horizontal
+  // ─────────────────────────────────────────────
   if (columnas) {
     return (
       <TouchableOpacity
         onLongPress={() => activaDeleteItem && setIsDeleteActive(true)}
         onPress={() => setIsDeleteActive(false)}
         activeOpacity={0.9}
-        style={[styles.cardCompact, isEmpty && styles.cardEmpty]}
+        style={[
+          styles.cardCompact,
+          isEmpty && styles.cardEmpty,
+          isLowStock && styles.cardLowStock,
+        ]}
       >
         {/* Imagen pequeña */}
         <Image
@@ -84,10 +93,17 @@ export default function Helado({
           onError={handleImageError}
         />
 
-        {/* Badge cantidad sobre imagen */}
-        <View style={styles.badgeCompact}>
+        {/* Badge cantidad */}
+        <View style={[styles.badgeCompact, isLowStock && styles.badgeLowStock]}>
           <Text style={styles.badgeTextCompact}>{cantidad}</Text>
         </View>
+
+        {/* Badge ⚠️ stock bajo */}
+        {isLowStock && (
+          <View style={styles.warningBadgeCompact}>
+            <Text style={styles.warningBadgeText}>⚠️</Text>
+          </View>
+        )}
 
         {/* Nombre + precio */}
         <View style={styles.dataCompact}>
@@ -97,9 +113,10 @@ export default function Helado({
           <Text style={styles.priceCompact}>
             ${precio.toLocaleString("es-CO")}
           </Text>
+          {isLowStock && <Text style={styles.lowStockLabel}>Stock bajo</Text>}
         </View>
 
-        {/* Botón + */}
+        {/* Botón */}
         {editItem ? (
           <Pressable onPress={openEditModal} style={styles.btnEditCompact}>
             <Feather name="edit" size={13} color="#fff" />
@@ -140,24 +157,39 @@ export default function Helado({
     );
   }
 
-  // ✅ MODO LISTA — fila horizontal (igual que antes pero limpio)
+  // ─────────────────────────────────────────────
+  // MODO LISTA — fila horizontal
+  // ─────────────────────────────────────────────
   return (
     <TouchableOpacity
       onLongPress={() => activaDeleteItem && setIsDeleteActive(true)}
       onPress={() => setIsDeleteActive(false)}
       activeOpacity={0.9}
-      style={[styles.cardRow, isEmpty && styles.cardEmpty, styles.shadow]}
+      style={[
+        styles.cardRow,
+        isEmpty && styles.cardEmpty,
+        isLowStock && styles.cardLowStock,
+        styles.shadow,
+      ]}
     >
-      {/* Imagen + badge */}
+      {/* Imagen + badges */}
       <View style={styles.imgWrapper}>
         <Image
           style={styles.imgRow}
           source={imageSource}
           onError={handleImageError}
         />
-        <View style={styles.badgeRow}>
+        {/* Badge cantidad — naranja si stock bajo */}
+        <View style={[styles.badgeRow, isLowStock && styles.badgeLowStock]}>
           <Text style={styles.badgeTextRow}>{cantidad}</Text>
         </View>
+
+        {/* Badge ⚠️ — solo cuando stock bajo */}
+        {isLowStock && (
+          <View style={styles.warningBadgeRow}>
+            <Text style={styles.warningBadgeText}>⚠️</Text>
+          </View>
+        )}
       </View>
 
       {/* Datos */}
@@ -166,6 +198,11 @@ export default function Helado({
           {sabor}
         </Text>
         <Text style={styles.priceRow}>${precio.toLocaleString("es-CO")}</Text>
+        {isLowStock && (
+          <Text style={styles.lowStockLabel}>
+            Stock bajo · quedan {cantidad} und
+          </Text>
+        )}
       </View>
 
       {/* Botón */}
@@ -212,7 +249,7 @@ export default function Helado({
 }
 
 const styles = StyleSheet.create({
-  // ============ MODO LISTA ============
+  // ── MODO LISTA ──
   cardRow: {
     flexDirection: "row",
     alignItems: "center",
@@ -238,7 +275,6 @@ const styles = StyleSheet.create({
     top: 0,
     left: 0,
     backgroundColor: "#09aef5",
-    color: "#ffffff !important",
     borderRadius: 12,
     width: 26,
     height: 26,
@@ -249,6 +285,16 @@ const styles = StyleSheet.create({
     color: "#ffffff",
     fontSize: 16,
     fontWeight: "800",
+  },
+  warningBadgeRow: {
+    position: "absolute",
+    bottom: 0,
+    left: 0,
+    borderRadius: 10,
+    width: 22,
+    height: 22,
+    justifyContent: "center",
+    alignItems: "center",
   },
   dataRow: {
     flex: 1,
@@ -267,7 +313,7 @@ const styles = StyleSheet.create({
     fontWeight: "500",
   },
 
-  // ============ MODO COLUMNA COMPACTO ============
+  // ── MODO COLUMNA COMPACTO ──
   cardCompact: {
     flex: 1,
     flexDirection: "row",
@@ -276,7 +322,7 @@ const styles = StyleSheet.create({
     borderRadius: 12,
     margin: 4,
     padding: 6,
-    height: 64, // ✅ altura fija pequeña — caben ~8 por pantalla
+    height: 64,
     position: "relative",
     overflow: "hidden",
     shadowColor: "rgba(38,43,48,0.3)",
@@ -302,14 +348,18 @@ const styles = StyleSheet.create({
     height: 22,
     justifyContent: "center",
     alignItems: "center",
-    color: "#ffffff !important",
-    fontWeight: "800",
     zIndex: 2,
   },
   badgeTextCompact: {
     color: "#ffffff",
     fontSize: 12,
     fontWeight: "800",
+  },
+  warningBadgeCompact: {
+    position: "absolute",
+    bottom: 4,
+    left: 4,
+    zIndex: 2,
   },
   dataCompact: {
     flex: 1,
@@ -358,7 +408,7 @@ const styles = StyleSheet.create({
     zIndex: 10,
   },
 
-  // ============ COMPARTIDOS ============
+  // ── COMPARTIDOS ──
   btnAdd: {
     backgroundColor: "#e91e63",
     width: 42,
@@ -375,11 +425,33 @@ const styles = StyleSheet.create({
     justifyContent: "center",
     alignItems: "center",
   },
+
+  // Stock vacío (sin cambios)
   cardEmpty: {
     backgroundColor: "#fff0f0",
     borderColor: "#ffcccc",
     borderWidth: 1.5,
   },
+
+  // ⚠️ Stock bajo — borde naranja
+  cardLowStock: {
+    borderColor: "#FF9800",
+    borderWidth: 2,
+    backgroundColor: "#fffbf0",
+  },
+  badgeLowStock: {
+    backgroundColor: "#FF9800",
+  },
+  lowStockLabel: {
+    fontSize: 11,
+    color: "#FF9800",
+    fontWeight: "700",
+    marginTop: 2,
+  },
+  warningBadgeText: {
+    fontSize: 14,
+  },
+
   shadow: {
     shadowColor: "rgba(38,43,48,0.4)",
     shadowOpacity: 0.8,
@@ -403,17 +475,5 @@ const styles = StyleSheet.create({
     justifyContent: "center",
     alignItems: "center",
     paddingHorizontal: 12,
-  },
-  deleteOverlay: {
-    position: "absolute",
-    top: 0,
-    left: 0,
-    right: 0,
-    bottom: 0,
-    backgroundColor: "rgba(229,57,53,0.92)",
-    justifyContent: "center",
-    alignItems: "center",
-    borderRadius: 16,
-    zIndex: 10,
   },
 });

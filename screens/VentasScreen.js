@@ -70,6 +70,8 @@ function VentasScreen() {
           #datepicker-portal > * { pointer-events: all; }
           .react-datepicker-popper { z-index: 99999 !important; }
           .react-datepicker { z-index: 99999 !important; }
+          .react-datepicker__navigation { z-index: 1 !important; }
+          .react-datepicker__navigation-icon::before { border-color: #e91e63 !important; }
           @media (max-width: 600px) {
             .react-datepicker { font-size: 11px !important; }
             .react-datepicker__day-name, .react-datepicker__day {
