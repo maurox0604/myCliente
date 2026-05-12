@@ -17,6 +17,7 @@ import StackEdit from "../screens/StackEdit";
 import ListaHelados from "../screens/ListaHelados";
 import VentasScreen from "../screens/VentasScreen";
 import ReportesScreen from "../screens/ReportesScreen";
+import HeladosAdminScreen from "../screens/HeladosAdminScreen";
 import DashboardScreen from "../screens/DashboardScreen";
 import SedeSelectorHeader from "../components/SedeSelectorHeader";
 import { CartContext } from "../context/CartContext";
@@ -85,7 +86,6 @@ export default function HomeTabs({
           ),
         }}
       />
-
       {/* EDITAR */}
       <Tab.Screen
         name="Editar"
@@ -98,7 +98,6 @@ export default function HomeTabs({
           tabBarBadge: cartItemCero > 0 ? cartItemCero : undefined,
         }}
       />
-
       {/* SABORES */}
       <Tab.Screen
         name="Sabores"
@@ -121,7 +120,6 @@ export default function HomeTabs({
           ),
         }}
       />
-
       {/* CARRITO — botón flotante central */}
       <Tab.Screen
         name="Carrito"
@@ -143,7 +141,6 @@ export default function HomeTabs({
           },
         }}
       />
-
       {/* VENTAS */}
       <Tab.Screen
         name="Ventas"
@@ -159,7 +156,6 @@ export default function HomeTabs({
           ),
         }}
       />
-
       {/* DASHBOARD — accesible solo desde HomeScreen, oculto en tab bar */}
       <Tab.Screen
         name="Dashboard"
@@ -173,7 +169,7 @@ export default function HomeTabs({
               size={size}
             />
           ),
-          tabBarButton: () => null,
+          tabBarButton: () => null, // Oculta el botón del tab bar
         }}
       />
 
@@ -190,6 +186,23 @@ export default function HomeTabs({
               size={size}
             />
           ),
+        }}
+      />
+
+      {/* HELADOS ADMIN */}
+      <Tab.Screen
+        name="HeladosAdmin"
+        component={HeladosAdminScreen}
+        options={{
+          tabBarLabel: "Helados Admin",
+          tabBarIcon: ({ color, size }) => (
+            <MaterialCommunityIcons
+              name="chart-pie"
+              color={color}
+              size={size}
+            />
+          ),
+          tabBarButton: () => null, // Oculta el botón del tab bar, solo accesible desde HomeScreen
         }}
       />
 

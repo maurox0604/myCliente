@@ -34,6 +34,12 @@ const BOTONES = [
     icon: "chart-pie",
     color: "#1565c0",
   },
+  {
+    label: "Activar/Desactivar",
+    screen: "HeladosAdmin",
+    icon: "chart-pie",
+    color: "#ffdded",
+  },
 ];
 
 export default function HomeScreen() {

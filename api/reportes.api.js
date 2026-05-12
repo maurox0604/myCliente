@@ -8,5 +8,6 @@ export const getTopSaboresRequest = async (query = "") => {
     throw new Error(`HTTP ${response.status} - ${txt}`);
   }
   const json = await response.json();
-  return json.data || [];
+  // return json.data || [];
+  return Array.isArray(json) ? json : json.data || json || [];
 };
