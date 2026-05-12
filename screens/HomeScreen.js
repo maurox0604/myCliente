@@ -15,24 +15,24 @@ import { AuthContext } from "../context/AuthContext";
 import HomeFondo from "../assets/images/HomeFondo.png";
 
 const BOTONES = [
-  { label: "Sabores", screen: "Sabores", icon: "ice-cream", color: "#e91e63" },
+  { label: "Sabores", screen: "Sabores", icon: "ice-cream", color: "#ffffff" },
   {
     label: "Editar helados",
     screen: "Editar",
     icon: "ice-pop",
-    color: "#9c27b0",
+    color: "#ffffff",
   },
   {
     label: "Ventas",
     screen: "Ventas",
     icon: "cash-register",
-    color: "#00897b",
+    color: "#ffffff",
   },
   {
     label: "Reportes",
     screen: "Reportes",
     icon: "chart-pie",
-    color: "#1565c0",
+    color: "#ffffff",
   },
   {
     label: "Activar/Desactivar",

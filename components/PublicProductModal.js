@@ -19,10 +19,9 @@ export default function PublicProductModal({ visible, producto, onClose }) {
   const { addItem } = usePublicCart();
   const { width } = useWindowDimensions();
 
-  // foto activa en la galería
   const [fotoActiva, setFotoActiva] = useState(0);
+  const [cantidad, setCantidad] = useState(1);
 
-  // construir galería: fotos[] + icon como fallback
   const galeria = producto
     ? producto.fotos?.length > 0
       ? producto.fotos
@@ -31,7 +30,8 @@ export default function PublicProductModal({ visible, producto, onClose }) {
 
   useEffect(() => {
     if (visible) {
-      setFotoActiva(0); // reset al abrir
+      setFotoActiva(0);
+      setCantidad(1);
       Animated.parallel([
         Animated.spring(scale, { toValue: 1, useNativeDriver: true }),
         Animated.timing(opacity, {
@@ -48,7 +48,19 @@ export default function PublicProductModal({ visible, producto, onClose }) {
 
   if (!producto) return null;
 
-  const imageSize = Math.min(width - 80, 380);
+  const agotado = producto.cantidad === 0;
+  const imageSize = Math.min(width - 80, 360);
+
+  const handleAgregar = () => {
+    if (!agotado) {
+      addItem(producto, cantidad);
+      onClose();
+    }
+  };
+
+  const decrementar = () => setCantidad((c) => Math.max(1, c - 1));
+  const incrementar = () =>
+    setCantidad((c) => Math.min(producto.cantidad, c + 1));
 
   return (
     <Modal
@@ -84,7 +96,7 @@ export default function PublicProductModal({ visible, producto, onClose }) {
               />
             </View>
 
-            {/* Thumbnails — solo si hay más de una foto */}
+            {/* Thumbnails */}
             {galeria.length > 1 && (
               <ScrollView
                 horizontal
@@ -116,34 +128,53 @@ export default function PublicProductModal({ visible, producto, onClose }) {
                 ${Number(producto.precio).toLocaleString("es-CO")}
               </Text>
               <Text style={styles.stock}>
-                {producto.cantidad > 0 ? `✅ Disponible` : "❌ Agotado"}
+                {agotado ? "❌ Agotado" : "✅ Disponible"}
               </Text>
             </View>
 
-            {/* Descripción si existe */}
+            {/* Descripción */}
             {producto.descripcion ? (
               <Text style={styles.descripcion}>{producto.descripcion}</Text>
             ) : null}
           </ScrollView>
 
-          {/* Botón agregar */}
-          <Pressable
-            style={[
-              styles.addBtn,
-              producto.cantidad === 0 && styles.addBtnDisabled,
-            ]}
-            onPress={() => {
-              if (producto.cantidad > 0) {
-                addItem(producto, 1);
-                onClose();
-              }
-            }}
-            disabled={producto.cantidad === 0}
-          >
-            <Text style={styles.addBtnText}>
-              {producto.cantidad > 0 ? "AGREGAR AL PEDIDO" : "AGOTADO"}
-            </Text>
-          </Pressable>
+          {/* Footer: cantidad + botón agregar */}
+          <View style={styles.footer}>
+            {/* Selector cantidad */}
+            <View style={styles.qtyRow}>
+              <Pressable
+                style={[styles.qtyBtn, cantidad <= 1 && styles.qtyBtnDisabled]}
+                onPress={decrementar}
+                disabled={cantidad <= 1}
+              >
+                <Text style={styles.qtyBtnText}>−</Text>
+              </Pressable>
+              <Text style={styles.qtyValue}>{cantidad}</Text>
+              <Pressable
+                style={[
+                  styles.qtyBtn,
+                  cantidad >= producto.cantidad && styles.qtyBtnDisabled,
+                ]}
+                onPress={incrementar}
+                disabled={cantidad >= producto.cantidad}
+              >
+                <Text style={styles.qtyBtnText}>+</Text>
+              </Pressable>
+            </View>
+
+            {/* Botón agregar */}
+            <Pressable
+              style={[styles.addBtn, agotado && styles.addBtnDisabled]}
+              onPress={handleAgregar}
+              disabled={agotado}
+            >
+              <Text style={styles.addBtnText}>
+                {agotado
+                  ? "AGOTADO"
+                  : `AGREGAR  $${(Number(producto.precio) * cantidad).toLocaleString("es-CO")}`}
+              </Text>
+            </Pressable>
+          </View>
         </Animated.View>
       </View>
     </Modal>
@@ -164,14 +195,14 @@ const styles = StyleSheet.create({
     backgroundColor: "#fff",
     borderRadius: 24,
     overflow: "hidden",
-    maxHeight: "90%",
+    maxHeight: "92%",
   },
   header: {
     flexDirection: "row",
     alignItems: "center",
     justifyContent: "space-between",
     paddingHorizontal: 20,
-    paddingVertical: 16,
+    paddingVertical: 14,
     borderBottomWidth: 1,
     borderBottomColor: "#f0f0f0",
   },
@@ -190,23 +221,14 @@ const styles = StyleSheet.create({
     justifyContent: "center",
     alignItems: "center",
   },
-  closeText: {
-    fontSize: 16,
-    color: "#555",
-    fontWeight: "700",
-  },
+  closeText: { fontSize: 16, color: "#555", fontWeight: "700" },
 
-  // Imagen principal
   mainImageWrapper: {
     width: "100%",
     backgroundColor: "#f8f0f4",
   },
-  mainImage: {
-    width: "100%",
-    height: "100%",
-  },
+  mainImage: { width: "100%", height: "100%" },
 
-  // Thumbnails
   thumbsRow: {
     paddingHorizontal: 16,
     paddingVertical: 12,
@@ -221,33 +243,20 @@ const styles = StyleSheet.create({
     borderWidth: 2,
     borderColor: "#eee",
   },
-  thumbActive: {
-    borderColor: "#e91e63",
-    borderWidth: 2.5,
-  },
-  thumbImage: {
-    width: "100%",
-    height: "100%",
-  },
+  thumbActive: { borderColor: "#e91e63", borderWidth: 2.5 },
+  thumbImage: { width: "100%", height: "100%" },
 
-  // Info
   priceRow: {
     flexDirection: "row",
     justifyContent: "space-between",
     alignItems: "center",
     paddingHorizontal: 20,
-    paddingVertical: 8,
+    paddingTop: 12,
+    paddingBottom: 4,
   },
-  price: {
-    fontSize: 22,
-    fontWeight: "900",
-    color: "#e91e63",
-  },
-  stock: {
-    fontSize: 13,
-    color: "#555",
-    fontWeight: "600",
-  },
+  price: { fontSize: 24, fontWeight: "900", color: "#e91e63" },
+  stock: { fontSize: 13, color: "#555", fontWeight: "600" },
+
   descripcion: {
     fontSize: 14,
     color: "#666",
@@ -256,21 +265,61 @@ const styles = StyleSheet.create({
     paddingBottom: 8,
   },
 
-  // Botón
+  // Footer
+  footer: {
+    flexDirection: "row",
+    alignItems: "center",
+    gap: 12,
+    padding: 16,
+    borderTopWidth: 1,
+    borderTopColor: "#f0f0f0",
+    backgroundColor: "#fff",
+  },
+
+  // Selector cantidad
+  qtyRow: {
+    flexDirection: "row",
+    alignItems: "center",
+    backgroundColor: "#f5f5f5",
+    borderRadius: 14,
+    padding: 4,
+    gap: 4,
+  },
+  qtyBtn: {
+    width: 36,
+    height: 36,
+    borderRadius: 10,
+    backgroundColor: "#fff",
+    justifyContent: "center",
+    alignItems: "center",
+    shadowColor: "#000",
+    shadowOpacity: 0.08,
+    shadowRadius: 4,
+    elevation: 2,
+  },
+  qtyBtnDisabled: { opacity: 0.35 },
+  qtyBtnText: { fontSize: 20, fontWeight: "700", color: "#1a1a1a" },
+  qtyValue: {
+    fontSize: 17,
+    fontWeight: "800",
+    color: "#1a1a1a",
+    minWidth: 28,
+    textAlign: "center",
+  },
+
+  // Botón agregar
   addBtn: {
-    margin: 16,
+    flex: 1,
     backgroundColor: "#e91e63",
-    paddingVertical: 16,
-    borderRadius: 16,
+    paddingVertical: 14,
+    borderRadius: 14,
     alignItems: "center",
   },
-  addBtnDisabled: {
-    backgroundColor: "#ccc",
-  },
+  addBtnDisabled: { backgroundColor: "#ccc" },
   addBtnText: {
     color: "#fff",
-    fontSize: 15,
+    fontSize: 14,
     fontWeight: "900",
-    letterSpacing: 1,
+    letterSpacing: 0.5,
   },
 });
