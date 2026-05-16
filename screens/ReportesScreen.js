@@ -312,6 +312,7 @@ export default function ReportesScreen() {
       <FlatList
         data={topSabores}
         keyExtractor={(item, index) => `${item.sabor ?? "sabor"}-${index}`}
+        contentContainerStyle={{ paddingBottom: 90 }}
         renderItem={({ item }) => {
           const value = Number(item.total_vendido || item.total || 0);
           const anchoPx = maxCantidad > 0 ? (value / maxCantidad) * 100 : 0;
