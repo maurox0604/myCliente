@@ -20,7 +20,7 @@ export default function RootNavigator() {
         <Stack.Screen
           name="LoginScreen"
           component={LoginScreen}
-          initialParams={{ userId: 2 }}
+          // initialParams={{ userId: 2 }}
         />
       )}
       {/* ✅ Público siempre disponible por URL/QR, no es la pantalla inicial */}

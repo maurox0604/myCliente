@@ -9,21 +9,12 @@
     "splash": {
       "image": "./assets/images/splash.png",
       "resizeMode": "contain",
-      "backgroundColor": "#ffffff",
-      "entryPoint": "./node_modules/expo-router/entry",
-
-      "web": {
-      "output": "static",
-      "bundler": "metro"
-    }
-
+      "backgroundColor": "#ffffff"
     },
     "updates": {
       "fallbackToCacheTimeout": 0
     },
-    "assetBundlePatterns": [
-      "**/*"
-    ],
+    "assetBundlePatterns": ["**/*"],
     "ios": {
       "supportsTablet": true
     },
@@ -36,17 +27,14 @@
     },
     "web": {
       "favicon": "./assets/images/favicon.png",
-      "output": "static",
-      "bundler": "metro"
+      "bundler": "metro",
+      "template": "./web/index.html"
     },
     "extra": {
       "eas": {
         "projectId": "ee673c4a-edea-4fe9-bbdd-5ecbc464447a"
       }
     },
-    "plugins": [
-      "expo-router",
-      "expo-image-picker"
-    ]
+    "plugins": ["expo-router", "expo-image-picker"]
   }
 }

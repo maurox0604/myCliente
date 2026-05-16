@@ -1,241 +1,295 @@
-import { BlurView } from 'expo-blur';
-import React, { useContext } from 'react';
+import React, { useContext, useState } from "react";
 import {
-    SafeAreaView,
-    TouchableOpacity,
-    ScrollView,
-    TextInput,
-    StyleSheet,
-    Text,
-    Image,
-    View,
-    Dimensions,
-} from 'react-native';
-import { AuthContext } from '../context/AuthContext.js';
+  SafeAreaView,
+  TouchableOpacity,
+  ScrollView,
+  TextInput,
+  StyleSheet,
+  Text,
+  View,
+  Platform,
+} from "react-native";
+import { AuthContext } from "../context/AuthContext.js";
 
-const uri = '../assets/images/fondLogin.png';
+export default function LoginScreen({ navigation }) {
+  const [email, setEmail] = useState("");
+  const [password, setPassword] = useState("");
+  const [showPwd, setShowPwd] = useState(false);
+  const { login } = useContext(AuthContext);
 
+  const handleLogin = async () => {
+    try {
+      await login(email, password);
+    } catch (error) {
+      alert("Error al iniciar sesión: " + error.message);
+    }
+  };
 
-const LoginScreen = ({ navigation, route }) => {
-    console.log("------------Navegación: ", navigation);
-    console.log("------------Route: ", route);
-    console.log("------------Route.params: ", route.params);
-    console.log("------------Route.params: ", route.params.userId);
-    // params.userId
-    const { height } = Dimensions.get('window');
-    const [email, setEmail] = React.useState('');
-    const [password, setPassword] = React.useState('');
-    const { login } = useContext(AuthContext);
+  return (
+    <View style={s.screen}>
+      {/* Fondo oscuro explícito para web */}
+      <View style={StyleSheet.absoluteFill} pointerEvents="none">
+        <View style={{ flex: 1, backgroundColor: "#1a0a10" }} />
+      </View>
 
+      {/* Blob top-right */}
+      <View
+        pointerEvents="none"
+        style={[s.blob, { width: 300, height: 300, top: -80, right: -80 }]}
+      />
+      {/* Blob bottom-left */}
+      <View
+        pointerEvents="none"
+        style={[
+          s.blob,
+          { width: 200, height: 200, bottom: -60, left: -60, opacity: 0.12 },
+        ]}
+      />
 
+      <SafeAreaView style={{ flex: 1 }}>
+        <ScrollView
+          contentContainerStyle={s.scroll}
+          keyboardShouldPersistTaps="handled"
+        >
+          <View style={s.card}>
+            {/* LOGO */}
+            <View style={s.logoArea}>
+              <View style={s.logoCircle}>
+                <Text style={s.logoEmoji}>🍦</Text>
+              </View>
+              <Text style={s.logoText}>Ice Queen</Text>
+              <Text style={s.logoSub}>PANEL DE GESTIÓN</Text>
+            </View>
 
-    // const handleSignIn = () => {
-    //     signInWithEmailAndPassword(auth, email, password)
-    //     .then((userCredential) => {
-    //         // Signed in
-    //         const user = userCredential.user;
-    //         console.log("usuario logeado: ", user);
-    //         navigation.navigate('HomeTabs')
-    //     })
-    //     .catch((error) => {
-    //         const errorCode = error.code;
-    //         const errorMessage = error.message;
-    //         alert("Error al iniciar sesión: "+ errorMessage)
-    //         // ..
-    //     });
-    // }
-    
+            <Text style={s.greeting}>Hola, bienvenido 👋</Text>
+            <Text style={s.sub}>Inicia sesión para continuar</Text>
 
-    const handleLogin = async () => {
-        try {
-            await login(email, password);
-            // navigation.navigate('HomeTabs');
-        } catch (error) {
-            console.error(error);
-            alert("Error al iniciar sesión: " + error.message); // ✅ era "errorMessage" (variable inexistente)
-        }
-    };
+            {/* EMAIL */}
+            <View style={s.field}>
+              <Text style={s.label}>Correo electrónico</Text>
+              <TextInput
+                style={s.input}
+                placeholder="tu@correo.com"
+                placeholderTextColor="rgba(255,255,255,0.3)"
+                value={email}
+                onChangeText={setEmail}
+                autoCapitalize="none"
+                keyboardType="email-address"
+                autoCorrect={false}
+              />
+            </View>
 
-    return (
-        <>
-            
-      {/* <MyBlur /> */}
-            <SafeAreaView style={styles.container}>
-                <View style={{flex: 1, alignContent: 'center', justifyContent: 'center', backgroundColor: 'purple', position: 'static'}}>
-                    <Image source={{uri}} style={[styles.image, StyleSheet.absoluteFill]} />
-                </View>
-                <View style={{width:100, height: 100, backgroundColor: 'blue', position: 'absolute'}}>
-                    
-                </View>
+            {/* PASSWORD */}
+            <View style={s.field}>
+              <Text style={s.label}>Contraseña</Text>
+              <View style={s.inputWrap}>
+                <TextInput
+                  style={[s.input, { paddingRight: 48 }]}
+                  placeholder="••••••••"
+                  placeholderTextColor="rgba(255,255,255,0.3)"
+                  value={password}
+                  onChangeText={setPassword}
+                  secureTextEntry={!showPwd}
+                  autoCorrect={false}
+                />
+                <TouchableOpacity
+                  style={s.eyeBtn}
+                  onPress={() => setShowPwd((p) => !p)}
+                  activeOpacity={0.7}
+                >
+                  <Text style={s.eyeIcon}>{showPwd ? "🙈" : "👁️"}</Text>
+                </TouchableOpacity>
+              </View>
+            </View>
 
-                <ScrollView contentContainerStyle={{flex: 1, alignItems: 'center' ,width: '100%', height: '100%'}}>
-                    <BlurView intensity={100} >
-                        <View style={styles.contentContainer}>
-                            <Text style={styles.title}>Hola Nuevamente!</Text>
-                            <Text style={styles.body}>Bienvenido al maravilloso mundo del placer!</Text>
+            {/* RECOVERY */}
+            <TouchableOpacity
+              style={{ alignSelf: "flex-end", marginBottom: 16 }}
+            >
+              <Text style={s.recovery}>¿Olvidaste tu contraseña?</Text>
+            </TouchableOpacity>
 
-                            <TextInput
-                            style={styles.input}
-                            placeholder="Enter email"
-                            onChangeText={(text) => setEmail(text)}
-                            autoCorrect={false}
-                            />
-                            <TextInput
-                            style={styles.input}
-                            placeholder="Password"
-                            onChangeText={(text) => setPassword(text)}
-                            autoCorrect={false}
-                            secureTextEntry={true}
-                            />
-                            <TouchableOpacity>
-                                <Text
-                                    style={[
-                                    styles.buttonsText,
-                                    {fontWeight: 'bold', lineHeight: 30, textAlign: 'right'},
-                                    ]}>
-                                    Recovery Password
-                                </Text>
-                            </TouchableOpacity>
+            {/* LOGIN BTN */}
+            <TouchableOpacity
+              style={s.btnPrimary}
+              onPress={handleLogin}
+              activeOpacity={0.85}
+            >
+              <Text style={s.btnPrimaryText}>Iniciar sesión</Text>
+            </TouchableOpacity>
 
-                            <TouchableOpacity onPress={handleLogin} style={styles.signInButton}>
-                                <Text style={{color: 'white', fontWeight: 'bold'}}>Login</Text>
-                            </TouchableOpacity>
-                            
-                            <Text style={{textAlign: 'center'}}>Or continue with</Text>
+            {/* DIVIDER */}
+            <View style={s.divider}>
+              <View style={s.dividerLine} />
+              <Text style={s.dividerText}>o continúa con</Text>
+              <View style={s.dividerLine} />
+            </View>
 
-                            <View style={styles.buttonContainer}>
-                                <TouchableOpacity style={styles.button1}>
-                                    <Image
-                                    source={{
-                                        uri: 'https://upload.wikimedia.org/wikipedia/commons/thumb/5/53/Google_%22G%22_Logo.svg/1024px-Google_%22G%22_Logo.svg.png',
-                                    }}
-                                    style={{width: 40, height: 40}}
-                                    />
-                                </TouchableOpacity>
-                                <TouchableOpacity
-                                    onPress={() => navigation.navigate('Welcome')}
-                                    style={styles.button1}>
-                                    <Image
-                                    source={{
-                                        uri: 'https://www.freepnglogos.com/uploads/apple-logo-png/apple-logo-png-dallas-shootings-don-add-are-speech-zones-used-4.png',
-                                    }}
-                                    style={{width: 40, height: 40}}
-                                    />
-                                </TouchableOpacity>
-                                <TouchableOpacity
-                                    onPress={() => navigation.navigate('Welcome')}
-                                    style={styles.button1}>
-                                    <Image
-                                    source={{
-                                        uri: 'https://cdn-icons-png.flaticon.com/512/124/124010.png',
-                                    }}
-                                    style={{width: 40, height: 40, borderRadius: 50}}
-                                    />
-                                </TouchableOpacity>
-                            </View>
-                        </View>
-                    </BlurView>
-            
-            </ScrollView>
-        </SafeAreaView>
-        </>
-    );
-};
+            {/* SOCIAL */}
+            <View style={s.socialRow}>
+              <TouchableOpacity style={s.socialBtn}>
+                <Text style={s.socialText}>G Google</Text>
+              </TouchableOpacity>
+              <TouchableOpacity style={s.socialBtn}>
+                <Text style={s.socialText}> Apple</Text>
+              </TouchableOpacity>
+            </View>
+          </View>
+        </ScrollView>
+      </SafeAreaView>
+    </View>
+  );
+}
 
-export default LoginScreen;
-
-const styles = StyleSheet.create({
-    container: {
-        flex: 1,
-        width: '100%',
-        alignItems: 'center',
-        justifyContent: 'center',
-        backgroundColor: '#fff',
-        // position: 'relative',
-    },
-    contentContainer: {
-        paddingHorizontal: 30,
-        width: 350,
-        height: '100%',
-        borderColor: '#ffffff',
-        borderWidth: 2,
-        borderRadius: 10,
-        padding: 10,
-        alignItems: 'center',
-    },
-    title: {
-        fontSize: 32,
-        fontWeight: '700',
-        lineHeight: 35,
-        textAlign: 'center',
-        color: '#353147',
-    },
-    body: {
-        padding: 20,
-        fontSize: 30,
-        lineHeight: 35,
-        marginBottom: 20,
-        fontWeight: '400',
-        textAlign: 'center',
-        color: '#353147',
-    },
-    buttonsText: {
-        fontWeight: '500',
-        color: '#353147',
-    },
-    button1: {
-        flex: 1,
-        alignItems: 'center',
-        backgroundColor: '#ffffff70',
-        padding: 16,
-        borderRadius: 6,
-        borderWidth: 2,
-        borderColor: 'white',
-        borderRadius: 16,
-        marginHorizontal: 10,
-    },
-    button2: {
-        flex: 1,
-        alignItems: 'center',
-        padding: 16,
-    },
-    buttonContainer: {
-        flexDirection: 'row',
-        width: '100%',
-
-        backgroundColor: '#DFE3E630',
-        marginTop: 40,
-    },
-    input: {
-        backgroundColor: '#F7F7F7',
-        padding: 10,
-        borderColor: '#fff',
-        borderWidth: 2,
-        borderRadius: 10,
-        marginBottom: 20,
-        width: '100%',
-        height: 50,
-        backgroundColor: '#ffffff90',
-    },
-    signInButton: {
-        backgroundColor: '#FD6D6A',
-        width: '100%',
-        padding: 20,
-        borderRadius: 16,
-        alignItems: 'center',
-        marginVertical: 30,
-        shadowColor: '#FD6D6A',
-        shadowOffset: {
-        width: 250,
-        height: 40,
-        },
-        shadowOpacity: 0.44,
-        shadowRadius: 10.32,
-    },
-    image: {
-        width: '100%',
-        height: '100%',	
-        resizeMode: 'cover',
-        position: 'absolute',
-    },
+const s = StyleSheet.create({
+  screen: {
+    flex: 1,
+    backgroundColor: "#1a0a10",
+    ...(Platform.OS === "web" && {
+      minHeight: "100vh",
+      height: "100vh",
+      backgroundColor: "#1a0a10",
+    }),
+    position: "relative",
+    overflow: "hidden",
+  },
+  blob: {
+    position: "absolute",
+    borderRadius: 999,
+    backgroundColor: "#DB1B53",
+    opacity: 0.18,
+    zIndex: 0,
+  },
+  scroll: {
+    flexGrow: 1,
+    alignItems: "center",
+    justifyContent: "center",
+    padding: 24,
+    ...(Platform.OS === "web" && {
+      minHeight: "100vh", // ← y esta
+    }),
+  },
+  card: {
+    width: "100%",
+    maxWidth: 400,
+    backgroundColor: "rgba(255,255,255,0.06)",
+    borderWidth: 0.5,
+    borderColor: "rgba(219,27,83,0.3)",
+    borderRadius: 24,
+    padding: 28,
+    zIndex: 2,
+  },
+  logoArea: {
+    alignItems: "center",
+    marginBottom: 24,
+  },
+  logoCircle: {
+    width: 72,
+    height: 72,
+    borderRadius: 36,
+    backgroundColor: "#DB1B53",
+    alignItems: "center",
+    justifyContent: "center",
+    borderWidth: 3,
+    borderColor: "rgba(255,255,255,0.15)",
+    marginBottom: 8,
+  },
+  logoEmoji: { fontSize: 32 },
+  logoText: {
+    fontSize: 22,
+    fontWeight: "500",
+    color: "#fff",
+    letterSpacing: 1,
+    marginBottom: 4,
+  },
+  logoSub: {
+    fontSize: 11,
+    color: "rgba(255,255,255,0.45)",
+    letterSpacing: 2,
+  },
+  greeting: {
+    fontSize: 18,
+    fontWeight: "500",
+    color: "#fff",
+    marginBottom: 4,
+  },
+  sub: {
+    fontSize: 13,
+    color: "rgba(255,255,255,0.5)",
+    marginBottom: 20,
+  },
+  field: { marginBottom: 14 },
+  label: {
+    fontSize: 12,
+    color: "rgba(255,255,255,0.6)",
+    marginBottom: 6,
+    letterSpacing: 0.5,
+  },
+  input: {
+    backgroundColor: "rgba(255,255,255,0.08)",
+    borderWidth: 0.5,
+    borderColor: "rgba(219,27,83,0.35)",
+    borderRadius: 10,
+    padding: 12,
+    paddingHorizontal: 16,
+    color: "#fff",
+    fontSize: 14,
+    width: "100%",
+  },
+  inputWrap: {
+    position: "relative",
+  },
+  eyeBtn: {
+    position: "absolute",
+    right: 14,
+    top: 0,
+    bottom: 0,
+    justifyContent: "center",
+  },
+  eyeIcon: { fontSize: 16 },
+  recovery: {
+    fontSize: 12,
+    color: "#DB1B53",
+  },
+  btnPrimary: {
+    backgroundColor: "#DB1B53",
+    borderRadius: 12,
+    padding: 14,
+    alignItems: "center",
+    marginTop: 4,
+  },
+  btnPrimaryText: {
+    color: "#fff",
+    fontSize: 15,
+    fontWeight: "500",
+  },
+  divider: {
+    flexDirection: "row",
+    alignItems: "center",
+    marginVertical: 20,
+    gap: 10,
+  },
+  dividerLine: {
+    flex: 1,
+    height: 0.5,
+    backgroundColor: "rgba(255,255,255,0.12)",
+  },
+  dividerText: {
+    fontSize: 12,
+    color: "rgba(255,255,255,0.35)",
+  },
+  socialRow: { flexDirection: "row", gap: 10 },
+  socialBtn: {
+    flex: 1,
+    padding: 11,
+    backgroundColor: "rgba(255,255,255,0.06)",
+    borderWidth: 0.5,
+    borderColor: "rgba(255,255,255,0.12)",
+    borderRadius: 10,
+    alignItems: "center",
+  },
+  socialText: {
+    color: "rgba(255,255,255,0.7)",
+    fontSize: 13,
+  },
 });
