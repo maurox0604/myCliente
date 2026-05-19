@@ -1,15 +1,14 @@
 import { View, Text, Pressable, StyleSheet } from "react-native";
 import { useSede } from "../context/SedeContext";
 
-const SEDES = [
-  { id: 1, nombre: "Local" },
-  { id: 2, nombre: "Rappi" },
-  { id: 3, nombre: "Eventosss" },
-];
+// const SEDES = [
+//   { id: 1, nombre: "Local" },
+//   { id: 2, nombre: "Rappi" },
+//   { id: 3, nombre: "Eventosss" },
+// ];
 
 export default function SelectorSedeModal({ onClose }) {
   const { sedeActiva, setSede, sedes } = useSede();
-  
 
   return (
     <View style={styles.modal}>
@@ -26,15 +25,9 @@ export default function SelectorSedeModal({ onClose }) {
               cambiarSede(sede);
               onClose();
             }}
-            style={[
-              styles.item,
-              activa && styles.activa,
-            ]}
+            style={[styles.item, activa && styles.activa]}
           >
-            <Text style={[
-              styles.text,
-              activa && styles.textActiva,
-            ]}>
+            <Text style={[styles.text, activa && styles.textActiva]}>
               {sede.nombre}
             </Text>
           </Pressable>
@@ -72,4 +65,3 @@ const styles = StyleSheet.create({
     fontWeight: "600",
   },
 });
-

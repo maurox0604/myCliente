@@ -395,7 +395,7 @@ function VentasScreen() {
                       <Text
                         style={[
                           styles.facturaSedeBadge,
-                          sedeStyleMap[factura.nombre_sede] || styles.sedeLocal,
+                          sedeStyleMap[factura.nombre_sede] || styles.sedeOtra,
                         ]}
                       >
                         SEDE: {factura.nombre_sede}
@@ -574,6 +574,7 @@ const styles = StyleSheet.create({
   sedeLocal: { backgroundColor: "#4CAF50" },
   sedeRappi: { backgroundColor: "#FF5722" },
   sedeEvento: { backgroundColor: "#2196F3" },
+  sedeOtra: { backgroundColor: "#e90000" },
 });
 
 export default VentasScreen;

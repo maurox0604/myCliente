@@ -1,32 +1,58 @@
 import { FontAwesome5 } from "@expo/vector-icons";
-import { useFocusEffect } from "@react-navigation/native";
-import { useCallback, useContext, useEffect, useRef, useState } from "react";
-import { Dimensions, Keyboard, View, Text, StyleSheet, Button, Alert, Pressable, TouchableOpacity } from "react-native";
+import { useContext, useState } from "react";
+import {
+  View,
+  Text,
+  StyleSheet,
+  Pressable,
+  Alert,
+  Platform,
+  ActivityIndicator,
+} from "react-native";
 import { ScrollView, TextInput } from "react-native-gesture-handler";
-import { useNavigation } from '@react-navigation/native';
 import { HeladosContext } from "../context/HeladosContext";
 
-export default function EditModalContent({ id, _icon, _sabor, _precio, _cantidad,   _id_categoria, closeEditModal }) {
-  const [focus, setFocus] = useState(false);
-  const [sabor, setSabor] = useState(_sabor);// Campo input
-  const [precio, setPrecio] = useState(_precio);// Campo input
-  const [cantidad, setCantidad] = useState(_cantidad);// Campo input
-  const { updateHeladoCantidad, handleSearch } = useContext(HeladosContext);
-  const [categoria, setCategoria] = useState(_id_categoria);
-  
-  // const bottomSheetModalRef = useRef(null);
-  const navigation = useNavigation();
-  // const [foto, setFoto] = useState("../assets/images/helados/Icon_App.png");// Campo Uri Foto
-  const [foto, setFoto] = useState(_icon);// Campo Uri Foto
+export default function EditModalContent({
+  id,
+  _icon,
+  _sabor,
+  _precio,
+  _cantidad,
+  _id_categoria,
+  closeEditModal,
+}) {
+  const [sabor, setSabor] = useState(_sabor ?? "");
+  const [precio, setPrecio] = useState(String(_precio ?? ""));
+  const [cantidad, setCantidad] = useState(String(_cantidad ?? ""));
+  const [foto, setFoto] = useState(_icon ?? "");
   const [isSaving, setIsSaving] = useState(false);
+  const [focusField, setFocusField] = useState(null);
+  const [guardadoOk, setGuardadoOk] = useState(false);
 
+  const { updateHeladoCantidad, handleSearch } = useContext(HeladosContext);
 
+  const showAlert = (title, msg) => {
+    if (Platform.OS === "web") window.alert(`${title}\n${msg}`);
+    else Alert.alert(title, msg);
+  };
 
   const actualizarHelado = async () => {
-    if (isSaving) return; // 🛑 protección extra
-    console.log(".......categoria, ", categoria)
+    if (isSaving) return;
+    if (!sabor.trim()) {
+      showAlert("Error", "El sabor no puede estar vacío");
+      return;
+    }
+    if (isNaN(Number(precio))) {
+      showAlert("Error", "El precio debe ser un número");
+      return;
+    }
+    if (isNaN(Number(cantidad))) {
+      showAlert("Error", "La cantidad debe ser un número");
+      return;
+    }
+
     try {
-      setIsSaving(true); // 🔒 bloquea el botón
+      setIsSaving(true);
 
       const response = await fetch(
         `${process.env.EXPO_PUBLIC_API_URL}/productos/update/${id}`,
@@ -34,222 +60,237 @@ export default function EditModalContent({ id, _icon, _sabor, _precio, _cantidad
           method: "PUT",
           headers: { "Content-Type": "application/json" },
           body: JSON.stringify({
-            nombre: sabor,
+            nombre: sabor.trim(),
             precio: Number(precio),
             cantidad: Number(cantidad),
             icon: foto,
-            id_categoria: categoria, // 🔴 OBLIGATORIO
+            id_categoria: _id_categoria,
           }),
-        }
+        },
       );
 
       if (!response.ok) {
         const errorText = await response.text();
-        throw new Error(`Error HTTP: ${response.status} - ${errorText}`);
+        throw new Error(`Error ${response.status}: ${errorText}`);
       }
-
-      const data = await response.json();
-      console.log("Datos actualizados: ", data);
 
       updateHeladoCantidad(id, Number(cantidad));
       handleSearch("");
-      closeEditModal();
 
+      // Mostrar confirmación brevemente antes de cerrar
+      setGuardadoOk(true);
+      setTimeout(() => {
+        setGuardadoOk(false);
+        closeEditModal();
+      }, 1200);
     } catch (error) {
-      console.error("Error al actualizar el helado:", error);
-      Alert.alert("Error", "No se pudo actualizar el helado");
+      console.error("Error al actualizar:", error);
+      showAlert("Error", "No se pudo guardar. Intenta de nuevo.");
     } finally {
-      setIsSaving(false); // 🔓 libera botón
+      setIsSaving(false);
     }
-};
+  };
 
-
-
-//   useFocusEffect(
-//   useCallback(() => {
-//     const timeout = setTimeout(() => {
-//       if (bottomSheetModalRef?.current) {
-//         bottomSheetModalRef.current.dismiss();
-//       } else {
-//         console.log("bottomSheetModalRef no está disponible aún.");
-//       }
-//     }, 100); // Retraso de 100ms, ajusta según sea necesario
-
-//     return () => {
-//       clearTimeout(timeout);
-//     };
-//   }, [])
-// );
-
-
+  const campos = [
+    {
+      key: "sabor",
+      label: "Sabor",
+      icon: "ice-cream",
+      value: sabor,
+      onChange: setSabor,
+      keyboardType: "default",
+      placeholder: "Nombre del sabor",
+    },
+    {
+      key: "precio",
+      label: "Precio",
+      icon: "dollar-sign",
+      value: precio,
+      onChange: setPrecio,
+      keyboardType: "numeric",
+      placeholder: "0",
+    },
+    {
+      key: "cantidad",
+      label: "Cantidad",
+      icon: "calculator",
+      value: cantidad,
+      onChange: setCantidad,
+      keyboardType: "numeric",
+      placeholder: "0",
+    },
+  ];
 
   return (
-    <View style={styles.contentContainer}>
-      <View style={styles.header}>
-        <Text style={[styles.title, { marginBottom: 20 }]}>Ingrese los nuevos datos del helado "SABOR, PRECIO, CANTIDAD"</Text>
-        <Button style={styles.closeButton} title="Close" onPress={closeEditModal} />
-        {/* <TouchableOpacity onPress={closeEditModal} style={styles.closeButton}>
-          <Text style={styles.closeButtonText}>X</Text>
-        </TouchableOpacity> */}
+    <View style={s.container}>
+      {/* HEADER */}
+      <View style={s.header}>
+        <Text style={s.titulo} numberOfLines={1}>
+          ✏️ Editar — {_sabor}
+        </Text>
+        <Pressable onPress={closeEditModal} style={s.btnCerrar}>
+          <Text style={s.btnCerrarTxt}>✕</Text>
+        </Pressable>
       </View>
-    
-      <ScrollView automaticallyAdjustKeyboardInsets={true}>
-      {/* ..............................sabor */}
-      <View style={styles.inputContainer}>
-        <View style={styles.campos}>
-          <FontAwesome5 style={styles.iconos} name="ice-cream" />
-          <TextInput
-            value={sabor}
-            onChangeText={setSabor}
-            onFocus={() => setFocus(true)}
-            onBlur={() => setFocus(false)}
-           // style={styles.containerTextInput}
-            style={[
-              styles.containerTextInput,
-              focus && { borderWidth: 3, borderColor: "gray" },
-            ]}
-            // placeholder={_sabor}
-          />
-        </View>
 
-        {/* ..............................Precio */}
-        <View style={styles.campos}>
-          <FontAwesome5 style={styles.iconos} name="dollar-sign" />
-          <TextInput
-            value={""+precio}
-            onChangeText={setPrecio}
-            onFocus={() => setFocus(true)}
-            onBlur={()  => setFocus(false)}
-            style={[
-              styles.containerTextInput,
-              focus && { borderWidth: 3, borderColor: "black" },
-            ]}
-            // placeholder={_precio}
-          />
-        </View>
+      <ScrollView
+        keyboardShouldPersistTaps="handled"
+        contentContainerStyle={{ paddingBottom: 40 }}
+      >
+        {/* CAMPOS */}
+        {campos.map((c) => (
+          <View key={c.key} style={s.campo}>
+            <Text style={s.label}>{c.label}</Text>
+            <View
+              style={[s.inputWrap, focusField === c.key && s.inputWrapFocus]}
+            >
+              <FontAwesome5
+                name={c.icon}
+                size={16}
+                color="#e91e63"
+                style={s.icon}
+              />
+              <TextInput
+                value={c.value}
+                onChangeText={c.onChange}
+                onFocus={() => setFocusField(c.key)}
+                onBlur={() => setFocusField(null)}
+                keyboardType={c.keyboardType}
+                placeholder={c.placeholder}
+                placeholderTextColor="#bbb"
+                style={s.input}
+              />
+            </View>
+          </View>
+        ))}
 
-        {/* ..............................Cantidad */}
-        <View style={styles.campos}>
-          <FontAwesome5 style={styles.iconos} name="calculator" />
-          <TextInput
-            value={""+cantidad}
-            onChangeText={setCantidad}
-            onFocus={() => setFocus(true)}
-            onBlur={() => setFocus(false)}
-            style={[
-              styles.containerTextInput,
-              focus && { borderWidth: 3, borderColor: "black" },
-            ]}
-            // placeholder={_cantidad}
-          />
-        </View>
-      </View>
-        
-      
-      {/* <TextInput
-        value={email}
-        onChangeText={(text) => setEmail(text.toLowerCase())}
-        // onFocus={() => setFocus(true)}
-        // onBlur={() => setFocus(false)}
-        keyboardType="email-address"
-        style={[
-          styles.input,
-          focus && { borderWidth: 3, borderColor: "black" },
-        ]}
-        placeholder="Enter your contact email"
-      /> */}
-      <Button
-        onPress={actualizarHelado}
-        title={isSaving ? "GUARDANDO..." : "GUARDAR"}
-        disabled={isSaving || sabor.length === 0}
-      />
+        {/* CONFIRMACIÓN */}
+        {guardadoOk && (
+          <View style={s.successBanner}>
+            <Text style={s.successTxt}>✅ ¡Guardado correctamente!</Text>
+          </View>
+        )}
+
+        {/* BOTÓN GUARDAR */}
+        <Pressable
+          onPress={actualizarHelado}
+          disabled={isSaving || !sabor.trim()}
+          style={[
+            s.btnGuardar,
+            (isSaving || !sabor.trim()) && s.btnGuardarDisabled,
+          ]}
+        >
+          {isSaving ? (
+            <ActivityIndicator color="#fff" />
+          ) : (
+            <Text style={s.btnGuardarTxt}>💾 Guardar cambios</Text>
+          )}
+        </Pressable>
       </ScrollView>
     </View>
   );
 }
 
-
-const windowWidth = Dimensions.get("window").width;
-const styles = StyleSheet.create({
-  contentContainer: {
+const s = StyleSheet.create({
+  container: {
     flex: 1,
-    paddingHorizontal: 15,
+    backgroundColor: "#fff",
+    borderTopLeftRadius: 20,
+    borderTopRightRadius: 20,
+  },
+  header: {
+    flexDirection: "row",
+    alignItems: "center",
+    justifyContent: "space-between",
+    paddingHorizontal: 20,
+    paddingVertical: 16,
+    borderBottomWidth: 0.5,
+    borderColor: "#eee",
+  },
+  titulo: {
+    fontSize: 16,
+    fontWeight: "700",
+    color: "#222",
+    flex: 1,
+    marginRight: 10,
+  },
+  btnCerrar: {
+    width: 32,
+    height: 32,
+    borderRadius: 16,
+    backgroundColor: "#f0f0f0",
+    alignItems: "center",
+    justifyContent: "center",
+  },
+  btnCerrarTxt: {
+    fontSize: 14,
+    fontWeight: "700",
+    color: "#555",
+  },
+  campo: {
+    marginHorizontal: 20,
+    marginTop: 16,
+  },
+  label: {
+    fontSize: 12,
+    fontWeight: "600",
+    color: "#888",
+    marginBottom: 6,
+    letterSpacing: 0.5,
+  },
+  inputWrap: {
+    flexDirection: "row",
+    alignItems: "center",
+    borderWidth: 1,
+    borderColor: "#e0e0e0",
+    borderRadius: 12,
+    backgroundColor: "#fafafa",
+    paddingHorizontal: 12,
+    height: 50,
+  },
+  inputWrapFocus: {
+    borderColor: "#e91e63",
+    backgroundColor: "#fff",
+  },
+  icon: {
+    marginRight: 10,
+    width: 20,
+    textAlign: "center",
   },
   input: {
-    borderWidth: 2,
-    borderColor: "#00000020",
-    padding: 15,
-    borderRadius: 15,
-    marginVertical: 15,
-  },
-  campos:{
     flex: 1,
-    flexDirection: "row",
-    justifyContent: "space-between",
-    alignItems:"center",
-    height:60,
-    padding: 10,
-    // borderRadius: 15,
-    marginBottom: 32,
-    backgroundColor: "white",
-    width:"100%",
-},
-
-iconos:{
-  display:"flex",
-  alignItems:"center",
-  justifyContent:"center",
-  color:"#e91e63", 
-  borderWidth:1,
-  borderColor:"#e91e63",
-  borderRadius:20,
-  padding:10,
-  width:"21%",
-  fontSize:24,
-
-  // backgroundColor="red" 
-},
-
-containerTextInput: {
-  width: windowWidth - 10,
-  borderWidth: 1,
-  borderRadius: 30,
-  minHeight: 45,
-  paddingHorizontal: 15,
-  paddingTop: 8,
-  fontSize: 16,
-  paddingVertical: 5,
-  borderColor: "lightgray",
-  backgroundColor: "#fff",
-  marginBottom: 5,
-  marginLeft:8,
-  fontWeight: "600",
-},
-
-  header: {
-    justifyContent: 'center',
-    alignItems: 'center',
-    position: 'relative',
+    fontSize: 16,
+    color: "#222",
+    fontWeight: "500",
   },
-  title: {
-    fontSize: 18,
-    fontWeight: 'bold',
-    flexShrink: 1,
-    marginRight: 40,
+  successBanner: {
+    marginHorizontal: 20,
+    marginTop: 16,
+    backgroundColor: "#e8f5e9",
+    borderRadius: 10,
+    padding: 12,
+    alignItems: "center",
   },
-  closeButton: {
-    position: 'absolute',
-    right: 0,
-    top: 0,
-    width: 30,
-    height: 30,
-    borderRadius: 15,
-    backgroundColor: '#ccc',
-    justifyContent: 'center',
-    alignItems: 'center',
+  successTxt: {
+    color: "#2e7d32",
+    fontWeight: "700",
+    fontSize: 14,
   },
-  closeButtonText: {
-    fontSize: 18,
-    fontWeight: 'bold',
+  btnGuardar: {
+    marginHorizontal: 20,
+    marginTop: 24,
+    backgroundColor: "#e91e63",
+    borderRadius: 14,
+    height: 52,
+    alignItems: "center",
+    justifyContent: "center",
+  },
+  btnGuardarDisabled: {
+    backgroundColor: "#ccc",
+  },
+  btnGuardarTxt: {
+    color: "#fff",
+    fontSize: 16,
+    fontWeight: "700",
   },
 });

@@ -1,15 +1,20 @@
 {
-    "buildCommand": "expo export -p web",
-    "outputDirectory": "dist",
-    "devCommand": "expo",
-    "cleanUrls": true,
-    "framework": null,
-    "rewrites": [
+  "buildCommand": "expo export -p web",
+  "outputDirectory": "dist",
+  "devCommand": "expo",
+  "cleanUrls": true,
+  "framework": null,
+  "rewrites": [
     {
-    "source": "/:path*",
-    "destination": "/"
+      "source": "/:path*",
+      "destination": "/"
     }
-]
+  ],
+  "redirects": [
+    {
+      "source": "/go",
+      "destination": "/public",
+      "permanent": false
+    }
+  ]
 }
-
-

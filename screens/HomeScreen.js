@@ -40,6 +40,13 @@ const BOTONES = [
     icon: "chart-pie",
     color: "#ffdded",
   },
+  {
+    label: "Crear producto",
+    screen: "MenuCrear",
+    icon: "plus-circle",
+    color: "#ffffff",
+  },
+  { label: "Sedes", screen: "SedesAdmin", icon: "store", color: "#ffffff" },
 ];
 
 export default function HomeScreen() {

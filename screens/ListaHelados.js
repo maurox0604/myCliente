@@ -115,6 +115,7 @@ export default function ListaHelados({ deletItem = false, editItem = false }) {
           style={isThreeColumns ? styles.contFlatListCol : styles.contFlatList}
           data={heladosPorCategoria}
           keyExtractor={(item) => item.id.toString()}
+          contentContainerStyle={{ paddingBottom: 90 }}
           ListHeaderComponent={
             <>
               {/*............................................. barra de búsqueda */}

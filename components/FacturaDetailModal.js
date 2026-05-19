@@ -13,14 +13,24 @@ import {
 } from "react-native";
 import { MaterialCommunityIcons } from "@expo/vector-icons";
 import { useVentas } from "../context/VentasContext";
+import { useSede } from "../context/SedeContext";
+
+// const SEDES = [
+//   { id: 1, nombre: "Local" },
+//   { id: 2, nombre: "Rappi" },
+//   { id: 3, nombre: "Eventosss" },
+// ];
+
+// export default function SelectorSedeModal({ onClose }) {
+//   const { sedeActiva, setSede, sedes } = useSede();
 
 const MOTIVOS = ["venta", "obsequio", "muestra", "derretido"];
 
-const SEDES = [
-  { id: 1, nombre: "Local" },
-  { id: 2, nombre: "Rappi" },
-  { id: 3, nombre: "Evento" },
-];
+// const SEDES = [
+//   { id: 1, nombre: "Local" },
+//   { id: 2, nombre: "Rappi" },
+//   { id: 3, nombre: "Evento" },
+// ];
 
 export default function FacturaDetailModal({
   visible,
@@ -30,6 +40,7 @@ export default function FacturaDetailModal({
 }) {
   const { editarFactura, cancelarFactura, editarItem, cancelarItem } =
     useVentas();
+  const { sedeActiva, setSede, sedes } = useSede();
 
   const [loading, setLoading] = useState(false);
 
@@ -210,7 +221,7 @@ export default function FacturaDetailModal({
 
                   <Text style={styles.editLabel}>Sede</Text>
                   <View style={styles.chipRow}>
-                    {SEDES.map((s) => (
+                    {sedes.map((s) => (
                       <TouchableOpacity
                         key={s.id}
                         style={[

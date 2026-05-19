@@ -13,6 +13,7 @@ import CrearProducto from "../screens/CreaHeladoScreen";
 import CrearCategoria from "../screens/CrearCategoria";
 import MenuCrear from "../screens/MenuCrear";
 import HeladosAdminScreen from "../screens/HeladosAdminScreen";
+import SedesAdminScreen from "../screens/SedesAdminScreen";
 
 // =======================
 // Tabs
@@ -87,10 +88,7 @@ export default function MainStack() {
           options={{ headerShown: false }}
         />
 
-        <Stack.Screen
-          name="HomeTabs"
-          options={{ headerShown: false }}
-        >
+        <Stack.Screen name="HomeTabs" options={{ headerShown: false }}>
           {() => (
             <HomeTabs
               openCartModal={openCartModal}
@@ -124,6 +122,11 @@ export default function MainStack() {
           options={{ title: "Administrar Productos" }}
         />
 
+        <Stack.Screen
+          name="SedesAdmin"
+          component={SedesAdminScreen}
+          options={{ title: "Gestión de Sedes" }}
+        />
       </Stack.Navigator>
 
       {/* ======================= */}
