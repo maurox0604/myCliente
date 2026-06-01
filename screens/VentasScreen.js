@@ -351,8 +351,16 @@ function VentasScreen() {
               <View style={styles.dateBlock}>
                 <View style={styles.dateLine}>
                   <Text style={styles.dateTitle}>
-                    {date} — ${totalDiaVentas.toLocaleString("es-CO")} ·{" "}
-                    {totalDiaCantidad} und
+                    {date}
+                    {rol === "superadmin" && (
+                      <Text>
+                        {" "}
+                        — ${totalDiaVentas.toLocaleString("es-CO")} ·{" "}
+                        {totalDiaCantidad} und
+                      </Text>
+                    )}
+                    {/* — ${totalDiaVentas.toLocaleString("es-CO")} ·{" "} */}
+                    {/* {totalDiaCantidad} und */}
                     {totalDiaNoVenta > 0 && (
                       <Text style={{ fontSize: 13, opacity: 0.8 }}>
                         {" "}
