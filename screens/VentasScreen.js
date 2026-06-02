@@ -28,6 +28,7 @@ if (Platform.OS === "web") {
 function VentasScreen() {
   const { ventas, loadVentasByDateRange, sortVentas } = useVentas();
   const { role } = useContext(AuthContext);
+
   useSede();
 
   const { width } = useWindowDimensions();
@@ -352,7 +353,7 @@ function VentasScreen() {
                 <View style={styles.dateLine}>
                   <Text style={styles.dateTitle}>
                     {date}
-                    {rol === "superadmin" && (
+                    {role === "superadmin" && (
                       <Text>
                         {" "}
                         — ${totalDiaVentas.toLocaleString("es-CO")} ·{" "}
