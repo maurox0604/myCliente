@@ -6,6 +6,7 @@ import {
   SafeAreaView,
   FlatList,
   Pressable,
+  Alert,
   ActivityIndicator,
 } from "react-native";
 import { StatusBar } from "expo-status-bar";
@@ -74,6 +75,14 @@ const CartModalContent = ({ closeModal }) => {
           }),
         },
       );
+
+      // ✅ Manejo de respuesta por falta de stock
+      if (res.status === 409) {
+        Alert.alert(
+          "Sin stock",
+          "Uno de los productos ya no tiene disponibilidad suficiente.",
+        );
+      }
 
       if (!response.ok) throw new Error(await response.text());
 

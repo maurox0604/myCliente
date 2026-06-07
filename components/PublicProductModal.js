@@ -16,7 +16,7 @@ import { usePublicCart } from "../context/PublicCartContext";
 export default function PublicProductModal({ visible, producto, onClose }) {
   const scale = useRef(new Animated.Value(0.92)).current;
   const opacity = useRef(new Animated.Value(0)).current;
-  const { addItem } = usePublicCart();
+  const { addItem, items } = usePublicCart();
   const { width } = useWindowDimensions();
 
   const [fotoActiva, setFotoActiva] = useState(0);
@@ -28,10 +28,23 @@ export default function PublicProductModal({ visible, producto, onClose }) {
       : [producto.icon]
     : [];
 
+  // ── Cuántas unidades de este producto ya están en el carrito
+  const enCarrito = producto
+    ? (items.find((i) => i.id === producto.id)?.cantidad ?? 0)
+    : 0;
+
+  // ── Cuántas quedan disponibles para agregar
+  const disponibleRestante = producto
+    ? Math.max(0, producto.cantidad - enCarrito)
+    : 0;
+
+  const agotado = producto?.cantidad === 0;
+  const sinRestante = disponibleRestante === 0 && !agotado; // stock hay pero el carrito lo tiene todo
+
   useEffect(() => {
     if (visible) {
       setFotoActiva(0);
-      setCantidad(1);
+      setCantidad(1); // siempre arranca en 1 (unidades NUEVAS a agregar)
       Animated.parallel([
         Animated.spring(scale, { toValue: 1, useNativeDriver: true }),
         Animated.timing(opacity, {
@@ -46,21 +59,38 @@ export default function PublicProductModal({ visible, producto, onClose }) {
     }
   }, [visible]);
 
+  useEffect(() => {
+    // Si al abrir el modal el disponibleRestante es menor que la cantidad seleccionada,
+    // ajustamos para no exceder
+    if (visible && cantidad > disponibleRestante) {
+      setCantidad(Math.max(1, disponibleRestante));
+    }
+  }, [visible, disponibleRestante]);
+
   if (!producto) return null;
 
-  const agotado = producto.cantidad === 0;
   const imageSize = Math.min(width - 80, 360);
 
   const handleAgregar = () => {
-    if (!agotado) {
-      addItem(producto, cantidad);
+    if (!agotado && disponibleRestante > 0) {
+      addItem(producto, cantidad, producto.cantidad);
       onClose();
     }
   };
 
   const decrementar = () => setCantidad((c) => Math.max(1, c - 1));
   const incrementar = () =>
-    setCantidad((c) => Math.min(producto.cantidad, c + 1));
+    setCantidad((c) => Math.min(disponibleRestante, c + 1));
+
+  // Etiqueta de stock para mostrar al usuario
+  const stockLabel = () => {
+    if (agotado) return "❌ Agotado";
+    if (sinRestante) return "🛒 Solo quedan estos disponibles";
+    if (enCarrito > 0) return `🛒 ${enCarrito} en carrito`; //· quedan ${disponibleRestante}`;
+    return `✅ Disponible`;
+  };
+
+  const bloqueado = agotado || sinRestante;
 
   return (
     <Modal
@@ -122,13 +152,19 @@ export default function PublicProductModal({ visible, producto, onClose }) {
               </ScrollView>
             )}
 
-            {/* Precio */}
+            {/* Precio + estado stock */}
             <View style={styles.priceRow}>
               <Text style={styles.price}>
                 ${Number(producto.precio).toLocaleString("es-CO")}
               </Text>
-              <Text style={styles.stock}>
-                {agotado ? "❌ Agotado" : "✅ Disponible"}
+              <Text
+                style={[
+                  styles.stock,
+                  sinRestante && styles.stockAgotado,
+                  enCarrito > 0 && !sinRestante && styles.stockEnCarrito,
+                ]}
+              >
+                {stockLabel()}
               </Text>
             </View>
 
@@ -143,20 +179,35 @@ export default function PublicProductModal({ visible, producto, onClose }) {
             {/* Selector cantidad */}
             <View style={styles.qtyRow}>
               <Pressable
-                style={[styles.qtyBtn, cantidad <= 1 && styles.qtyBtnDisabled]}
+                style={[
+                  styles.qtyBtn,
+                  (cantidad <= 1 || bloqueado) && styles.qtyBtnDisabled,
+                ]}
                 onPress={decrementar}
-                disabled={cantidad <= 1}
+                disabled={cantidad <= 1 || bloqueado}
               >
                 <Text style={styles.qtyBtnText}>−</Text>
               </Pressable>
-              <Text style={styles.qtyValue}>{cantidad}</Text>
+
+              {/* Muestra: en carrito + nuevos a agregar */}
+              <View style={styles.qtyCenter}>
+                {/* {enCarrito > 0 &&
+                  {
+                     <Text style={styles.qtyCarrito}>🛒 {enCarrito}</Text> 
+                  }} */}
+                <Text style={styles.qtyValue}>
+                  {bloqueado ? "—" : `${cantidad}`}
+                </Text>
+              </View>
+
               <Pressable
                 style={[
                   styles.qtyBtn,
-                  cantidad >= producto.cantidad && styles.qtyBtnDisabled,
+                  (cantidad >= disponibleRestante || bloqueado) &&
+                    styles.qtyBtnDisabled,
                 ]}
                 onPress={incrementar}
-                disabled={cantidad >= producto.cantidad}
+                disabled={cantidad >= disponibleRestante || bloqueado}
               >
                 <Text style={styles.qtyBtnText}>+</Text>
               </Pressable>
@@ -164,14 +215,16 @@ export default function PublicProductModal({ visible, producto, onClose }) {
 
             {/* Botón agregar */}
             <Pressable
-              style={[styles.addBtn, agotado && styles.addBtnDisabled]}
+              style={[styles.addBtn, bloqueado && styles.addBtnDisabled]}
               onPress={handleAgregar}
-              disabled={agotado}
+              disabled={bloqueado}
             >
               <Text style={styles.addBtnText}>
                 {agotado
                   ? "AGOTADO"
-                  : `AGREGAR  $${(Number(producto.precio) * cantidad).toLocaleString("es-CO")}`}
+                  : sinRestante
+                    ? "YA ESTÁ EN EL CARRITO"
+                    : `AGREGAR  $${(Number(producto.precio) * cantidad).toLocaleString("es-CO")}`}
               </Text>
             </Pressable>
           </View>
@@ -223,10 +276,7 @@ const styles = StyleSheet.create({
   },
   closeText: { fontSize: 16, color: "#555", fontWeight: "700" },
 
-  mainImageWrapper: {
-    width: "100%",
-    backgroundColor: "#f8f0f4",
-  },
+  mainImageWrapper: { width: "100%", backgroundColor: "#f8f0f4" },
   mainImage: { width: "100%", height: "100%" },
 
   thumbsRow: {
@@ -253,9 +303,13 @@ const styles = StyleSheet.create({
     paddingHorizontal: 20,
     paddingTop: 12,
     paddingBottom: 4,
+    flexWrap: "wrap",
+    gap: 4,
   },
   price: { fontSize: 24, fontWeight: "900", color: "#e91e63" },
-  stock: { fontSize: 13, color: "#555", fontWeight: "600" },
+  stock: { fontSize: 12, color: "#555", fontWeight: "600" },
+  stockAgotado: { color: "#d32f2f" },
+  stockEnCarrito: { color: "#e91e63" },
 
   descripcion: {
     fontSize: 14,
@@ -297,13 +351,24 @@ const styles = StyleSheet.create({
     shadowRadius: 4,
     elevation: 2,
   },
-  qtyBtnDisabled: { opacity: 0.35 },
+  qtyBtnDisabled: { opacity: 0.3 },
   qtyBtnText: { fontSize: 20, fontWeight: "700", color: "#1a1a1a" },
+
+  // Centro del selector — muestra carrito + nuevos
+  qtyCenter: {
+    alignItems: "center",
+    minWidth: 48,
+  },
+  qtyCarrito: {
+    fontSize: 10,
+    color: "#e91e63",
+    fontWeight: "700",
+    marginBottom: 1,
+  },
   qtyValue: {
     fontSize: 17,
     fontWeight: "800",
     color: "#1a1a1a",
-    minWidth: 28,
     textAlign: "center",
   },
 
@@ -314,12 +379,15 @@ const styles = StyleSheet.create({
     paddingVertical: 14,
     borderRadius: 14,
     alignItems: "center",
+    justifyContent: "center",
+    textAlign: "center",
   },
-  addBtnDisabled: { backgroundColor: "#ccc" },
+  addBtnDisabled: { backgroundColor: "#bbb" },
   addBtnText: {
     color: "#fff",
-    fontSize: 14,
+    fontSize: 13,
     fontWeight: "900",
     letterSpacing: 0.5,
+    textAlign: "center",
   },
 });

@@ -18,6 +18,8 @@ const getToken = async () => {
 
 const API = process.env.EXPO_PUBLIC_API_URL;
 
+// ─────────────────────────────────────────────
+// NUEVO: Cargar ventas por rango de fechas
 export const VentasContextProvider = ({ children }) => {
   const [ventas, setVentas] = useState([]);
   const [modoVenta, setModoVenta] = useState("normal");
@@ -72,6 +74,7 @@ export const VentasContextProvider = ({ children }) => {
     }
   };
 
+  // Función para ordenar ventas por fecha o cantidad total
   const sortVentas = (criterion) => {
     const sortedVentas = [...ventas];
     if (criterion === "fecha") {
