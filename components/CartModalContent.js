@@ -77,13 +77,16 @@ const CartModalContent = ({ closeModal }) => {
       );
 
       // ✅ Manejo de respuesta por falta de stock
-      if (res.status === 409) {
+      // ✅ Primero verificar 409 específicamente
+      if (response.status === 409) {
         Alert.alert(
-          "Sin stock",
+          "Sin stock 😔",
           "Uno de los productos ya no tiene disponibilidad suficiente.",
         );
+        return; // salir sin lanzar error
       }
 
+      // Luego el resto de errores
       if (!response.ok) throw new Error(await response.text());
 
       clearCart();
