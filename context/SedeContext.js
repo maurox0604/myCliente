@@ -1,38 +1,37 @@
 import { createContext, useContext, useState, useEffect } from "react";
+import { useBootstrap } from "./BootstrapContext";
 
 const SedeContext = createContext();
 
 export function SedeProvider({ children }) {
+  const { bootstrapData } = useBootstrap();
+
   const [sedes, setSedes] = useState([]);
   const [sedeActiva, setSedeActiva] = useState(null);
   const sedePrincipal = "Local";
 
+  // ── Cuando el bootstrap termina, inicializar sedes ──────────────────────
   useEffect(() => {
-    fetch(`${process.env.EXPO_PUBLIC_API_URL}/sedes`)
-      .then((res) => res.json())
-      .then((data) => {
-        setSedes(data);
-        // Buscar la sede que se llama "Local"
-        const sedeLocal = data.find((sede) => sede.nombre === sedePrincipal);
+    if (!bootstrapData?.sedes?.length) return;
 
-        // Si existe "Local" la uso, sino uso la primera
-        setSedeActiva(sedeLocal || data[0]); // default
-      });
-  }, []);
+    const data = bootstrapData.sedes;
+    setSedes(data);
 
+    // Respetar la selección activa si el usuario ya eligió una sede
+    if (sedeActiva) return;
+
+    const sedeLocal = data.find((s) => s.nombre === sedePrincipal);
+    setSedeActiva(sedeLocal || data[0]);
+  }, [bootstrapData]);
+
+  // ── Cambio manual de sede ────────────────────────────────────────────────
   const cambiarSede = (sede) => {
     setSedeActiva(sede);
-    console.log("SEDE activa: ", sede);
+    console.log("SEDE activa:", sede);
   };
 
   return (
-    <SedeContext.Provider
-      value={{
-        sedes,
-        sedeActiva,
-        cambiarSede,
-      }}
-    >
+    <SedeContext.Provider value={{ sedes, sedeActiva, cambiarSede }}>
       {children}
     </SedeContext.Provider>
   );

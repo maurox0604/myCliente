@@ -1,114 +1,53 @@
-
-import { StyleSheet, Text, View, FlatList, SafeAreaView, Image } from "react-native"; 
-import React from "react";
-import Navigation from "./Navigation";
-import { CartModalProvider } from "./context/CartModalContext";
-import { DbaseProvider } from "./context/DbaseContext";
-import { BlurView } from "expo-blur";
-
-import {LogBox} from 'react-native';
+import { StyleSheet } from "react-native";
 import { GestureHandlerRootView } from "react-native-gesture-handler";
-import { VentaContext, VentasContextProvider } from "./context/VentasContext";
-import { Dimensions } from "react-native";
+import { LogBox } from "react-native";
+
+import Navigation from "./Navigation";
 import { AuthProvider } from "./context/AuthContext";
-import { HeladosProvider } from "./context/HeladosContext";
-import { ReportesProvider } from "./context/ReportesContext";
-import { CategoriasProvider } from "./context/CategoriasContext";
+import { BootstrapProvider } from "./context/BootstrapContext";
 import { SedeProvider } from "./context/SedeContext";
+import { CategoriasProvider } from "./context/CategoriasContext";
+import { HeladosProvider } from "./context/HeladosContext";
+import { VentasContextProvider } from "./context/VentasContext";
+import { ReportesProvider } from "./context/ReportesContext";
+import { DbaseProvider } from "./context/DbaseContext";
+import { CartModalProvider } from "./context/CartModalContext";
 
-const uri = 'https://my-cliente.vercel.app/assets/assets/images/LogoQueen.4b364def9b5acb1851859bc949d7163f.png';
-
-// Ignore log notification by message
-LogBox.ignoreLogs([
-  // Exact message
-  'Warning: componentWillReceiveProps has been renamed',
-
-  // Substring or regex match
-  /GraphQL error: .*/,
-]);
-
-// Ignore all log notifications
 LogBox.ignoreAllLogs();
-// const screenWidth = Dimensions.get("window").width;
+
 export default function App() {
-    
-    if (!global.__fetchWrapped) {
-        global.__fetchWrapped = true;
-
-        const originalFetch = global.fetch;
-        let counter = 0;
-
-        global.fetch = async (...args) => {
-            counter++;
-            console.log(`🌐 FETCH #${counter}:`, args[0]);
-            return originalFetch(...args);
-        };
-    }
-
-    
-    const funMsg = function FunciMSG (){
-        return (console.log("Esat es una prueba"));
-    }
-
-// function HomeScreen() {
-//     return (
-//     <View style={styles.container}>
-//             <Image source={{uri}} style={[styles.image, StyleSheet.absoluteFill]} />
-//     </View>
-//     )
-// }
-
-    return (
-        
-        <GestureHandlerRootView >
-            <AuthProvider>
-                <SedeProvider>
-                    <ReportesProvider>
-                        <CategoriasProvider>
-                            <HeladosProvider>
-                                <VentasContextProvider>
-                                    
-                                        <DbaseProvider>
-                                            <CartModalProvider>
-                                                <Navigation style={styles.container}/>
-                                            </CartModalProvider>
-                                        </DbaseProvider>
-                                    
-                                </VentasContextProvider>
-                            </HeladosProvider>
-                        </CategoriasProvider>
-                    </ReportesProvider>
-                </SedeProvider>
-            </AuthProvider>
-        </GestureHandlerRootView>
-    )
+  return (
+    <GestureHandlerRootView style={{ flex: 1 }}>
+      <AuthProvider>
+        {/*
+          BootstrapProvider hace UN solo fetch con productos + categorías + sedes.
+          Los tres providers de abajo leen de ese resultado — no disparan
+          fetches propios al arrancar, lo que evita saturar Clever Cloud.
+        */}
+        <BootstrapProvider>
+          <SedeProvider>
+            <ReportesProvider>
+              <CategoriasProvider>
+                <HeladosProvider>
+                  <VentasContextProvider>
+                    <DbaseProvider>
+                      <CartModalProvider>
+                        <Navigation style={styles.container} />
+                      </CartModalProvider>
+                    </DbaseProvider>
+                  </VentasContextProvider>
+                </HeladosProvider>
+              </CategoriasProvider>
+            </ReportesProvider>
+          </SedeProvider>
+        </BootstrapProvider>
+      </AuthProvider>
+    </GestureHandlerRootView>
+  );
 }
 
 const styles = StyleSheet.create({
-    container: {
-        // flexWrap: 'wrap',
-        flex: 1,
-        backgroundColor: "#f00",
-        alignItems: "center",
-        justifyContent : "center",
-        fontWeight: "400",
-        fontSize: 29,
-        // width:screenWidth,
-        marginTop: 40,
-        overflow: 'hidden',
-        width: "80%",
-    },
-    contentContainerStyle: {
-        padding: 18,
-    },
-    title: {
-        fontWeight: "800",
-        fontSize: 28,
-        marginBottom: 15,
-    },
-    image: {
-        width: "100%",
-        height: "100%",
-        resizeMode: "cover",
-    },
+  container: {
+    flex: 1,
+  },
 });

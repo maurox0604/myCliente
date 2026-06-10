@@ -1,68 +1,50 @@
 import React, { createContext, useState, useEffect } from "react";
 import {
-  getAuth,
   onAuthStateChanged,
   signInWithEmailAndPassword,
   signOut,
 } from "firebase/auth";
-// import { firebaseConfig } from '../firebase-config.js';
-// import { initializeApp } from "firebase/app";
-import { auth } from "../firebase-config.js"; // ✅ importa el auth ya inicializado
+import { auth } from "../firebase-config.js";
 import axios from "axios";
-// import app from '../firebase-config.js';
 
 const AuthContext = createContext();
-// const app = initializeApp(firebaseConfig);
-// const auth = getAuth(app);
 
 const AuthProvider = ({ children }) => {
-  const [user, setUser] = useState(null); // Datos básicos del usuario
-  const [role, setRole] = useState(null); // Rol del usuario
-  const [emailUser, setEmailUser] = useState(null); // Email del usuario
-  const [loading, setLoading] = useState(true); // Estado de carga
-
-  const authContextValue = {
-    emailUser, // Este es el valor que usarás con `useContext`
-    setEmailUser,
-  };
+  const [user, setUser] = useState(null);
+  const [role, setRole] = useState(null);
+  const [emailUser, setEmailUser] = useState(null);
+  const [loading, setLoading] = useState(true);
 
   useEffect(() => {
     const unsubscribe = onAuthStateChanged(auth, async (currentUser) => {
       if (currentUser) {
         setUser(currentUser);
-        console.log("******User: ", currentUser);
-        console.log("Current user email:", currentUser.email);
-
         setEmailUser(currentUser.email);
-        console.log("👉 API URL para roles:", process.env.EXPO_PUBLIC_API_URL);
 
-        // Obtener el rol desde la base de datos
         try {
-          const token = await currentUser.getIdToken();
+          // ✅ getIdToken(true) fuerza refresh — evita el 401 en arranque frío
+          const token = await currentUser.getIdToken(true);
 
-          // const response = await axios.post(`${process.env.EXPO_PUBLIC_API_URL}/users/getUserRole`, {
-
-          //     email: currentUser.email, // Enviar el email en el cuerpo de la solicitud
-          // });
           const response = await axios.get(
             `${process.env.EXPO_PUBLIC_API_URL}/users/me/role`,
-            {
-              headers: {
-                Authorization: `Bearer ${token}`,
-              },
-            },
+            { headers: { Authorization: `Bearer ${token}` } },
           );
 
-          setRole(response.data.rol); // Asignar el rol recibido
+          setRole(response.data.rol);
         } catch (error) {
-          console.error("Error fetching user role:", error);
+          console.error("Error fetching user role:", error.message);
+          // No desloguear al usuario por un error de red — solo dejar role en null
+          // El RootNavigator mostrará pantalla de error o reintentará
         }
       } else {
         setUser(null);
         setRole(null);
+        setEmailUser(null);
       }
+
       setLoading(false);
     });
+
     return () => unsubscribe();
   }, []);
 
@@ -76,15 +58,7 @@ const AuthProvider = ({ children }) => {
 
   return (
     <AuthContext.Provider
-      value={{
-        user,
-        role,
-        authContextValue,
-        emailUser,
-        loading,
-        login,
-        logout,
-      }}
+      value={{ user, role, emailUser, loading, login, logout }}
     >
       {children}
     </AuthContext.Provider>
