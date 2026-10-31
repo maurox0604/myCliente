@@ -1,7 +1,13 @@
 // components/costeo/IngredientesTab.js
 import {
-  View, Text, FlatList, Pressable, StyleSheet,
-  TextInput, Alert, Modal,
+  View,
+  Text,
+  FlatList,
+  Pressable,
+  StyleSheet,
+  TextInput,
+  Alert,
+  Modal,
 } from "react-native";
 import { useState } from "react";
 import { useCosteo } from "../../context/CosteoContext";
@@ -11,34 +17,45 @@ const EMPTY = { nombre: "", unidad: "gr", precio_unidad: "", proveedor: "" };
 
 export default function IngredientesTab() {
   const { ingredientes, guardarIngrediente, borrarIngrediente } = useCosteo();
-  const [modal, setModal]   = useState(false);
-  const [form, setForm]     = useState(EMPTY);
+  const [modal, setModal] = useState(false);
+  const [form, setForm] = useState(EMPTY);
   const [editId, setEditId] = useState(null);
 
   const abrir = (item = null) => {
     setEditId(item?.id ?? null);
-    setForm(item
-      ? { nombre: item.nombre, unidad: item.unidad,
-          precio_unidad: String(item.precio_unidad), proveedor: item.proveedor ?? "" }
-      : EMPTY
+    setForm(
+      item
+        ? {
+            nombre: item.nombre,
+            unidad: item.unidad,
+            precio_unidad: String(item.precio_unidad),
+            proveedor: item.proveedor ?? "",
+          }
+        : EMPTY,
     );
     setModal(true);
   };
 
   const guardar = async () => {
     if (!form.nombre.trim()) return Alert.alert("Nombre requerido");
-    await guardarIngrediente({
-      ...form,
-      precio_unidad: Number(form.precio_unidad) || 0,
-    }, editId);
+    await guardarIngrediente(
+      {
+        ...form,
+        precio_unidad: Number(form.precio_unidad) || 0,
+      },
+      editId,
+    );
     setModal(false);
   };
 
   const borrar = (item) =>
     Alert.alert("Eliminar", `¿Eliminar ${item.nombre}?`, [
       { text: "Cancelar", style: "cancel" },
-      { text: "Eliminar", style: "destructive",
-        onPress: () => borrarIngrediente(item.id) },
+      {
+        text: "Eliminar",
+        style: "destructive",
+        onPress: () => borrarIngrediente(item.id),
+      },
     ]);
 
   return (
@@ -70,35 +87,59 @@ export default function IngredientesTab() {
         )}
       />
 
-      <Modal visible={modal} transparent animationType="fade" onRequestClose={() => setModal(false)}>
+      <Modal
+        visible={modal}
+        transparent
+        animationType="fade"
+        onRequestClose={() => setModal(false)}
+      >
         <View style={s.overlay}>
           <View style={s.modalBox}>
-            <Text style={s.modalTitle}>{editId ? "Editar" : "Nuevo"} ingrediente</Text>
+            <Text style={s.modalTitle}>
+              {editId ? "Editar" : "Nuevo"} ingrediente
+            </Text>
 
             <Text style={s.label}>Nombre</Text>
-            <TextInput style={s.input} value={form.nombre}
-              onChangeText={v => setForm(f => ({ ...f, nombre: v }))} placeholder="ej: Leche en polvo" />
+            <TextInput
+              style={s.input}
+              value={form.nombre}
+              onChangeText={(v) => setForm((f) => ({ ...f, nombre: v }))}
+              placeholder="ej: Leche en polvo"
+            />
 
             <Text style={s.label}>Unidad</Text>
             <View style={s.chipRow}>
-              {UNIDADES.map(u => (
-                <Pressable key={u}
+              {UNIDADES.map((u) => (
+                <Pressable
+                  key={u}
                   style={[s.chip, form.unidad === u && s.chipActivo]}
-                  onPress={() => setForm(f => ({ ...f, unidad: u }))}
+                  onPress={() => setForm((f) => ({ ...f, unidad: u }))}
                 >
-                  <Text style={[s.chipText, form.unidad === u && s.chipTextActivo]}>{u}</Text>
+                  <Text
+                    style={[s.chipText, form.unidad === u && s.chipTextActivo]}
+                  >
+                    {u}
+                  </Text>
                 </Pressable>
               ))}
             </View>
 
             <Text style={s.label}>Precio por {form.unidad}</Text>
-            <TextInput style={s.input} value={form.precio_unidad}
-              onChangeText={v => setForm(f => ({ ...f, precio_unidad: v }))}
-              keyboardType="numeric" placeholder="0.0000" />
+            <TextInput
+              style={s.input}
+              value={form.precio_unidad}
+              onChangeText={(v) => setForm((f) => ({ ...f, precio_unidad: v }))}
+              keyboardType="numeric"
+              placeholder="0.0000"
+            />
 
             <Text style={s.label}>Proveedor (opcional)</Text>
-            <TextInput style={s.input} value={form.proveedor}
-              onChangeText={v => setForm(f => ({ ...f, proveedor: v }))} placeholder="ej: Lácteos del Valle" />
+            <TextInput
+              style={s.input}
+              value={form.proveedor}
+              onChangeText={(v) => setForm((f) => ({ ...f, proveedor: v }))}
+              placeholder="ej: Lácteos del Valle"
+            />
 
             <View style={s.modalBtns}>
               <Pressable style={s.cancelBtn} onPress={() => setModal(false)}>
@@ -118,36 +159,71 @@ export default function IngredientesTab() {
 const s = StyleSheet.create({
   container: { flex: 1 },
   addBtn: {
-    margin: 12, backgroundColor: "#e91e63", borderRadius: 10,
-    paddingVertical: 12, alignItems: "center",
+    margin: 12,
+    backgroundColor: "#e91e63",
+    borderRadius: 10,
+    paddingVertical: 12,
+    alignItems: "center",
   },
   addBtnText: { color: "#fff", fontWeight: "700", fontSize: 14 },
   card: {
-    backgroundColor: "#fff", borderRadius: 12, padding: 14,
-    flexDirection: "row", alignItems: "center",
-    shadowColor: "#000", shadowOpacity: 0.05, shadowRadius: 3, elevation: 2,
+    backgroundColor: "#fff",
+    borderRadius: 12,
+    padding: 14,
+    flexDirection: "row",
+    alignItems: "center",
+    shadowColor: "#000",
+    shadowOpacity: 0.05,
+    shadowRadius: 3,
+    elevation: 2,
   },
-  nombre:  { fontSize: 14, fontWeight: "700", color: "#1a1a1a" },
+  nombre: { fontSize: 14, fontWeight: "700", color: "#1a1a1a" },
   detalle: { fontSize: 12, color: "#777", marginTop: 2 },
   editBtn: { padding: 6 },
   editBtnText: { fontSize: 18 },
 
-  overlay: { flex: 1, backgroundColor: "rgba(0,0,0,0.5)", justifyContent: "center", padding: 20 },
+  overlay: {
+    flex: 1,
+    backgroundColor: "rgba(0,0,0,0.5)",
+    justifyContent: "center",
+    padding: 20,
+  },
   modalBox: { backgroundColor: "#fff", borderRadius: 20, padding: 20, gap: 6 },
   modalTitle: { fontSize: 17, fontWeight: "800", marginBottom: 8 },
   label: { fontSize: 12, color: "#666", fontWeight: "600", marginTop: 8 },
   input: {
-    borderWidth: 1, borderColor: "#ddd", borderRadius: 10,
-    padding: 10, fontSize: 14, backgroundColor: "#fafafa",
+    borderWidth: 1,
+    borderColor: "#ddd",
+    borderRadius: 10,
+    padding: 10,
+    fontSize: 14,
+    backgroundColor: "#fafafa",
   },
   chipRow: { flexDirection: "row", gap: 8, marginTop: 4 },
-  chip: { paddingHorizontal: 16, paddingVertical: 8, borderRadius: 20, backgroundColor: "#f0f0f0" },
+  chip: {
+    paddingHorizontal: 16,
+    paddingVertical: 8,
+    borderRadius: 20,
+    backgroundColor: "#f0f0f0",
+  },
   chipActivo: { backgroundColor: "#fce4ec" },
   chipText: { fontSize: 13, color: "#666" },
   chipTextActivo: { color: "#e91e63", fontWeight: "700" },
   modalBtns: { flexDirection: "row", gap: 10, marginTop: 16 },
-  cancelBtn: { flex: 1, padding: 12, borderRadius: 10, backgroundColor: "#f5f5f5", alignItems: "center" },
+  cancelBtn: {
+    flex: 1,
+    padding: 12,
+    borderRadius: 10,
+    backgroundColor: "#f5f5f5",
+    alignItems: "center",
+  },
   cancelBtnText: { color: "#666", fontWeight: "600" },
-  saveBtn: { flex: 1, padding: 12, borderRadius: 10, backgroundColor: "#e91e63", alignItems: "center" },
+  saveBtn: {
+    flex: 1,
+    padding: 12,
+    borderRadius: 10,
+    backgroundColor: "#e91e63",
+    alignItems: "center",
+  },
   saveBtnText: { color: "#fff", fontWeight: "700" },
 });
