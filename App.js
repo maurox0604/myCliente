@@ -12,6 +12,7 @@ import { VentasContextProvider } from "./context/VentasContext";
 import { ReportesProvider } from "./context/ReportesContext";
 import { DbaseProvider } from "./context/DbaseContext";
 import { CartModalProvider } from "./context/CartModalContext";
+import { CosteoProvider } from "./context/CosteoContext";
 
 LogBox.ignoreAllLogs();
 
@@ -32,7 +33,9 @@ export default function App() {
                   <VentasContextProvider>
                     <DbaseProvider>
                       <CartModalProvider>
-                        <Navigation style={styles.container} />
+                        <CosteoProvider>
+                          <Navigation style={styles.container} />
+                        </CosteoProvider>
                       </CartModalProvider>
                     </DbaseProvider>
                   </VentasContextProvider>
