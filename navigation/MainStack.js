@@ -14,6 +14,7 @@ import CrearCategoria from "../screens/CrearCategoria";
 import MenuCrear from "../screens/MenuCrear";
 import HeladosAdminScreen from "../screens/HeladosAdminScreen";
 import SedesAdminScreen from "../screens/SedesAdminScreen";
+import CosteoScreen from "../screens/CosteoScreen";
 
 // =======================
 // Tabs
@@ -75,19 +76,16 @@ export default function MainStack() {
           component={Welcome}
           options={{ headerShown: false }}
         />
-
         <Stack.Screen
           name="RegisterScreen"
           component={RegisterScreen}
           options={{ headerShown: false }}
         />
-
         <Stack.Screen
           name="LoginScreen"
           component={LoginScreen}
           options={{ headerShown: false }}
         />
-
         <Stack.Screen name="HomeTabs" options={{ headerShown: false }}>
           {() => (
             <HomeTabs
@@ -97,35 +95,36 @@ export default function MainStack() {
             />
           )}
         </Stack.Screen>
-
         <Stack.Screen
           name="MenuCrear"
           component={MenuCrear}
           options={{ title: "Agregar" }}
         />
-
         <Stack.Screen
           name="CrearCategoria"
           component={CrearCategoria}
           options={{ title: "Nueva Categoría" }}
         />
-
         <Stack.Screen
           name="CrearProducto"
           component={CrearProducto}
           options={{ title: "Nuevo Producto" }}
         />
-
         <Stack.Screen
           name="HeladosAdmin"
           component={HeladosAdminScreen}
           options={{ title: "Administrar Productos" }}
         />
-
         <Stack.Screen
           name="SedesAdmin"
           component={SedesAdminScreen}
           options={{ title: "Gestión de Sedes" }}
+        />
+
+        <Stack.Screen
+          name="Costeo"
+          component={CosteoScreen}
+          options={{ headerShown: false }}
         />
       </Stack.Navigator>
 

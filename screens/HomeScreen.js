@@ -14,7 +14,10 @@ import { MaterialCommunityIcons } from "@expo/vector-icons";
 import { AuthContext } from "../context/AuthContext";
 import HomeFondo from "../assets/images/HomeFondo.png";
 
-const BOTONES = [
+// Reemplaza la línea:
+
+// const BOTONES = role === "admin" ? BOTONES_ADMIN : BOTONES_BASE;
+const BOTONES_BASE = [
   { label: "Sabores", screen: "Sabores", icon: "ice-cream", color: "#ffffff" },
   {
     label: "Editar helados",
@@ -49,9 +52,20 @@ const BOTONES = [
   { label: "Sedes", screen: "SedesAdmin", icon: "store", color: "#ffffff" },
 ];
 
+const BOTONES_ADMIN = [
+  { label: "Costeo", screen: "Costeo", icon: "calculator", color: "#fce4ec" },
+];
+
 export default function HomeScreen() {
   const navigation = useNavigation();
   const { role } = useContext(AuthContext);
+
+  const BOTONES = [
+    ...BOTONES_BASE,
+    ...(["admin", "contador", "superadmin"].includes(role)
+      ? BOTONES_ADMIN
+      : []),
+  ];
 
   return (
     <SafeAreaView style={styles.safe}>
@@ -72,7 +86,7 @@ export default function HomeScreen() {
 
         {/* Grid de botones principales */}
         <View style={styles.grid}>
-          {BOTONES.map((b) => (
+          {/* {BOTONES.map((b) => (
             <TouchableOpacity
               key={b.screen}
               style={[styles.boton, { borderColor: b.color }]}
@@ -84,7 +98,8 @@ export default function HomeScreen() {
                 {b.label}
               </Text>
             </TouchableOpacity>
-          ))}
+          ))} */}
+          BOTONES = [...]
         </View>
 
         {/* Botón Dashboard — solo superadmin */}
@@ -128,7 +143,7 @@ const styles = StyleSheet.create({
     justifyContent: "center",
     alignItems: "center",
     paddingHorizontal: 24,
-    paddingBottom: 100, // espacio para la tab bar flotante
+    paddingBottom: 120, // espacio para la tab bar flotante
   },
 
   header: {

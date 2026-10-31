@@ -276,7 +276,11 @@ const styles = StyleSheet.create({
   },
   closeText: { fontSize: 16, color: "#555", fontWeight: "700" },
 
-  mainImageWrapper: { width: "100%", backgroundColor: "#f8f0f4" },
+  mainImageWrapper: {
+    width: "100%",
+    backgroundColor: "#f8f0f4",
+    bacgroundsize: "contain",
+  },
   mainImage: { width: "100%", height: "100%" },
 
   thumbsRow: {

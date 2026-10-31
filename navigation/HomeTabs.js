@@ -21,6 +21,7 @@ import HeladosAdminScreen from "../screens/HeladosAdminScreen";
 import DashboardScreen from "../screens/DashboardScreen";
 import SedeSelectorHeader from "../components/SedeSelectorHeader";
 import { CartContext } from "../context/CartContext";
+import CosteoScreen from "../screens/CosteoScreen";
 
 const Tab = createBottomTabNavigator();
 
@@ -172,7 +173,6 @@ export default function HomeTabs({
           tabBarButton: () => null, // Oculta el botón del tab bar
         }}
       />
-
       {/* REPORTES */}
       <Tab.Screen
         name="Reportes"
@@ -188,7 +188,6 @@ export default function HomeTabs({
           ),
         }}
       />
-
       {/* HELADOS ADMIN */}
       <Tab.Screen
         name="HeladosAdmin"
@@ -203,6 +202,15 @@ export default function HomeTabs({
             />
           ),
           tabBarButton: () => null, // Oculta el botón del tab bar, solo accesible desde HomeScreen
+        }}
+      />
+
+      {/* COSTEO */}
+      <Tab.Screen
+        name="Costeo"
+        component={CosteoScreen}
+        options={{
+          tabBarButton: () => null, // oculto en tab bar, solo accesible desde HomeScreen
         }}
       />
 
