@@ -86,7 +86,7 @@ export default function HomeScreen() {
 
         {/* Grid de botones principales */}
         <View style={styles.grid}>
-          {/* {BOTONES.map((b) => (
+          {BOTONES.map((b) => (
             <TouchableOpacity
               key={b.screen}
               style={[styles.boton, { borderColor: b.color }]}
@@ -98,8 +98,7 @@ export default function HomeScreen() {
                 {b.label}
               </Text>
             </TouchableOpacity>
-          ))} */}
-          BOTONES = [...]
+          ))}
         </View>
 
         {/* Botón Dashboard — solo superadmin */}
