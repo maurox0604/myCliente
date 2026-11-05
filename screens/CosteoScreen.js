@@ -1,21 +1,28 @@
 // screens/CosteoScreen.js
-// Pantalla raíz del módulo — tabs: Ingredientes | Bases | Packaging | Costos Fijos | Recetas
-import { View, Text, Pressable, StyleSheet, ActivityIndicator } from "react-native";
+import {
+  View,
+  Text,
+  Pressable,
+  StyleSheet,
+  ActivityIndicator,
+} from "react-native";
 import { useEffect, useState } from "react";
 import { useCosteo } from "../context/CosteoContext";
 
-import IngredientesTab  from "../components/costeo/IngredientesTab";
-import BasesTab         from "../components/costeo/BasesTab";
-import PackagingTab     from "../components/costeo/PackagingTab";
-import CostosFijosTab   from "../components/costeo/CostosFijosTab";
-import RecetasTab       from "../components/costeo/RecetasTab";
+import IngredientesTab from "../components/costeo/IngredientesTab";
+import PreparacionesTab from "../components/costeo/PreparacionesTab";
+import BasesTab from "../components/costeo/BasesTab";
+import PackagingTab from "../components/costeo/PackagingTab";
+import CostosFijosTab from "../components/costeo/CostosFijosTab";
+import RecetasTab from "../components/costeo/RecetasTab";
 
 const TABS = [
   { key: "ingredientes", label: "Ingredientes" },
-  { key: "bases",        label: "Bases" },
-  { key: "packaging",    label: "Packaging" },
-  { key: "fijos",        label: "Costos fijos" },
-  { key: "recetas",      label: "Recetas" },
+  { key: "preparaciones", label: "Preparaciones" },
+  { key: "bases", label: "Bases" },
+  { key: "packaging", label: "Packaging" },
+  { key: "fijos", label: "Costos fijos" },
+  { key: "recetas", label: "Recetas" },
 ];
 
 export default function CosteoScreen() {
@@ -50,7 +57,9 @@ export default function CosteoScreen() {
             style={[styles.tab, tab === t.key && styles.tabActive]}
             onPress={() => setTab(t.key)}
           >
-            <Text style={[styles.tabText, tab === t.key && styles.tabTextActive]}>
+            <Text
+              style={[styles.tabText, tab === t.key && styles.tabTextActive]}
+            >
               {t.label}
             </Text>
           </Pressable>
@@ -60,10 +69,11 @@ export default function CosteoScreen() {
       {/* CONTENIDO */}
       <View style={styles.content}>
         {tab === "ingredientes" && <IngredientesTab />}
-        {tab === "bases"        && <BasesTab />}
-        {tab === "packaging"    && <PackagingTab />}
-        {tab === "fijos"        && <CostosFijosTab />}
-        {tab === "recetas"      && <RecetasTab />}
+        {tab === "preparaciones" && <PreparacionesTab />}
+        {tab === "bases" && <BasesTab />}
+        {tab === "packaging" && <PackagingTab />}
+        {tab === "fijos" && <CostosFijosTab />}
+        {tab === "recetas" && <RecetasTab />}
       </View>
     </View>
   );
