@@ -13,13 +13,28 @@ import { useState } from "react";
 import { useCosteo } from "../../context/CosteoContext";
 
 const UNIDADES = ["gr", "ml", "unidad"];
-const EMPTY = { nombre: "", unidad: "gr", precio_unidad: "", proveedor: "" };
+const EMPTY = {
+  nombre: "",
+  unidad: "gr",
+  precio_compra: "", // precio total pagado
+  cantidad_compra: "", // cuántos gr/ml/unidades se compraron
+  proveedor: "",
+};
+
+const calcPrecioUnidad = (precio, cantidad) => {
+  const p = Number(precio);
+  const c = Number(cantidad);
+  if (!p || !c) return null;
+  return p / c;
+};
 
 export default function IngredientesTab() {
   const { ingredientes, guardarIngrediente, borrarIngrediente } = useCosteo();
   const [modal, setModal] = useState(false);
   const [form, setForm] = useState(EMPTY);
   const [editId, setEditId] = useState(null);
+
+  const precioUnd = calcPrecioUnidad(form.precio_compra, form.cantidad_compra);
 
   const abrir = (item = null) => {
     setEditId(item?.id ?? null);
@@ -28,7 +43,8 @@ export default function IngredientesTab() {
         ? {
             nombre: item.nombre,
             unidad: item.unidad,
-            precio_unidad: String(item.precio_unidad),
+            precio_compra: String(item.precio_compra ?? ""),
+            cantidad_compra: String(item.cantidad_compra ?? ""),
             proveedor: item.proveedor ?? "",
           }
         : EMPTY,
@@ -38,10 +54,21 @@ export default function IngredientesTab() {
 
   const guardar = async () => {
     if (!form.nombre.trim()) return Alert.alert("Nombre requerido");
+    if (!form.precio_compra) return Alert.alert("Ingresa el precio de compra");
+    if (!form.cantidad_compra)
+      return Alert.alert("Ingresa la cantidad comprada");
+    const precio_unidad = calcPrecioUnidad(
+      form.precio_compra,
+      form.cantidad_compra,
+    );
     await guardarIngrediente(
       {
-        ...form,
-        precio_unidad: Number(form.precio_unidad) || 0,
+        nombre: form.nombre,
+        unidad: form.unidad,
+        precio_compra: Number(form.precio_compra),
+        cantidad_compra: Number(form.cantidad_compra),
+        precio_unidad, // calculado automáticamente
+        proveedor: form.proveedor,
       },
       editId,
     );
@@ -68,20 +95,26 @@ export default function IngredientesTab() {
         data={ingredientes}
         keyExtractor={(i) => String(i.id)}
         contentContainerStyle={{ padding: 12, gap: 8 }}
+        ListEmptyComponent={
+          <Text style={s.empty}>No hay ingredientes. Agrega el primero.</Text>
+        }
         renderItem={({ item }) => (
           <View style={s.card}>
             <View style={{ flex: 1 }}>
               <Text style={s.nombre}>{item.nombre}</Text>
               <Text style={s.detalle}>
                 ${Number(item.precio_unidad).toFixed(4)} / {item.unidad}
+                {item.precio_compra
+                  ? `  ·  $${Number(item.precio_compra).toLocaleString("es-CO")} × ${item.cantidad_compra} ${item.unidad}`
+                  : ""}
                 {item.proveedor ? `  ·  ${item.proveedor}` : ""}
               </Text>
             </View>
             <Pressable onPress={() => abrir(item)} style={s.editBtn}>
-              <Text style={s.editBtnText}>✏️</Text>
+              <Text>✏️</Text>
             </Pressable>
             <Pressable onPress={() => borrar(item)} style={s.editBtn}>
-              <Text style={s.editBtnText}>🗑️</Text>
+              <Text>🗑️</Text>
             </Pressable>
           </View>
         )}
@@ -124,14 +157,42 @@ export default function IngredientesTab() {
               ))}
             </View>
 
-            <Text style={s.label}>Precio por {form.unidad}</Text>
-            <TextInput
-              style={s.input}
-              value={form.precio_unidad}
-              onChangeText={(v) => setForm((f) => ({ ...f, precio_unidad: v }))}
-              keyboardType="numeric"
-              placeholder="0.0000"
-            />
+            {/* Precio de compra + cantidad → cálculo automático */}
+            <View style={s.row}>
+              <View style={{ flex: 1 }}>
+                <Text style={s.label}>Precio total de compra ($)</Text>
+                <TextInput
+                  style={s.input}
+                  value={form.precio_compra}
+                  onChangeText={(v) =>
+                    setForm((f) => ({ ...f, precio_compra: v }))
+                  }
+                  keyboardType="numeric"
+                  placeholder="ej: 8500"
+                />
+              </View>
+              <View style={s.divider} />
+              <View style={{ flex: 1 }}>
+                <Text style={s.label}>Cantidad comprada ({form.unidad})</Text>
+                <TextInput
+                  style={s.input}
+                  value={form.cantidad_compra}
+                  onChangeText={(v) =>
+                    setForm((f) => ({ ...f, cantidad_compra: v }))
+                  }
+                  keyboardType="numeric"
+                  placeholder="ej: 500"
+                />
+              </View>
+            </View>
+
+            {/* Resultado automático */}
+            <View style={s.resultRow}>
+              <Text style={s.resultLabel}>Costo por {form.unidad}:</Text>
+              <Text style={s.resultValor}>
+                {precioUnd !== null ? `$${precioUnd.toFixed(4)}` : "—"}
+              </Text>
+            </View>
 
             <Text style={s.label}>Proveedor (opcional)</Text>
             <TextInput
@@ -166,6 +227,8 @@ const s = StyleSheet.create({
     alignItems: "center",
   },
   addBtnText: { color: "#fff", fontWeight: "700", fontSize: 14 },
+  empty: { textAlign: "center", color: "#aaa", fontSize: 13, marginTop: 20 },
+
   card: {
     backgroundColor: "#fff",
     borderRadius: 12,
@@ -180,7 +243,6 @@ const s = StyleSheet.create({
   nombre: { fontSize: 14, fontWeight: "700", color: "#1a1a1a" },
   detalle: { fontSize: 12, color: "#777", marginTop: 2 },
   editBtn: { padding: 6 },
-  editBtnText: { fontSize: 18 },
 
   overlay: {
     flex: 1,
@@ -198,7 +260,24 @@ const s = StyleSheet.create({
     padding: 10,
     fontSize: 14,
     backgroundColor: "#fafafa",
+    marginTop: 4,
   },
+
+  row: { flexDirection: "row", alignItems: "flex-start", marginTop: 4 },
+  divider: { width: 10 },
+
+  resultRow: {
+    flexDirection: "row",
+    justifyContent: "space-between",
+    alignItems: "center",
+    backgroundColor: "#fce4ec",
+    borderRadius: 10,
+    padding: 10,
+    marginTop: 8,
+  },
+  resultLabel: { fontSize: 13, color: "#c2185b", fontWeight: "600" },
+  resultValor: { fontSize: 14, color: "#c2185b", fontWeight: "800" },
+
   chipRow: { flexDirection: "row", gap: 8, marginTop: 4 },
   chip: {
     paddingHorizontal: 16,
@@ -209,6 +288,7 @@ const s = StyleSheet.create({
   chipActivo: { backgroundColor: "#fce4ec" },
   chipText: { fontSize: 13, color: "#666" },
   chipTextActivo: { color: "#e91e63", fontWeight: "700" },
+
   modalBtns: { flexDirection: "row", gap: 10, marginTop: 16 },
   cancelBtn: {
     flex: 1,
