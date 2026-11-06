@@ -1,180 +1,225 @@
-// components/costeo/PackagingTab.js
-// Gestiona los materiales de empaque: vasos, palitos, bolsas, stickers, etc.
-import {
-  View, Text, FlatList, Pressable, StyleSheet,
-  TextInput, Alert, Modal,
-} from "react-native";
 import { useState } from "react";
+import {
+  View, Text, TextInput, TouchableOpacity, FlatList,
+  StyleSheet, Alert,
+} from "react-native";
 import { useCosteo } from "../../context/CosteoContext";
 
-const TIPOS = ["vaso", "palito", "bolsa", "sticker", "tapa", "etiqueta", "otro"];
-const EMPTY  = { nombre: "", tipo: "vaso", costo_unitario: "", proveedor: "", notas: "" };
+const TIPOS = ["vaso", "cono", "tapa", "cuchara", "servilleta", "bolsa", "otro"];
 
-const TIPO_ICON = {
-  vaso: "🥤", palito: "🍡", bolsa: "🛍️", sticker: "🏷️",
-  tapa: "🔵", etiqueta: "📋", otro: "📦",
+const EMPTY = { nombre: "", tipo: "vaso", precio_compra: "", cantidad_compra: "" };
+
+const fmt = (val) => {
+  const n = Number(val);
+  if (isNaN(n) || n === 0) return "—";
+  return n % 1 === 0
+    ? n.toLocaleString()
+    : n.toFixed(2).replace(/\.?0+$/, "");
 };
 
 export default function PackagingTab() {
   const { packaging, guardarPackaging, borrarPackaging } = useCosteo();
-  const [modal,  setModal]  = useState(false);
-  const [form,   setForm]   = useState(EMPTY);
-  const [editId, setEditId] = useState(null);
+  const [form, setForm]       = useState(EMPTY);
+  const [editId, setEditId]   = useState(null);
+  const [showForm, setShowForm] = useState(false);
 
-  const abrir = (item = null) => {
-    setEditId(item?.id ?? null);
-    setForm(item
-      ? {
-          nombre: item.nombre,
-          tipo: item.tipo ?? "otro",
-          costo_unitario: String(item.costo_unitario),
-          proveedor: item.proveedor ?? "",
-          notas: item.notas ?? "",
-        }
-      : EMPTY
+  const precioUnitario = () => {
+    const c = Number(form.precio_compra);
+    const q = Number(form.cantidad_compra);
+    if (!c || !q || q === 0) return null;
+    return c / q;
+  };
+
+  const handleSave = async () => {
+    if (!form.nombre.trim()) {
+      Alert.alert("Falta el nombre del packaging");
+      return;
+    }
+    if (!form.precio_compra || !form.cantidad_compra) {
+      Alert.alert("Ingresa el precio y cantidad de compra");
+      return;
+    }
+    try {
+      await guardarPackaging(
+        {
+          nombre:          form.nombre.trim(),
+          tipo:            form.tipo,
+          precio_compra:   Number(form.precio_compra),
+          cantidad_compra: Number(form.cantidad_compra),
+        },
+        editId
+      );
+      setForm(EMPTY);
+      setEditId(null);
+      setShowForm(false);
+    } catch (e) {
+      Alert.alert("Error al guardar", e.message);
+    }
+  };
+
+  const handleEdit = (item) => {
+    setForm({
+      nombre:          item.nombre,
+      tipo:            item.tipo ?? "vaso",
+      precio_compra:   String(item.precio_compra ?? ""),
+      cantidad_compra: String(item.cantidad_compra ?? ""),
+    });
+    setEditId(item.id);
+    setShowForm(true);
+  };
+
+  const handleDelete = (item) => {
+    Alert.alert(
+      "Eliminar packaging",
+      `¿Eliminar "${item.nombre}"?`,
+      [
+        { text: "Cancelar", style: "cancel" },
+        { text: "Eliminar", style: "destructive", onPress: () => borrarPackaging(item.id) },
+      ]
     );
-    setModal(true);
   };
 
-  const guardar = async () => {
-    if (!form.nombre.trim()) return Alert.alert("Nombre requerido");
-    await guardarPackaging({
-      ...form,
-      costo_unitario: Number(form.costo_unitario) || 0,
-    }, editId);
-    setModal(false);
-  };
-
-  const borrar = (item) =>
-    Alert.alert("Eliminar", `¿Eliminar "${item.nombre}"?`, [
-      { text: "Cancelar", style: "cancel" },
-      { text: "Eliminar", style: "destructive", onPress: () => borrarPackaging(item.id) },
-    ]);
+  const pu = precioUnitario();
 
   return (
     <View style={s.container}>
-      <Pressable style={s.addBtn} onPress={() => abrir()}>
-        <Text style={s.addBtnText}>+ Nuevo material de empaque</Text>
-      </Pressable>
+      <View style={s.header}>
+        <Text style={s.title}>Packaging</Text>
+        <TouchableOpacity
+          style={s.addBtn}
+          onPress={() => { setForm(EMPTY); setEditId(null); setShowForm(!showForm); }}
+        >
+          <Text style={s.addBtnTxt}>{showForm ? "✕ Cerrar" : "+ Agregar"}</Text>
+        </TouchableOpacity>
+      </View>
+
+      {showForm && (
+        <View style={s.form}>
+          <Text style={s.label}>Nombre</Text>
+          <TextInput
+            style={s.input}
+            value={form.nombre}
+            onChangeText={(v) => setForm({ ...form, nombre: v })}
+            placeholder="ej. Vaso 8oz"
+          />
+
+          <Text style={s.label}>Tipo</Text>
+          <View style={s.tiposRow}>
+            {TIPOS.map((t) => (
+              <TouchableOpacity
+                key={t}
+                style={[s.tipoBadge, form.tipo === t && s.tipoBadgeActive]}
+                onPress={() => setForm({ ...form, tipo: t })}
+              >
+                <Text style={[s.tipoTxt, form.tipo === t && s.tipoTxtActive]}>
+                  {t}
+                </Text>
+              </TouchableOpacity>
+            ))}
+          </View>
+
+          <Text style={s.label}>Precio de compra total ($)</Text>
+          <TextInput
+            style={s.input}
+            value={form.precio_compra}
+            onChangeText={(v) => setForm({ ...form, precio_compra: v })}
+            keyboardType="decimal-pad"
+            placeholder="ej. 5000"
+          />
+
+          <Text style={s.label}>Cantidad comprada (unidades)</Text>
+          <TextInput
+            style={s.input}
+            value={form.cantidad_compra}
+            onChangeText={(v) => setForm({ ...form, cantidad_compra: v })}
+            keyboardType="decimal-pad"
+            placeholder="ej. 100"
+          />
+
+          {pu !== null && (
+            <View style={s.calcBox}>
+              <Text style={s.calcTxt}>
+                💰 Precio por unidad: <Text style={s.calcVal}>${fmt(pu)}</Text>
+              </Text>
+            </View>
+          )}
+
+          <TouchableOpacity style={s.saveBtn} onPress={handleSave}>
+            <Text style={s.saveBtnTxt}>{editId ? "Actualizar" : "Guardar"}</Text>
+          </TouchableOpacity>
+        </View>
+      )}
 
       <FlatList
         data={packaging}
-        keyExtractor={(i) => String(i.id)}
-        contentContainerStyle={{ padding: 12, gap: 8 }}
+        keyExtractor={(item) => String(item.id)}
+        renderItem={({ item }) => {
+          const pu_item = item.precio_compra && item.cantidad_compra
+            ? Number(item.precio_compra) / Number(item.cantidad_compra)
+            : Number(item.precio_unidad ?? 0);
+          return (
+            <View style={s.row}>
+              <View style={s.rowInfo}>
+                <Text style={s.rowNombre}>{item.nombre}</Text>
+                <Text style={s.rowSub}>
+                  {item.tipo} · ${fmt(pu_item)} / unidad
+                  {item.precio_compra
+                    ? `  (${fmt(item.precio_compra)} × ${fmt(item.cantidad_compra)} und)`
+                    : ""}
+                </Text>
+              </View>
+              <View style={s.rowActions}>
+                <TouchableOpacity onPress={() => handleEdit(item)} style={s.iconBtn}>
+                  <Text>✏️</Text>
+                </TouchableOpacity>
+                <TouchableOpacity onPress={() => handleDelete(item)} style={s.iconBtn}>
+                  <Text>🗑️</Text>
+                </TouchableOpacity>
+              </View>
+            </View>
+          );
+        }}
         ListEmptyComponent={
-          <Text style={s.empty}>No hay materiales de empaque definidos.</Text>
+          <Text style={s.empty}>Sin packaging. Agrega vasos, conos, tapas…</Text>
         }
-        renderItem={({ item }) => (
-          <View style={s.card}>
-            <Text style={s.icon}>{TIPO_ICON[item.tipo] ?? "📦"}</Text>
-            <View style={{ flex: 1 }}>
-              <Text style={s.nombre}>{item.nombre}</Text>
-              <Text style={s.detalle}>
-                ${Number(item.costo_unitario).toLocaleString("es-CO", { minimumFractionDigits: 0 })} / unidad
-                {item.proveedor ? `  ·  ${item.proveedor}` : ""}
-              </Text>
-              {item.notas ? <Text style={s.notas}>{item.notas}</Text> : null}
-            </View>
-            <Pressable onPress={() => abrir(item)} style={s.iconBtn}><Text>✏️</Text></Pressable>
-            <Pressable onPress={() => borrar(item)} style={s.iconBtn}><Text>🗑️</Text></Pressable>
-          </View>
-        )}
       />
-
-      <Modal visible={modal} transparent animationType="fade" onRequestClose={() => setModal(false)}>
-        <View style={s.overlay}>
-          <View style={s.modalBox}>
-            <Text style={s.modalTitle}>{editId ? "Editar" : "Nuevo"} empaque</Text>
-
-            <Text style={s.label}>Nombre</Text>
-            <TextInput style={s.input} value={form.nombre}
-              onChangeText={v => setForm(f => ({ ...f, nombre: v }))}
-              placeholder="ej: Vaso plástico 100ml" />
-
-            <Text style={s.label}>Tipo</Text>
-            <View style={s.chipRow}>
-              {TIPOS.map(t => (
-                <Pressable key={t}
-                  style={[s.chip, form.tipo === t && s.chipActivo]}
-                  onPress={() => setForm(f => ({ ...f, tipo: t }))}
-                >
-                  <Text style={[s.chipText, form.tipo === t && s.chipTextActivo]}>
-                    {TIPO_ICON[t]} {t}
-                  </Text>
-                </Pressable>
-              ))}
-            </View>
-
-            <Text style={s.label}>Costo por unidad ($)</Text>
-            <TextInput style={s.input} value={form.costo_unitario}
-              onChangeText={v => setForm(f => ({ ...f, costo_unitario: v }))}
-              keyboardType="numeric" placeholder="350" />
-
-            <Text style={s.label}>Proveedor (opcional)</Text>
-            <TextInput style={s.input} value={form.proveedor}
-              onChangeText={v => setForm(f => ({ ...f, proveedor: v }))}
-              placeholder="ej: Empaques del Valle" />
-
-            <Text style={s.label}>Notas (opcional)</Text>
-            <TextInput style={s.input} value={form.notas}
-              onChangeText={v => setForm(f => ({ ...f, notas: v }))}
-              placeholder="ej: Ref. 4820-B" />
-
-            <View style={s.modalBtns}>
-              <Pressable style={s.cancelBtn} onPress={() => setModal(false)}>
-                <Text style={s.cancelBtnText}>Cancelar</Text>
-              </Pressable>
-              <Pressable style={s.saveBtn} onPress={guardar}>
-                <Text style={s.saveBtnText}>Guardar</Text>
-              </Pressable>
-            </View>
-          </View>
-        </View>
-      </Modal>
     </View>
   );
 }
 
 const s = StyleSheet.create({
-  container: { flex: 1 },
-  addBtn: {
-    margin: 12, backgroundColor: "#e91e63", borderRadius: 10,
-    paddingVertical: 12, alignItems: "center",
-  },
-  addBtnText: { color: "#fff", fontWeight: "700", fontSize: 14 },
-  empty: { textAlign: "center", color: "#aaa", fontSize: 13, marginTop: 20 },
-
-  card: {
-    backgroundColor: "#fff", borderRadius: 12, padding: 14,
-    flexDirection: "row", alignItems: "center", gap: 10,
-    shadowColor: "#000", shadowOpacity: 0.05, shadowRadius: 3, elevation: 2,
-  },
-  icon:    { fontSize: 24 },
-  nombre:  { fontSize: 14, fontWeight: "700", color: "#1a1a1a" },
-  detalle: { fontSize: 12, color: "#777", marginTop: 2 },
-  notas:   { fontSize: 11, color: "#aaa", marginTop: 2, fontStyle: "italic" },
-  iconBtn: { padding: 6 },
-
-  overlay: { flex: 1, backgroundColor: "rgba(0,0,0,0.5)", justifyContent: "center", padding: 20 },
-  modalBox: {
-    backgroundColor: "#fff", borderRadius: 20, padding: 20,
-    maxHeight: "90%",
-  },
-  modalTitle: { fontSize: 17, fontWeight: "800", marginBottom: 8 },
-  label: { fontSize: 12, color: "#666", fontWeight: "600", marginTop: 12 },
-  input: {
-    borderWidth: 1, borderColor: "#ddd", borderRadius: 10,
-    padding: 10, fontSize: 14, backgroundColor: "#fafafa", marginTop: 4,
-  },
-  chipRow: { flexDirection: "row", flexWrap: "wrap", gap: 6, marginTop: 6 },
-  chip: { paddingHorizontal: 12, paddingVertical: 6, borderRadius: 16, backgroundColor: "#f0f0f0" },
-  chipActivo: { backgroundColor: "#fce4ec" },
-  chipText: { fontSize: 12, color: "#666" },
-  chipTextActivo: { color: "#e91e63", fontWeight: "700" },
-
-  modalBtns: { flexDirection: "row", gap: 10, marginTop: 16 },
-  cancelBtn: { flex: 1, padding: 12, borderRadius: 10, backgroundColor: "#f5f5f5", alignItems: "center" },
-  cancelBtnText: { color: "#666", fontWeight: "600" },
-  saveBtn: { flex: 1, padding: 12, borderRadius: 10, backgroundColor: "#e91e63", alignItems: "center" },
-  saveBtnText: { color: "#fff", fontWeight: "700" },
+  container:      { flex: 1 },
+  header:         { flexDirection: "row", justifyContent: "space-between",
+                    alignItems: "center", marginBottom: 12 },
+  title:          { fontSize: 18, fontWeight: "700", color: "#1a1a2e" },
+  addBtn:         { backgroundColor: "#4a90d9", paddingHorizontal: 14,
+                    paddingVertical: 8, borderRadius: 8 },
+  addBtnTxt:      { color: "#fff", fontWeight: "600" },
+  form:           { backgroundColor: "#f8f9fa", borderRadius: 10, padding: 16,
+                    marginBottom: 16, borderWidth: 1, borderColor: "#e0e0e0" },
+  label:          { fontSize: 13, color: "#555", marginBottom: 4, marginTop: 10 },
+  input:          { borderWidth: 1, borderColor: "#ddd", borderRadius: 8,
+                    paddingHorizontal: 12, paddingVertical: 8, fontSize: 15,
+                    backgroundColor: "#fff" },
+  tiposRow:       { flexDirection: "row", flexWrap: "wrap", gap: 6, marginBottom: 4 },
+  tipoBadge:      { paddingHorizontal: 10, paddingVertical: 5, borderRadius: 20,
+                    backgroundColor: "#e9ecef", borderWidth: 1, borderColor: "#ddd" },
+  tipoBadgeActive:{ backgroundColor: "#4a90d9", borderColor: "#4a90d9" },
+  tipoTxt:        { fontSize: 12, color: "#555" },
+  tipoTxtActive:  { color: "#fff", fontWeight: "600" },
+  calcBox:        { backgroundColor: "#e8f4e8", borderRadius: 8, padding: 10,
+                    marginTop: 12 },
+  calcTxt:        { fontSize: 13, color: "#2d7a2d" },
+  calcVal:        { fontWeight: "700" },
+  saveBtn:        { backgroundColor: "#2ecc71", borderRadius: 10, padding: 14,
+                    alignItems: "center", marginTop: 16 },
+  saveBtnTxt:     { color: "#fff", fontWeight: "700", fontSize: 15 },
+  row:            { flexDirection: "row", alignItems: "center", paddingVertical: 12,
+                    borderBottomWidth: 1, borderBottomColor: "#f0f0f0" },
+  rowInfo:        { flex: 1 },
+  rowNombre:      { fontSize: 15, fontWeight: "600", color: "#1a1a2e" },
+  rowSub:         { fontSize: 12, color: "#777", marginTop: 2 },
+  rowActions:     { flexDirection: "row", gap: 8 },
+  iconBtn:        { padding: 6 },
+  empty:          { textAlign: "center", color: "#aaa", paddingVertical: 30 },
 });

@@ -103,7 +103,11 @@ export default function IngredientesTab() {
             <View style={{ flex: 1 }}>
               <Text style={s.nombre}>{item.nombre}</Text>
               <Text style={s.detalle}>
-                ${Number(item.precio_unidad).toFixed(4)} / {item.unidad}
+                $
+                {Number(item.precio_unidad) % 1 === 0
+                  ? Number(item.precio_unidad).toLocaleString("es-CO")
+                  : Number(item.precio_unidad).toFixed(2)}{" "}
+                / {item.unidad}
                 {item.precio_compra
                   ? `  ·  $${Number(item.precio_compra).toLocaleString("es-CO")} × ${item.cantidad_compra} ${item.unidad}`
                   : ""}
@@ -190,7 +194,9 @@ export default function IngredientesTab() {
             <View style={s.resultRow}>
               <Text style={s.resultLabel}>Costo por {form.unidad}:</Text>
               <Text style={s.resultValor}>
-                {precioUnd !== null ? `$${precioUnd.toFixed(4)}` : "—"}
+                {precioUnd !== null
+                  ? `$${precioUnd % 1 === 0 ? precioUnd.toLocaleString("es-CO") : precioUnd.toFixed(2)}`
+                  : "—"}
               </Text>
             </View>
 
