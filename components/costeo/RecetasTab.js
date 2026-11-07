@@ -15,10 +15,17 @@ import { useState, useContext, useMemo } from "react";
 import { useCosteo } from "../../context/CosteoContext";
 import { HeladosContext } from "../../context/HeladosContext";
 
+// ── Helpers de formato ───────────────────────────────────────────
 const fmt = (n) => {
+  const v = Math.round(Number(n ?? 0));
+  if (isNaN(v)) return "0";
+  return v.toLocaleString("es-CO");
+};
+// Elimina ceros finales: 90.0000 → "90",  1.5 → "1.5"
+const fmtCant = (n) => {
   const v = Number(n ?? 0);
   if (isNaN(v)) return "0";
-  return Math.round(v).toLocaleString("es-CO");
+  return v % 1 === 0 ? String(v) : parseFloat(v.toFixed(4)).toString();
 };
 
 export default function RecetasTab() {
@@ -40,13 +47,15 @@ export default function RecetasTab() {
   const [loadingDet, setLoadingDet] = useState(false);
   const [guardando, setGuardando] = useState(false);
 
+  // ── Estado del formulario ────────────────────────────────────
+  // ingredientes tiene ahora campo `tipo`: 'principal' | 'topping'
   const FORM_VACIO = {
     base_id: null,
-    base_gr: "", // gramos de base por unidad (antes volumen_base_ml)
+    base_gr: "",
     mano_de_obra: "",
     margen_ganancia: "2.5",
     notas: "",
-    ingredientes: [], // [{ ingrediente_id, cantidad }]
+    ingredientes: [], // [{ ingrediente_id, cantidad, tipo }]
     preparaciones: [], // [{ prep_id, cantidad }]
     packaging: [], // [{ packaging_id, cantidad }]
   };
@@ -56,48 +65,38 @@ export default function RecetasTab() {
   const costoVivo = useMemo(() => {
     let total = 0;
 
-    // Base
     if (form.base_id && form.base_gr) {
       const base = bases.find((b) => b.id === form.base_id);
       if (base && base.costo_tanda > 0) {
-        // costo por gr = costo_tanda / (suma gr ingredientes base)
-        // Si no tenemos ese dato, usamos costo_tanda como referencia
-        total += Number(form.base_gr) * (base.costo_tanda / 1000); // aprox
+        total += Number(form.base_gr) * (base.costo_tanda / 1000);
       }
     }
 
-    // Ingredientes
     for (const fi of form.ingredientes) {
       const ing = ingredientes.find((i) => i.id === fi.ingrediente_id);
       if (ing)
         total += Number(fi.cantidad || 0) * Number(ing.precio_unidad || 0);
     }
 
-    // Preparaciones
     for (const fp of form.preparaciones) {
       const prep = preparaciones.find((p) => p.id === fp.prep_id);
       if (prep && prep.rendimiento_gr > 0) {
-        // costo_por_gr lo calcula el backend; usamos el que traiga el detalle
         const cpg = prep.costo_por_gr ?? 0;
         total += Number(fp.cantidad || 0) * Number(cpg);
       }
     }
 
-    // Packaging
     for (const fp of form.packaging) {
       const pkg = pkgList.find((p) => p.id === fp.packaging_id);
       if (pkg)
         total += Number(fp.cantidad || 0) * Number(pkg.precio_unidad || 0);
     }
 
-    // Costos fijos
     if (costosFijos?.costo_fijo_por_unidad) {
       total += Number(costosFijos.costo_fijo_por_unidad);
     }
 
-    // Mano de obra
     total += Number(form.mano_de_obra || 0);
-
     return total;
   }, [form, bases, ingredientes, preparaciones, pkgList, costosFijos]);
 
@@ -114,21 +113,22 @@ export default function RecetasTab() {
       setDetalle(det);
       setForm({
         base_id: det.base_id ?? null,
-        base_gr: String(det.volumen_base_ml ?? ""),
-        mano_de_obra: String(det.mano_de_obra ?? ""),
+        base_gr: fmtCant(det.volumen_base_ml),
+        mano_de_obra: fmtCant(det.mano_de_obra),
         margen_ganancia: String(det.margen_ganancia ?? "2.5"),
         notas: det.notas ?? "",
         ingredientes: (det.ingredientes ?? []).map((i) => ({
           ingrediente_id: i.ingrediente_id,
-          cantidad: String(i.cantidad),
+          cantidad: fmtCant(i.cantidad),
+          tipo: i.tipo ?? "principal", // ← conserva tipo guardado
         })),
         preparaciones: (det.preparaciones ?? []).map((p) => ({
           prep_id: p.prep_id ?? p.preparacion_id,
-          cantidad: String(p.cantidad),
+          cantidad: fmtCant(p.cantidad),
         })),
         packaging: (det.packaging ?? []).map((p) => ({
           packaging_id: p.packaging_id,
-          cantidad: String(p.cantidad),
+          cantidad: fmtCant(p.cantidad),
         })),
       });
     }
@@ -149,6 +149,7 @@ export default function RecetasTab() {
         ingredientes: form.ingredientes.map((i) => ({
           ingrediente_id: i.ingrediente_id,
           cantidad: Number(i.cantidad),
+          tipo: i.tipo ?? "principal",
         })),
         preparaciones: form.preparaciones.map((p) => ({
           prep_id: p.prep_id,
@@ -169,12 +170,15 @@ export default function RecetasTab() {
     }
   };
 
-  // ── Helpers add/remove ────────────────────────────────────────
-  const addIngrediente = (id) => {
+  // ── Helpers ingredientes (con tipo) ─────────────────────────
+  const addIngrediente = (id, tipo) => {
     if (form.ingredientes.find((i) => i.ingrediente_id === id)) return;
     setForm((f) => ({
       ...f,
-      ingredientes: [...f.ingredientes, { ingrediente_id: id, cantidad: "" }],
+      ingredientes: [
+        ...f.ingredientes,
+        { ingrediente_id: id, cantidad: "", tipo },
+      ],
     }));
   };
   const removeIngrediente = (id) =>
@@ -190,6 +194,7 @@ export default function RecetasTab() {
       ),
     }));
 
+  // ── Helpers preparaciones ────────────────────────────────────
   const addPreparacion = (id) => {
     if (form.preparaciones.find((p) => p.prep_id === id)) return;
     setForm((f) => ({
@@ -210,6 +215,7 @@ export default function RecetasTab() {
       ),
     }));
 
+  // ── Helpers packaging ────────────────────────────────────────
   const addPackaging = (id) => {
     if (form.packaging.find((p) => p.packaging_id === id)) return;
     setForm((f) => ({
@@ -225,6 +231,14 @@ export default function RecetasTab() {
 
   const getReceta = (helado_id) =>
     recetas.find((r) => r.helado_id === helado_id);
+
+  // ── Ingredientes separados por tipo ─────────────────────────
+  const ingPrincipales = form.ingredientes.filter(
+    (i) => i.tipo === "principal" || !i.tipo,
+  );
+  const ingToppings = form.ingredientes.filter((i) => i.tipo === "topping");
+  const ingOtros = form.ingredientes.filter((i) => i.tipo === "otro");
+  const ingIdsUsados = form.ingredientes.map((i) => i.ingrediente_id);
 
   return (
     <View style={s.container}>
@@ -299,7 +313,7 @@ export default function RecetasTab() {
                 )}
               </View>
 
-              {/* ── DESGLOSE GUARDADO (si existe) ── */}
+              {/* ── DESGLOSE GUARDADO ── */}
               {detalle?.desglose && (
                 <View style={s.seccion}>
                   <Text style={s.secTitulo}>📊 Último costeo guardado</Text>
@@ -413,16 +427,32 @@ export default function RecetasTab() {
                 )}
               </View>
 
-              {/* ── INGREDIENTES ── */}
+              {/* ── INGREDIENTES PRINCIPALES ── */}
               <View style={s.seccion}>
-                <Text style={s.secTitulo}>🥛 Ingredientes</Text>
-                {form.ingredientes.map((fi) => {
+                <Text style={s.secTitulo}>🍓 Ingrediente(s) principal(es)</Text>
+                {ingPrincipales.length === 0 && (
+                  <Text style={s.secHint}>
+                    Agrega el ingrediente base del helado
+                  </Text>
+                )}
+                {ingPrincipales.map((fi) => {
                   const ing = ingredientes.find(
                     (i) => i.id === fi.ingrediente_id,
                   );
+                  const subtotal =
+                    Number(fi.cantidad || 0) * Number(ing?.precio_unidad || 0);
                   return (
                     <View key={fi.ingrediente_id} style={s.itemRow}>
-                      <Text style={s.itemNombre}>{ing?.nombre}</Text>
+                      <View style={{ flex: 1 }}>
+                        <Text style={s.itemNombre}>{ing?.nombre}</Text>
+                        {subtotal > 0 && (
+                          <Text style={s.itemSubtotal}>
+                            {fmtCant(fi.cantidad)} {ing?.unidad} × $
+                            {fmt(ing?.precio_unidad)}/{ing?.unidad} = $
+                            {fmt(subtotal)}
+                          </Text>
+                        )}
+                      </View>
                       <TextInput
                         style={s.inputNum}
                         value={fi.cantidad}
@@ -449,17 +479,12 @@ export default function RecetasTab() {
                 >
                   <View style={{ flexDirection: "row", gap: 6 }}>
                     {ingredientes
-                      .filter(
-                        (i) =>
-                          !form.ingredientes.find(
-                            (fi) => fi.ingrediente_id === i.id,
-                          ),
-                      )
+                      .filter((i) => !ingIdsUsados.includes(i.id))
                       .map((i) => (
                         <Pressable
                           key={i.id}
                           style={s.addChip}
-                          onPress={() => addIngrediente(i.id)}
+                          onPress={() => addIngrediente(i.id, "principal")}
                         >
                           <Text style={s.addChipTxt}>+ {i.nombre}</Text>
                         </Pressable>
@@ -468,7 +493,114 @@ export default function RecetasTab() {
                 </ScrollView>
               </View>
 
-              {/* ── PREPARACIONES ── */}
+              {/* ── TOPPINGS ── */}
+              <View style={s.seccion}>
+                <Text style={s.secTitulo}>✨ Toppings (opcional)</Text>
+                {ingToppings.length === 0 && (
+                  <Text style={s.secHint}>
+                    Agrega coberturas, salsas o extras
+                  </Text>
+                )}
+                {ingToppings.map((fi) => {
+                  const ing = ingredientes.find(
+                    (i) => i.id === fi.ingrediente_id,
+                  );
+                  const subtotal =
+                    Number(fi.cantidad || 0) * Number(ing?.precio_unidad || 0);
+                  return (
+                    <View key={fi.ingrediente_id} style={s.itemRow}>
+                      <View style={{ flex: 1 }}>
+                        <Text style={s.itemNombre}>{ing?.nombre}</Text>
+                        {subtotal > 0 && (
+                          <Text style={s.itemSubtotal}>
+                            {fmtCant(fi.cantidad)} {ing?.unidad} × $
+                            {fmt(ing?.precio_unidad)}/{ing?.unidad} = $
+                            {fmt(subtotal)}
+                          </Text>
+                        )}
+                      </View>
+                      <TextInput
+                        style={s.inputNum}
+                        value={fi.cantidad}
+                        onChangeText={(v) =>
+                          setCantIngrediente(fi.ingrediente_id, v)
+                        }
+                        keyboardType="numeric"
+                        placeholder="0"
+                      />
+                      <Text style={s.inputSufijo}>{ing?.unidad}</Text>
+                      <Pressable
+                        onPress={() => removeIngrediente(fi.ingrediente_id)}
+                        style={s.removeBtn}
+                      >
+                        <Text style={s.removeBtnTxt}>✕</Text>
+                      </Pressable>
+                    </View>
+                  );
+                })}
+                <ScrollView
+                  horizontal
+                  showsHorizontalScrollIndicator={false}
+                  style={{ marginTop: 8 }}
+                >
+                  <View style={{ flexDirection: "row", gap: 6 }}>
+                    {ingredientes
+                      .filter((i) => !ingIdsUsados.includes(i.id))
+                      .map((i) => (
+                        <Pressable
+                          key={i.id}
+                          style={[
+                            s.addChip,
+                            {
+                              backgroundColor: "#fce4ec",
+                              borderColor: "#f48fb1",
+                            },
+                          ]}
+                          onPress={() => addIngrediente(i.id, "topping")}
+                        >
+                          <Text style={[s.addChipTxt, { color: "#c2185b" }]}>
+                            + {i.nombre}
+                          </Text>
+                        </Pressable>
+                      ))}
+                  </View>
+                </ScrollView>
+              </View>
+
+              {/* ── OTROS ingredientes (si los hay, no se muestran chips para agregar) ── */}
+              {ingOtros.length > 0 && (
+                <View style={s.seccion}>
+                  <Text style={s.secTitulo}>📌 Otros ingredientes</Text>
+                  {ingOtros.map((fi) => {
+                    const ing = ingredientes.find(
+                      (i) => i.id === fi.ingrediente_id,
+                    );
+                    return (
+                      <View key={fi.ingrediente_id} style={s.itemRow}>
+                        <Text style={s.itemNombre}>{ing?.nombre}</Text>
+                        <TextInput
+                          style={s.inputNum}
+                          value={fi.cantidad}
+                          onChangeText={(v) =>
+                            setCantIngrediente(fi.ingrediente_id, v)
+                          }
+                          keyboardType="numeric"
+                          placeholder="0"
+                        />
+                        <Text style={s.inputSufijo}>{ing?.unidad}</Text>
+                        <Pressable
+                          onPress={() => removeIngrediente(fi.ingrediente_id)}
+                          style={s.removeBtn}
+                        >
+                          <Text style={s.removeBtnTxt}>✕</Text>
+                        </Pressable>
+                      </View>
+                    );
+                  })}
+                </View>
+              )}
+
+              {/* ── PREPARACIONES CASERAS ── */}
               <View style={s.seccion}>
                 <Text style={s.secTitulo}>🫙 Preparaciones caseras</Text>
                 {form.preparaciones.map((fp) => {
@@ -651,6 +783,7 @@ export default function RecetasTab() {
 }
 
 function DesgloseRow({ label, valor }) {
+  const fmt = (n) => Math.round(Number(n ?? 0)).toLocaleString("es-CO");
   return (
     <View style={s.desgloseRow}>
       <Text style={s.desgloseLabel}>{label}</Text>
@@ -739,8 +872,14 @@ const s = StyleSheet.create({
     fontWeight: "700",
     color: "#888",
     textTransform: "uppercase",
-    marginBottom: 10,
+    marginBottom: 6,
     letterSpacing: 0.5,
+  },
+  secHint: {
+    fontSize: 12,
+    color: "#bbb",
+    fontStyle: "italic",
+    marginBottom: 8,
   },
 
   desgloseRow: {
@@ -777,11 +916,12 @@ const s = StyleSheet.create({
     flexDirection: "row",
     alignItems: "center",
     gap: 8,
-    paddingVertical: 6,
+    paddingVertical: 7,
     borderBottomWidth: 1,
     borderBottomColor: "#f5f5f5",
   },
-  itemNombre: { flex: 1, fontSize: 13, color: "#333", fontWeight: "500" },
+  itemNombre: { fontSize: 13, color: "#333", fontWeight: "500" },
+  itemSubtotal: { fontSize: 11, color: "#999", marginTop: 1 },
   inputNum: {
     borderWidth: 1,
     borderColor: "#ddd",
