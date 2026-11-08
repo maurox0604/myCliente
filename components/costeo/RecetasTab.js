@@ -1,4 +1,4 @@
-import React, { useEffect, useState, useCallback } from "react";
+import React, { useState } from "react";
 import {
   View,
   Text,
@@ -11,7 +11,7 @@ import {
   ActivityIndicator,
   Alert,
 } from "react-native";
-import { apiFetch } from "../../utils/api";
+import { useCosteo } from "../../context/CosteoContext";
 
 // ── formato sin decimales innecesarios ──────────────────────────────────────
 const fmtPeso = (n) => Math.round(Number(n ?? 0)).toLocaleString("es-CO");
@@ -23,53 +23,29 @@ const fmtCant = (n) => {
 const EMPTY_FORM = {
   base_id: null,
   base_gr: "",
-  ingredientes_principal: [], // [{id, nombre, unidad, precio_unidad, cantidad}]
-  ingredientes_topping: [], // [{id, nombre, unidad, precio_unidad, cantidad}]
-  preparaciones: [], // [{id, nombre, costo_por_gr, cantidad}]
-  packaging_ids: [], // [id]
+  ingredientes_principal: [],
+  ingredientes_topping: [],
+  preparaciones: [],
+  packaging_ids: [],
   unidades: 1,
   margen: 30,
 };
 
 export default function RecetasTab() {
-  const [helados, setHelados] = useState([]);
-  const [bases, setBases] = useState([]);
-  const [ingredientes, setIngredientes] = useState([]);
-  const [preparaciones, setPreparaciones] = useState([]);
-  const [packagingList, setPackagingList] = useState([]);
-  const [loading, setLoading] = useState(true);
+  const {
+    helados,
+    bases,
+    ingredientes,
+    preparaciones,
+    packaging,
+    loading,
+    upsertReceta,
+  } = useCosteo();
 
-  const [selected, setSelected] = useState(null); // helado activo
+  const [selected, setSelected] = useState(null);
   const [form, setForm] = useState(EMPTY_FORM);
   const [saving, setSaving] = useState(false);
   const [modalVisible, setModalVisible] = useState(false);
-
-  // ── carga inicial ──────────────────────────────────────────────────────────
-  const loadAll = useCallback(async () => {
-    setLoading(true);
-    try {
-      const [h, b, i, p, pk] = await Promise.all([
-        apiFetch("/costeo/recetas"),
-        apiFetch("/costeo/bases"),
-        apiFetch("/costeo/ingredientes"),
-        apiFetch("/costeo/preparaciones"),
-        apiFetch("/costeo/packaging"),
-      ]);
-      setHelados(Array.isArray(h) ? h : []);
-      setBases(Array.isArray(b) ? b : []);
-      setIngredientes(Array.isArray(i) ? i : []);
-      setPreparaciones(Array.isArray(p) ? p : []);
-      setPackagingList(Array.isArray(pk) ? pk : []);
-    } catch (e) {
-      Alert.alert("Error", "No se pudo cargar la información");
-    } finally {
-      setLoading(false);
-    }
-  }, []);
-
-  useEffect(() => {
-    loadAll();
-  }, [loadAll]);
 
   // ── abrir detalle de un helado ─────────────────────────────────────────────
   const openHelado = (helado) => {
@@ -101,7 +77,7 @@ export default function RecetasTab() {
 
   // ── costo en tiempo real ───────────────────────────────────────────────────
   const calcCosto = () => {
-    const base = bases.find((b) => b.id === form.base_id);
+    const base = (bases ?? []).find((b) => b.id === form.base_id);
     const costoBase = base
       ? Number(base.costo_por_ml ?? 0) * Number(form.base_gr || 0)
       : 0;
@@ -110,15 +86,17 @@ export default function RecetasTab() {
       ...form.ingredientes_principal,
       ...form.ingredientes_topping,
     ];
-    const costoIngs = allIngs.reduce((acc, i) => {
-      return acc + Number(i.precio_unidad ?? 0) * Number(i.cantidad || 0);
-    }, 0);
+    const costoIngs = allIngs.reduce(
+      (acc, i) => acc + Number(i.precio_unidad ?? 0) * Number(i.cantidad || 0),
+      0,
+    );
 
-    const costoPreps = form.preparaciones.reduce((acc, p) => {
-      return acc + Number(p.costo_por_gr ?? 0) * Number(p.cantidad || 0);
-    }, 0);
+    const costoPreps = form.preparaciones.reduce(
+      (acc, p) => acc + Number(p.costo_por_gr ?? 0) * Number(p.cantidad || 0),
+      0,
+    );
 
-    const pkgSel = packagingList.filter((p) =>
+    const pkgSel = (packaging ?? []).filter((p) =>
       form.packaging_ids.includes(p.id),
     );
     const costoPkg = pkgSel.reduce(
@@ -131,20 +109,18 @@ export default function RecetasTab() {
     return { costoBase, costoIngs, costoPreps, costoPkg, total, conMargen };
   };
 
-  // ── agregar / quitar ingrediente ───────────────────────────────────────────
+  // ── ingredientes ───────────────────────────────────────────────────────────
   const addIngrediente = (ing, tipo) => {
     const key =
       tipo === "topping" ? "ingredientes_topping" : "ingredientes_principal";
     if (form[key].find((i) => i.id === ing.id)) return;
     setForm((f) => ({ ...f, [key]: [...f[key], { ...ing, cantidad: "" }] }));
   };
-
   const removeIngrediente = (id, tipo) => {
     const key =
       tipo === "topping" ? "ingredientes_topping" : "ingredientes_principal";
     setForm((f) => ({ ...f, [key]: f[key].filter((i) => i.id !== id) }));
   };
-
   const updateCantIng = (id, val, tipo) => {
     const key =
       tipo === "topping" ? "ingredientes_topping" : "ingredientes_principal";
@@ -154,7 +130,7 @@ export default function RecetasTab() {
     }));
   };
 
-  // ── agregar / quitar preparación ───────────────────────────────────────────
+  // ── preparaciones ──────────────────────────────────────────────────────────
   const addPrep = (prep) => {
     if (form.preparaciones.find((p) => p.id === prep.id)) return;
     setForm((f) => ({
@@ -175,7 +151,7 @@ export default function RecetasTab() {
       ),
     }));
 
-  // ── toggle packaging ───────────────────────────────────────────────────────
+  // ── packaging ──────────────────────────────────────────────────────────────
   const togglePkg = (id) =>
     setForm((f) => ({
       ...f,
@@ -189,7 +165,7 @@ export default function RecetasTab() {
     if (!selected) return;
     setSaving(true);
     try {
-      const payload = {
+      await upsertReceta({
         helado_id: selected.id,
         base_id: form.base_id,
         base_gr: Number(form.base_gr) || 0,
@@ -212,12 +188,7 @@ export default function RecetasTab() {
         packaging_ids: form.packaging_ids,
         unidades: Number(form.unidades) || 1,
         margen: Number(form.margen) || 30,
-      };
-      await apiFetch("/costeo/recetas", {
-        method: "POST",
-        body: JSON.stringify(payload),
       });
-      await loadAll();
       setModalVisible(false);
     } catch (e) {
       Alert.alert("Error", "No se pudo guardar la receta");
@@ -226,17 +197,20 @@ export default function RecetasTab() {
     }
   };
 
-  // ── chips de selección (ingredientes disponibles sin los ya agregados) ─────
+  // ── chips disponibles ──────────────────────────────────────────────────────
   const ingUsados = new Set([
     ...form.ingredientes_principal.map((i) => i.id),
     ...form.ingredientes_topping.map((i) => i.id),
   ]);
-  const ingDisponibles = ingredientes.filter((i) => !ingUsados.has(i.id));
-
+  const ingDisponibles = (ingredientes ?? []).filter(
+    (i) => !ingUsados.has(i.id),
+  );
   const prepUsados = new Set(form.preparaciones.map((p) => p.id));
-  const prepDisponibles = preparaciones.filter((p) => !prepUsados.has(p.id));
+  const prepDisponibles = (preparaciones ?? []).filter(
+    (p) => !prepUsados.has(p.id),
+  );
 
-  // ── render lista de ingredientes con cantidad ──────────────────────────────
+  // ── filas de ingrediente ───────────────────────────────────────────────────
   const renderIngRow = (ing, tipo) => {
     const sub = Number(ing.precio_unidad ?? 0) * Number(ing.cantidad || 0);
     return (
@@ -289,7 +263,7 @@ export default function RecetasTab() {
     );
   };
 
-  // ── modal de edición ───────────────────────────────────────────────────────
+  // ── modal ──────────────────────────────────────────────────────────────────
   const renderModal = () => {
     if (!selected) return null;
     const { costoBase, costoIngs, costoPreps, costoPkg, total, conMargen } =
@@ -302,7 +276,6 @@ export default function RecetasTab() {
         onRequestClose={() => setModalVisible(false)}
       >
         <View style={s.modalContainer}>
-          {/* header */}
           <View style={s.modalHeader}>
             <TouchableOpacity onPress={() => setModalVisible(false)}>
               <Text style={s.backTxt}>← Volver</Text>
@@ -316,7 +289,7 @@ export default function RecetasTab() {
           </View>
 
           <ScrollView contentContainerStyle={s.modalBody}>
-            {/* ── caja de costo ── */}
+            {/* costo */}
             <View style={s.costoBox}>
               <Text style={s.costoTitle}>💰 Costo estimado</Text>
               {costoBase > 0 && (
@@ -342,14 +315,14 @@ export default function RecetasTab() {
               </Text>
             </View>
 
-            {/* ── base ── */}
+            {/* base */}
             <Text style={s.sectionTitle}>🧊 Base</Text>
             <ScrollView
               horizontal
               showsHorizontalScrollIndicator={false}
               style={s.chipScroll}
             >
-              {bases.map((b) => (
+              {(bases ?? []).map((b) => (
                 <TouchableOpacity
                   key={b.id}
                   style={[s.chip, form.base_id === b.id && s.chipSel]}
@@ -366,12 +339,12 @@ export default function RecetasTab() {
             {form.base_id && (
               <View style={s.ingRow}>
                 <Text style={s.ingNombre}>
-                  {bases.find((b) => b.id === form.base_id)?.nombre}
+                  {(bases ?? []).find((b) => b.id === form.base_id)?.nombre}
                 </Text>
                 <TextInput
                   style={s.cantInput}
                   keyboardType="decimal-pad"
-                  placeholder="gr/ml"
+                  placeholder="gr"
                   value={String(form.base_gr)}
                   onChangeText={(v) => setForm((f) => ({ ...f, base_gr: v }))}
                 />
@@ -379,7 +352,7 @@ export default function RecetasTab() {
               </View>
             )}
 
-            {/* ── ingrediente principal ── */}
+            {/* ingrediente principal */}
             <Text style={s.sectionTitle}>🍓 Ingrediente(s) principal(es)</Text>
             {form.ingredientes_principal.map((i) =>
               renderIngRow(i, "principal"),
@@ -404,7 +377,7 @@ export default function RecetasTab() {
               )}
             </ScrollView>
 
-            {/* ── toppings ── */}
+            {/* toppings */}
             <Text style={s.sectionTitle}>✨ Toppings (opcional)</Text>
             {form.ingredientes_topping.map((i) => renderIngRow(i, "topping"))}
             <Text style={s.addLabel}>+ Agregar topping:</Text>
@@ -427,7 +400,7 @@ export default function RecetasTab() {
               )}
             </ScrollView>
 
-            {/* ── preparaciones caseras ── */}
+            {/* preparaciones */}
             <Text style={s.sectionTitle}>🫙 Preparaciones caseras</Text>
             {form.preparaciones.map((p) => renderPrepRow(p))}
             {prepDisponibles.length > 0 && (
@@ -451,14 +424,14 @@ export default function RecetasTab() {
               </>
             )}
 
-            {/* ── packaging ── */}
+            {/* packaging */}
             <Text style={s.sectionTitle}>📦 Packaging</Text>
             <ScrollView
               horizontal
               showsHorizontalScrollIndicator={false}
               style={s.chipScroll}
             >
-              {packagingList.map((p) => (
+              {(packaging ?? []).map((p) => (
                 <TouchableOpacity
                   key={p.id}
                   style={[
@@ -479,7 +452,7 @@ export default function RecetasTab() {
               ))}
             </ScrollView>
 
-            {/* ── configuración ── */}
+            {/* configuración */}
             <Text style={s.sectionTitle}>⚙️ Configuración</Text>
             <View style={s.configRow}>
               <Text style={s.configLabel}>Unidades por receta</Text>
@@ -507,7 +480,7 @@ export default function RecetasTab() {
     );
   };
 
-  // ── lista principal ────────────────────────────────────────────────────────
+  // ── lista ──────────────────────────────────────────────────────────────────
   if (loading) return <ActivityIndicator style={{ marginTop: 40 }} />;
 
   return (
@@ -516,7 +489,7 @@ export default function RecetasTab() {
         Toca un helado para definir su receta y ver el costo
       </Text>
       <FlatList
-        data={helados}
+        data={helados ?? []}
         keyExtractor={(item) => String(item.id)}
         renderItem={({ item }) => {
           const tieneCosto = item.receta?.costo_total > 0;
@@ -567,17 +540,16 @@ const s = StyleSheet.create({
   arrow: { fontSize: 20, color: "#ccc" },
   separator: { height: 1, backgroundColor: "#f0f0f0", marginLeft: 16 },
 
-  // modal
   modalContainer: { flex: 1, backgroundColor: "#fff" },
   modalHeader: {
     flexDirection: "row",
     alignItems: "center",
     justifyContent: "space-between",
     paddingHorizontal: 16,
-    paddingVertical: 14,
+    paddingTop: 50,
+    paddingBottom: 14,
     borderBottomWidth: 1,
     borderBottomColor: "#eee",
-    paddingTop: 50,
   },
   backTxt: { fontSize: 15, color: "#1976d2" },
   modalTitle: { fontSize: 17, fontWeight: "700", color: "#1a1a1a" },
