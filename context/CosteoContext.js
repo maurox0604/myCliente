@@ -23,6 +23,18 @@ export function CosteoProvider({ children }) {
     Authorization: `Bearer ${await getToken()}`,
   });
 
+  // Lanza Error con el mensaje del servidor si la respuesta no es 2xx.
+  // (solo lo usan bases y recetas; el resto de CRUDs queda como estaba)
+  const assertOk = async (res, fallback) => {
+    if (res.ok) return;
+    let msg = fallback;
+    try {
+      const j = await res.json();
+      if (j?.message) msg = j.message;
+    } catch (_) {}
+    throw new Error(msg);
+  };
+
   // ── fetch helpers ─────────────────────────────────────────
   const fetchIngredientes = useCallback(async () => {
     const res = await fetch(`${API}/api/costeo/ingredientes`, {
@@ -183,19 +195,21 @@ export function CosteoProvider({ children }) {
     const url = id
       ? `${API}/api/costeo/bases/${id}`
       : `${API}/api/costeo/bases`;
-    await fetch(url, {
+    const res = await fetch(url, {
       method,
       headers: await headers(),
       body: JSON.stringify(data),
     });
+    await assertOk(res, "No se pudo guardar la base");
     await fetchBases();
   };
 
   const borrarBase = async (id) => {
-    await fetch(`${API}/api/costeo/bases/${id}`, {
+    const res = await fetch(`${API}/api/costeo/bases/${id}`, {
       method: "DELETE",
       headers: await headers(),
     });
+    await assertOk(res, "No se pudo eliminar la base");
     await fetchBases();
   };
 
@@ -231,13 +245,16 @@ export function CosteoProvider({ children }) {
   };
 
   // ── RECETAS ──────────────────────────────────────────────
+  // Lanza Error si el servidor rechaza la receta (RecetasTab muestra el mensaje).
   const guardarReceta = async (helado_id, data) => {
-    await fetch(`${API}/api/costeo/recetas/${helado_id}`, {
+    const res = await fetch(`${API}/api/costeo/recetas/${helado_id}`, {
       method: "POST",
       headers: await headers(),
       body: JSON.stringify(data),
     });
+    await assertOk(res, "No se pudo guardar la receta");
     await fetchRecetas();
+    return await res.json();
   };
 
   return (

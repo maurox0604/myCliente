@@ -1,4 +1,5 @@
-import React, { useState, useEffect } from "react";
+// components/costeo/RecetasTab.js
+import React, { useState } from "react";
 import {
   View,
   Text,
@@ -13,37 +14,57 @@ import {
 } from "react-native";
 import { useCosteo } from "../../context/CosteoContext";
 
-const fmtPeso = (n) => Math.round(Number(n ?? 0)).toLocaleString("es-CO");
+// ── formato (sin dependencias externas) ─────────────────────────────────────
+const fmtPeso = (n) => {
+  const v = Math.round(Number(n ?? 0));
+  return isNaN(v) ? "0" : v.toLocaleString("es-CO");
+};
+// cantidades: 90.0000 → "90" · 1.5 → "1.5"
 const fmtCant = (n) => {
   const v = Number(n ?? 0);
+  if (isNaN(v)) return "0";
   return v % 1 === 0 ? String(v) : parseFloat(v.toFixed(4)).toString();
+};
+// precio por unidad: 38 → "38" · 4.2 → "4,2" (no redondea a 4)
+const fmtUnit = (n) => {
+  const v = Number(n ?? 0);
+  if (isNaN(v)) return "0";
+  return v >= 100
+    ? fmtPeso(v)
+    : v.toLocaleString("es-CO", { maximumFractionDigits: 2 });
+};
+// acepta "0,5" y "0.5"
+const toNum = (v) => {
+  const n = Number(String(v ?? "").replace(",", "."));
+  return Number.isFinite(n) ? n : 0;
 };
 
 const EMPTY_FORM = {
   base_id: null,
-  base_gr: "",
+  base_ml: "",
   ingredientes_principal: [],
   ingredientes_topping: [],
   preparaciones: [],
   packaging_ids: [],
-  unidades: 1,
-  margen: 30,
+  margen: "60",
 };
 
 export default function RecetasTab() {
   const {
-    recetas, // lista de helados con receta incluida (si existe)
+    recetas, // todos los helados; `id` = id del helado, `receta_id` = null si no tiene receta
     bases,
     ingredientes,
     preparaciones,
     packaging,
+    costosFijos,
     loading,
     fetchRecetaDetalle,
+    fetchBases,
+    fetchPreparaciones,
     guardarReceta,
-    fetchRecetas,
   } = useCosteo();
 
-  const [selected, setSelected] = useState(null);
+  const [selected, setSelected] = useState(null); // helado seleccionado
   const [form, setForm] = useState(EMPTY_FORM);
   const [saving, setSaving] = useState(false);
   const [modalVisible, setModalVisible] = useState(false);
@@ -52,85 +73,146 @@ export default function RecetasTab() {
   // ── abrir detalle ──────────────────────────────────────────────────────────
   const openHelado = async (item) => {
     setSelected(item);
+    setForm(EMPTY_FORM);
     setModalVisible(true);
-    if (item.receta_id) {
-      setLoadingDetalle(true);
+    setLoadingDetalle(true);
+    try {
+      // Bases y preparaciones traen su costo calculado en el servidor: si se
+      // cambió el precio de un ingrediente, hay que refrescarlas.
       try {
-        const detalle = await fetchRecetaDetalle(item.id);
-        if (detalle) {
-          setForm({
-            base_id: detalle.base_id ?? null,
-            base_gr: detalle.base_gr != null ? fmtCant(detalle.base_gr) : "",
-            ingredientes_principal: (detalle.ingredientes ?? [])
-              .filter((i) => i.tipo === "principal" || i.tipo == null)
-              .map((i) => ({ ...i, cantidad: fmtCant(i.cantidad) })),
-            ingredientes_topping: (detalle.ingredientes ?? [])
-              .filter((i) => i.tipo === "topping")
-              .map((i) => ({ ...i, cantidad: fmtCant(i.cantidad) })),
-            preparaciones: (detalle.preparaciones ?? []).map((p) => ({
-              ...p,
-              cantidad: fmtCant(p.cantidad),
-            })),
-            packaging_ids: (detalle.packaging ?? []).map((p) => p.id),
-            unidades: detalle.unidades ?? 1,
-            margen: detalle.margen ?? 30,
-          });
-        } else {
-          setForm(EMPTY_FORM);
-        }
-      } finally {
-        setLoadingDetalle(false);
+        await fetchBases();
+        await fetchPreparaciones();
+      } catch (_) {}
+
+      if (!item.receta_id) return; // helado sin receta: formulario vacío
+
+      const detalle = await fetchRecetaDetalle(item.id);
+      if (!detalle) {
+        // No mostrar un formulario vacío: al guardar pisaría la receta real.
+        setModalVisible(false);
+        Alert.alert("Error", "No se pudo cargar la receta de este helado");
+        return;
       }
-    } else {
-      setForm(EMPTY_FORM);
+      const ings = detalle.ingredientes ?? [];
+      const aFila = (i) => ({
+        id: i.ingrediente_id,
+        nombre: i.nombre,
+        unidad: i.unidad,
+        precio_unidad: i.precio_unidad,
+        cantidad: fmtCant(i.cantidad),
+      });
+      setForm({
+        base_id: detalle.base_id ?? null,
+        base_ml: detalle.base_id ? fmtCant(detalle.base_ml) : "",
+        ingredientes_principal: ings
+          .filter((i) => i.tipo !== "topping")
+          .map(aFila),
+        ingredientes_topping: ings
+          .filter((i) => i.tipo === "topping")
+          .map(aFila),
+        preparaciones: (detalle.preparaciones ?? []).map((p) => ({
+          id: p.prep_id,
+          nombre: p.nombre,
+          unidad: p.unidad,
+          costo_por_gr: p.costo_por_gr,
+          cantidad: fmtCant(p.cantidad),
+        })),
+        packaging_ids: (detalle.packaging ?? []).map((p) => p.packaging_id),
+        margen: fmtCant(detalle.margen_pct ?? 60),
+      });
+    } finally {
+      setLoadingDetalle(false);
     }
   };
 
   // ── costo en tiempo real ───────────────────────────────────────────────────
+  const baseSel = (bases ?? []).find((b) => b.id === form.base_id);
+
   const calcCosto = () => {
-    const base = (bases ?? []).find((b) => b.id === form.base_id);
-    const costoBase = base
-      ? Number(base.costo_por_ml ?? 0) * Number(form.base_gr || 0)
+    const costoBase = baseSel
+      ? Number(baseSel.costo_por_ml ?? 0) * toNum(form.base_ml)
       : 0;
-    const allIngs = [
+    const costoIngs = [
       ...form.ingredientes_principal,
       ...form.ingredientes_topping,
-    ];
-    const costoIngs = allIngs.reduce(
-      (acc, i) => acc + Number(i.precio_unidad ?? 0) * Number(i.cantidad || 0),
+    ].reduce(
+      (acc, i) => acc + Number(i.precio_unidad ?? 0) * toNum(i.cantidad),
       0,
     );
     const costoPreps = form.preparaciones.reduce(
-      (acc, p) => acc + Number(p.costo_por_gr ?? 0) * Number(p.cantidad || 0),
+      (acc, p) => acc + Number(p.costo_por_gr ?? 0) * toNum(p.cantidad),
       0,
     );
-    const pkgSel = (packaging ?? []).filter((p) =>
-      form.packaging_ids.includes(p.id),
-    );
-    const costoPkg = pkgSel.reduce(
-      (acc, p) => acc + Number(p.precio_unidad ?? 0),
-      0,
-    );
-    const total = costoBase + costoIngs + costoPreps + costoPkg;
-    const conMargen = total * (1 + Number(form.margen || 0) / 100);
-    return { costoBase, costoIngs, costoPreps, costoPkg, total, conMargen };
+    const costoPkg = (packaging ?? [])
+      .filter((p) => form.packaging_ids.includes(p.id))
+      .reduce((acc, p) => acc + Number(p.precio_unidad ?? 0), 0);
+    const costoFijo = Number(costosFijos?.costo_fijo_por_unidad ?? 0);
+
+    const total = costoBase + costoIngs + costoPreps + costoPkg + costoFijo;
+    const m = toNum(form.margen);
+    // precio = costo / (1 − margen%)
+    const precioSug = m >= 0 && m < 100 ? total / (1 - m / 100) : null;
+    return {
+      costoBase,
+      costoIngs,
+      costoPreps,
+      costoPkg,
+      costoFijo,
+      total,
+      precioSug,
+    };
+  };
+
+  // composición de la base escalada a los ml de ESTE helado
+  const baseLineas = () => {
+    const ml = toNum(form.base_ml);
+    const rend = Number(baseSel?.rendimiento_ml ?? 0);
+    if (!baseSel || !(ml > 0) || !(rend > 0)) return [];
+    const f = ml / rend;
+    return [
+      ...(baseSel.ingredientes ?? []).map((i) => ({
+        key: `i${i.ingrediente_id}`,
+        nombre: i.ingr_nombre,
+        unidad: i.unidad,
+        cantidad: Number(i.cantidad) * f,
+        precio: Number(i.precio_unidad),
+      })),
+      ...(baseSel.sub_bases ?? []).map((b) => ({
+        key: `b${b.base_origen_id}`,
+        nombre: `🧊 ${b.origen_nombre}`,
+        unidad: "ml",
+        cantidad: Number(b.cantidad_ml) * f,
+        precio: Number(b.costo_por_ml),
+      })),
+    ];
   };
 
   // ── ingredientes ───────────────────────────────────────────────────────────
+  const keyDe = (tipo) =>
+    tipo === "topping" ? "ingredientes_topping" : "ingredientes_principal";
+
   const addIngrediente = (ing, tipo) => {
-    const key =
-      tipo === "topping" ? "ingredientes_topping" : "ingredientes_principal";
-    if (form[key].find((i) => i.id === ing.id)) return;
-    setForm((f) => ({ ...f, [key]: [...f[key], { ...ing, cantidad: "" }] }));
+    const key = keyDe(tipo);
+    setForm((f) => ({
+      ...f,
+      [key]: [
+        ...f[key],
+        {
+          id: ing.id,
+          nombre: ing.nombre,
+          unidad: ing.unidad,
+          precio_unidad: ing.precio_unidad,
+          cantidad: "",
+        },
+      ],
+    }));
   };
   const removeIngrediente = (id, tipo) => {
-    const key =
-      tipo === "topping" ? "ingredientes_topping" : "ingredientes_principal";
+    const key = keyDe(tipo);
     setForm((f) => ({ ...f, [key]: f[key].filter((i) => i.id !== id) }));
   };
   const updateCantIng = (id, val, tipo) => {
-    const key =
-      tipo === "topping" ? "ingredientes_topping" : "ingredientes_principal";
+    const key = keyDe(tipo);
     setForm((f) => ({
       ...f,
       [key]: f[key].map((i) => (i.id === id ? { ...i, cantidad: val } : i)),
@@ -138,13 +220,20 @@ export default function RecetasTab() {
   };
 
   // ── preparaciones ──────────────────────────────────────────────────────────
-  const addPrep = (prep) => {
-    if (form.preparaciones.find((p) => p.id === prep.id)) return;
+  const addPrep = (prep) =>
     setForm((f) => ({
       ...f,
-      preparaciones: [...f.preparaciones, { ...prep, cantidad: "" }],
+      preparaciones: [
+        ...f.preparaciones,
+        {
+          id: prep.id,
+          nombre: prep.nombre,
+          unidad: prep.unidad,
+          costo_por_gr: prep.costo_por_gr,
+          cantidad: "",
+        },
+      ],
     }));
-  };
   const removePrep = (id) =>
     setForm((f) => ({
       ...f,
@@ -170,34 +259,50 @@ export default function RecetasTab() {
   // ── guardar ────────────────────────────────────────────────────────────────
   const guardar = async () => {
     if (!selected) return;
+
+    if (form.base_id && !(toNum(form.base_ml) > 0))
+      return Alert.alert("Base", "Indica cuántos ml de base lleva este helado");
+    const todas = [
+      ...form.ingredientes_principal,
+      ...form.ingredientes_topping,
+      ...form.preparaciones,
+    ];
+    if (todas.some((l) => !(toNum(l.cantidad) > 0)))
+      return Alert.alert(
+        "Cantidades",
+        "Hay ingredientes o preparaciones sin cantidad. Complétalas o quítalas.",
+      );
+    const m = toNum(form.margen);
+    if (!(m >= 0 && m < 100))
+      return Alert.alert("Margen", "El margen debe estar entre 0 y 99 %");
+
     setSaving(true);
     try {
       await guardarReceta(selected.id, {
         base_id: form.base_id,
-        base_gr: Number(form.base_gr) || 0,
+        base_ml: form.base_id ? toNum(form.base_ml) : 0,
         ingredientes: [
           ...form.ingredientes_principal.map((i) => ({
-            id: i.id,
-            cantidad: Number(i.cantidad) || 0,
+            ingrediente_id: i.id,
+            cantidad: toNum(i.cantidad),
             tipo: "principal",
           })),
           ...form.ingredientes_topping.map((i) => ({
-            id: i.id,
-            cantidad: Number(i.cantidad) || 0,
+            ingrediente_id: i.id,
+            cantidad: toNum(i.cantidad),
             tipo: "topping",
           })),
         ],
         preparaciones: form.preparaciones.map((p) => ({
-          id: p.id,
-          cantidad: Number(p.cantidad) || 0,
+          prep_id: p.id,
+          cantidad: toNum(p.cantidad),
         })),
         packaging_ids: form.packaging_ids,
-        unidades: Number(form.unidades) || 1,
-        margen: Number(form.margen) || 30,
+        margen_pct: m,
       });
       setModalVisible(false);
     } catch (e) {
-      Alert.alert("Error", "No se pudo guardar la receta");
+      Alert.alert("Error", e.message || "No se pudo guardar la receta");
     } finally {
       setSaving(false);
     }
@@ -217,63 +322,92 @@ export default function RecetasTab() {
   );
 
   // ── filas ──────────────────────────────────────────────────────────────────
-  const renderIngRow = (ing, tipo) => {
-    const sub = Number(ing.precio_unidad ?? 0) * Number(ing.cantidad || 0);
+  // 12 gr × $38/gr = $456
+  const renderFila = ({
+    key,
+    nombre,
+    unidad,
+    cantidad,
+    precio,
+    onRemove,
+    onChange,
+  }) => {
+    const q = toNum(cantidad);
+    const sub = Number(precio ?? 0) * q;
     return (
-      <View key={ing.id} style={s.ingRow}>
-        <TouchableOpacity
-          onPress={() => removeIngrediente(ing.id, tipo)}
-          style={s.removeBtn}
-        >
-          <Text style={s.removeTxt}>✕</Text>
-        </TouchableOpacity>
-        <Text style={s.ingNombre} numberOfLines={1}>
-          {ing.nombre}
-        </Text>
-        <TextInput
-          style={s.cantInput}
-          keyboardType="decimal-pad"
-          placeholder="gr"
-          value={String(ing.cantidad)}
-          onChangeText={(v) => updateCantIng(ing.id, v, tipo)}
-        />
-        <Text style={s.ingUnidad}>{ing.unidad ?? "gr"}</Text>
-        {sub > 0 && <Text style={s.ingSub}>= ${fmtPeso(sub)}</Text>}
+      <View key={key} style={s.filaWrap}>
+        <View style={s.ingRow}>
+          <TouchableOpacity onPress={onRemove} style={s.removeBtn}>
+            <Text style={s.removeTxt}>✕</Text>
+          </TouchableOpacity>
+          <Text style={s.ingNombre} numberOfLines={1}>
+            {nombre}
+          </Text>
+          <TextInput
+            style={s.cantInput}
+            keyboardType="decimal-pad"
+            placeholder={unidad ?? "gr"}
+            value={String(cantidad)}
+            onChangeText={onChange}
+          />
+          <Text style={s.ingUnidad}>{unidad ?? "gr"}</Text>
+        </View>
+        {sub > 0 && (
+          <Text style={s.ingDetalle}>
+            {fmtCant(q)} {unidad ?? "gr"} × ${fmtUnit(precio)}/{unidad ?? "gr"}{" "}
+            = ${fmtPeso(sub)}
+          </Text>
+        )}
       </View>
     );
   };
 
-  const renderPrepRow = (prep) => {
-    const sub = Number(prep.costo_por_gr ?? 0) * Number(prep.cantidad || 0);
-    return (
-      <View key={prep.id} style={s.ingRow}>
+  const renderIngRow = (ing, tipo) =>
+    renderFila({
+      key: `${tipo}-${ing.id}`,
+      nombre: ing.nombre,
+      unidad: ing.unidad,
+      cantidad: ing.cantidad,
+      precio: ing.precio_unidad,
+      onRemove: () => removeIngrediente(ing.id, tipo),
+      onChange: (v) => updateCantIng(ing.id, v, tipo),
+    });
+
+  const renderPrepRow = (prep) =>
+    renderFila({
+      key: `prep-${prep.id}`,
+      nombre: prep.nombre,
+      unidad: prep.unidad ?? "gr",
+      cantidad: prep.cantidad,
+      precio: prep.costo_por_gr,
+      onRemove: () => removePrep(prep.id),
+      onChange: (v) => updateCantPrep(prep.id, v),
+    });
+
+  const renderChips = (items, onPress, vacio) => (
+    <ScrollView
+      horizontal
+      showsHorizontalScrollIndicator={false}
+      style={s.chipScroll}
+    >
+      {items.map((it) => (
         <TouchableOpacity
-          onPress={() => removePrep(prep.id)}
-          style={s.removeBtn}
+          key={it.id}
+          style={s.chip}
+          onPress={() => onPress(it)}
         >
-          <Text style={s.removeTxt}>✕</Text>
+          <Text style={s.chipTxt}>{it.nombre}</Text>
         </TouchableOpacity>
-        <Text style={s.ingNombre} numberOfLines={1}>
-          {prep.nombre}
-        </Text>
-        <TextInput
-          style={s.cantInput}
-          keyboardType="decimal-pad"
-          placeholder="gr"
-          value={String(prep.cantidad)}
-          onChangeText={(v) => updateCantPrep(prep.id, v)}
-        />
-        <Text style={s.ingUnidad}>gr</Text>
-        {sub > 0 && <Text style={s.ingSub}>= ${fmtPeso(sub)}</Text>}
-      </View>
-    );
-  };
+      ))}
+      {items.length === 0 && <Text style={s.emptyChip}>{vacio}</Text>}
+    </ScrollView>
+  );
 
   // ── modal ──────────────────────────────────────────────────────────────────
   const renderModal = () => {
     if (!selected) return null;
-    const { costoBase, costoIngs, costoPreps, costoPkg, total, conMargen } =
-      calcCosto();
+    const c = calcCosto();
+    const lineasBase = baseLineas();
 
     return (
       <Modal
@@ -287,10 +421,18 @@ export default function RecetasTab() {
               <Text style={s.backTxt}>← Volver</Text>
             </TouchableOpacity>
             <Text style={s.modalTitle} numberOfLines={1}>
-              {selected.helado_nombre ?? selected.sabor}
+              {selected.helado_nombre}
             </Text>
-            <TouchableOpacity onPress={guardar} disabled={saving}>
-              <Text style={[s.saveTxt, saving && { opacity: 0.4 }]}>
+            <TouchableOpacity
+              onPress={guardar}
+              disabled={saving || loadingDetalle}
+            >
+              <Text
+                style={[
+                  s.saveTxt,
+                  (saving || loadingDetalle) && { opacity: 0.4 },
+                ]}
+              >
                 {saving ? "Guardando…" : "Guardar"}
               </Text>
             </TouchableOpacity>
@@ -299,33 +441,48 @@ export default function RecetasTab() {
           {loadingDetalle ? (
             <ActivityIndicator style={{ marginTop: 40 }} />
           ) : (
-            <ScrollView contentContainerStyle={s.modalBody}>
+            <ScrollView
+              contentContainerStyle={s.modalBody}
+              keyboardShouldPersistTaps="handled"
+            >
               {/* costo */}
               <View style={s.costoBox}>
-                <Text style={s.costoTitle}>💰 Costo estimado</Text>
-                {costoBase > 0 && (
-                  <Text style={s.costoLine}>Base: ${fmtPeso(costoBase)}</Text>
+                <Text style={s.costoTitle}>💰 Costo de producción</Text>
+                {c.costoBase > 0 && (
+                  <Text style={s.costoLine}>Base: ${fmtPeso(c.costoBase)}</Text>
                 )}
-                {costoIngs > 0 && (
+                {c.costoIngs > 0 && (
                   <Text style={s.costoLine}>
-                    Ingredientes: ${fmtPeso(costoIngs)}
+                    Ingredientes: ${fmtPeso(c.costoIngs)}
                   </Text>
                 )}
-                {costoPreps > 0 && (
+                {c.costoPreps > 0 && (
                   <Text style={s.costoLine}>
-                    Preparaciones: ${fmtPeso(costoPreps)}
+                    Preparaciones: ${fmtPeso(c.costoPreps)}
                   </Text>
                 )}
-                {costoPkg > 0 && (
+                {c.costoPkg > 0 && (
                   <Text style={s.costoLine}>
-                    Packaging: ${fmtPeso(costoPkg)}
+                    Packaging: ${fmtPeso(c.costoPkg)}
+                  </Text>
+                )}
+                {c.costoFijo > 0 && (
+                  <Text style={s.costoLine}>
+                    Costos fijos: ${fmtPeso(c.costoFijo)}
                   </Text>
                 )}
                 <View style={s.costoDivider} />
-                <Text style={s.costoTotal}>Total: ${fmtPeso(total)}</Text>
+                <Text style={s.costoTotal}>Total: ${fmtPeso(c.total)}</Text>
                 <Text style={s.costoPrecio}>
-                  Precio sugerido (+{form.margen}%): ${fmtPeso(conMargen)}
+                  {c.precioSug == null
+                    ? "Precio sugerido: — (margen inválido)"
+                    : `Precio sugerido (margen ${fmtCant(toNum(form.margen))}%): $${fmtPeso(c.precioSug)}`}
                 </Text>
+                {Number(selected.precio_venta) > 0 && (
+                  <Text style={s.costoActual}>
+                    Precio de venta actual: ${fmtPeso(selected.precio_venta)}
+                  </Text>
+                )}
               </View>
 
               {/* base */}
@@ -339,30 +496,55 @@ export default function RecetasTab() {
                   <TouchableOpacity
                     key={b.id}
                     style={[s.chip, form.base_id === b.id && s.chipSel]}
-                    onPress={() => setForm((f) => ({ ...f, base_id: b.id }))}
+                    onPress={() =>
+                      setForm((f) => ({
+                        ...f,
+                        base_id: f.base_id === b.id ? null : b.id,
+                      }))
+                    }
                   >
                     <Text
                       style={[s.chipTxt, form.base_id === b.id && s.chipTxtSel]}
                     >
-                      {b.nombre}
+                      {b.nombre} · ${fmtUnit(b.costo_por_ml)}/ml
                     </Text>
                   </TouchableOpacity>
                 ))}
+                {(bases ?? []).length === 0 && (
+                  <Text style={s.emptyChip}>Aún no hay bases</Text>
+                )}
               </ScrollView>
-              {form.base_id && (
-                <View style={s.ingRow}>
-                  <Text style={s.ingNombre}>
-                    {(bases ?? []).find((b) => b.id === form.base_id)?.nombre}
+              {baseSel && (
+                <>
+                  <View style={s.ingRow}>
+                    <Text style={s.ingNombre}>{baseSel.nombre}</Text>
+                    <TextInput
+                      style={s.cantInput}
+                      keyboardType="decimal-pad"
+                      placeholder="ml"
+                      value={String(form.base_ml)}
+                      onChangeText={(v) =>
+                        setForm((f) => ({ ...f, base_ml: v }))
+                      }
+                    />
+                    <Text style={s.ingUnidad}>ml</Text>
+                  </View>
+                  <Text style={s.hint}>
+                    Cuántos ml de base lleva ESTE helado
                   </Text>
-                  <TextInput
-                    style={s.cantInput}
-                    keyboardType="decimal-pad"
-                    placeholder="gr"
-                    value={String(form.base_gr)}
-                    onChangeText={(v) => setForm((f) => ({ ...f, base_gr: v }))}
-                  />
-                  <Text style={s.ingUnidad}>gr</Text>
-                </View>
+                  {lineasBase.map((l) => (
+                    <View key={l.key} style={s.baseLinea}>
+                      <Text style={s.baseLineaNombre} numberOfLines={1}>
+                        {l.nombre}
+                      </Text>
+                      <Text style={s.baseLineaDetalle}>
+                        {fmtCant(Math.round(l.cantidad * 100) / 100)} {l.unidad}{" "}
+                        × ${fmtUnit(l.precio)} = $
+                        {fmtPeso(l.cantidad * l.precio)}
+                      </Text>
+                    </View>
+                  ))}
+                </>
               )}
 
               {/* ingrediente principal */}
@@ -372,75 +554,35 @@ export default function RecetasTab() {
               {form.ingredientes_principal.map((i) =>
                 renderIngRow(i, "principal"),
               )}
-              <Text style={s.addLabel}>+ Agregar principal:</Text>
-              <ScrollView
-                horizontal
-                showsHorizontalScrollIndicator={false}
-                style={s.chipScroll}
-              >
-                {ingDisponibles.map((ing) => (
-                  <TouchableOpacity
-                    key={ing.id}
-                    style={s.chip}
-                    onPress={() => addIngrediente(ing, "principal")}
-                  >
-                    <Text style={s.chipTxt}>{ing.nombre}</Text>
-                  </TouchableOpacity>
-                ))}
-                {ingDisponibles.length === 0 && (
-                  <Text style={s.emptyChip}>No hay más ingredientes</Text>
-                )}
-              </ScrollView>
+              <Text style={s.addLabel}>+ Añadir ingrediente:</Text>
+              {renderChips(
+                ingDisponibles,
+                (ing) => addIngrediente(ing, "principal"),
+                "No hay más ingredientes",
+              )}
 
               {/* toppings */}
               <Text style={s.sectionTitle}>✨ Toppings (opcional)</Text>
               {form.ingredientes_topping.map((i) => renderIngRow(i, "topping"))}
-              <Text style={s.addLabel}>+ Agregar topping:</Text>
-              <ScrollView
-                horizontal
-                showsHorizontalScrollIndicator={false}
-                style={s.chipScroll}
-              >
-                {ingDisponibles.map((ing) => (
-                  <TouchableOpacity
-                    key={ing.id}
-                    style={s.chip}
-                    onPress={() => addIngrediente(ing, "topping")}
-                  >
-                    <Text style={s.chipTxt}>{ing.nombre}</Text>
-                  </TouchableOpacity>
-                ))}
-                {ingDisponibles.length === 0 && (
-                  <Text style={s.emptyChip}>No hay más ingredientes</Text>
-                )}
-              </ScrollView>
+              <Text style={s.addLabel}>+ Añadir topping:</Text>
+              {renderChips(
+                ingDisponibles,
+                (ing) => addIngrediente(ing, "topping"),
+                "No hay más ingredientes",
+              )}
 
               {/* preparaciones */}
               <Text style={s.sectionTitle}>🫙 Preparaciones caseras</Text>
               {form.preparaciones.map((p) => renderPrepRow(p))}
               {prepDisponibles.length > 0 && (
                 <>
-                  <Text style={s.addLabel}>+ Agregar preparación:</Text>
-                  <ScrollView
-                    horizontal
-                    showsHorizontalScrollIndicator={false}
-                    style={s.chipScroll}
-                  >
-                    {prepDisponibles.map((prep) => (
-                      <TouchableOpacity
-                        key={prep.id}
-                        style={s.chip}
-                        onPress={() => addPrep(prep)}
-                      >
-                        <Text style={s.chipTxt}>{prep.nombre}</Text>
-                      </TouchableOpacity>
-                    ))}
-                  </ScrollView>
+                  <Text style={s.addLabel}>+ Añadir preparación:</Text>
+                  {renderChips(prepDisponibles, addPrep, "")}
                 </>
               )}
 
               {/* packaging */}
-              <Text style={s.sectionTitle}>📦 Packaging</Text>
+              <Text style={s.sectionTitle}>📦 Packaging para este helado</Text>
               <ScrollView
                 horizontal
                 showsHorizontalScrollIndicator={false}
@@ -461,7 +603,7 @@ export default function RecetasTab() {
                         form.packaging_ids.includes(p.id) && s.chipTxtSel,
                       ]}
                     >
-                      {p.nombre} ${fmtPeso(p.precio_unidad)}
+                      {p.nombre} — ${fmtPeso(p.precio_unidad)}
                     </Text>
                   </TouchableOpacity>
                 ))}
@@ -470,19 +612,10 @@ export default function RecetasTab() {
               {/* configuración */}
               <Text style={s.sectionTitle}>⚙️ Configuración</Text>
               <View style={s.configRow}>
-                <Text style={s.configLabel}>Unidades por receta</Text>
+                <Text style={s.configLabel}>% de margen deseado</Text>
                 <TextInput
                   style={s.configInput}
-                  keyboardType="number-pad"
-                  value={String(form.unidades)}
-                  onChangeText={(v) => setForm((f) => ({ ...f, unidades: v }))}
-                />
-              </View>
-              <View style={s.configRow}>
-                <Text style={s.configLabel}>Margen de ganancia (%)</Text>
-                <TextInput
-                  style={s.configInput}
-                  keyboardType="number-pad"
+                  keyboardType="decimal-pad"
                   value={String(form.margen)}
                   onChangeText={(v) => setForm((f) => ({ ...f, margen: v }))}
                 />
@@ -501,13 +634,14 @@ export default function RecetasTab() {
 
   return (
     <View style={s.container}>
-      <Text style={s.hint}>
+      <Text style={s.hintTop}>
         Toca un helado para definir su receta y ver el costo
       </Text>
       <FlatList
         data={recetas ?? []}
         keyExtractor={(item) => String(item.id)}
         renderItem={({ item }) => {
+          const tieneReceta = !!item.receta_id;
           const tieneCosto = Number(item.costo_total) > 0;
           return (
             <TouchableOpacity
@@ -515,12 +649,16 @@ export default function RecetasTab() {
               onPress={() => openHelado(item)}
             >
               <View style={s.heladoInfo}>
-                <Text style={s.heladoNombre}>
-                  {item.helado_nombre ?? item.sabor}
-                </Text>
-                {tieneCosto ? (
+                <Text style={s.heladoNombre}>{item.helado_nombre}</Text>
+                {tieneReceta ? (
                   <Text style={s.heladoCosto}>
-                    Costo: ${fmtPeso(item.costo_total)}
+                    {tieneCosto
+                      ? `Costo: $${fmtPeso(item.costo_total)}`
+                      : "Receta guardada"}
+                    {item.base_nombre ? ` · ${item.base_nombre}` : ""}
+                    {Number(item.precio_venta) > 0
+                      ? ` · Vende $${fmtPeso(item.precio_venta)}`
+                      : ""}
                   </Text>
                 ) : (
                   <Text style={s.heladoSinReceta}>Sin receta →</Text>
@@ -539,7 +677,7 @@ export default function RecetasTab() {
 
 const s = StyleSheet.create({
   container: { flex: 1, backgroundColor: "#fff" },
-  hint: {
+  hintTop: {
     fontSize: 13,
     color: "#888",
     textAlign: "center",
@@ -592,10 +730,11 @@ const s = StyleSheet.create({
     color: "#2e7d32",
     marginBottom: 6,
   },
-  costoLine: { fontSize: 13, color: "#388e3c", fontFamily: "monospace" },
+  costoLine: { fontSize: 13, color: "#388e3c" },
   costoDivider: { height: 1, backgroundColor: "#a5d6a7", marginVertical: 6 },
   costoTotal: { fontSize: 15, fontWeight: "700", color: "#1b5e20" },
   costoPrecio: { fontSize: 14, color: "#388e3c", marginTop: 2 },
+  costoActual: { fontSize: 12, color: "#66806a", marginTop: 4 },
 
   sectionTitle: {
     fontSize: 15,
@@ -604,6 +743,7 @@ const s = StyleSheet.create({
     marginTop: 20,
     marginBottom: 8,
   },
+  hint: { fontSize: 11, color: "#999", marginTop: 4, marginBottom: 4 },
   chipScroll: { flexGrow: 0, marginBottom: 8 },
   chip: {
     paddingHorizontal: 12,
@@ -625,12 +765,15 @@ const s = StyleSheet.create({
   },
   addLabel: { fontSize: 12, color: "#888", marginBottom: 4 },
 
+  filaWrap: {
+    borderBottomWidth: 1,
+    borderBottomColor: "#f0f0f0",
+    paddingBottom: 4,
+  },
   ingRow: {
     flexDirection: "row",
     alignItems: "center",
     paddingVertical: 6,
-    borderBottomWidth: 1,
-    borderBottomColor: "#f0f0f0",
   },
   removeBtn: {
     width: 24,
@@ -644,7 +787,7 @@ const s = StyleSheet.create({
   removeTxt: { fontSize: 11, color: "#c62828" },
   ingNombre: { flex: 1, fontSize: 14, color: "#333" },
   cantInput: {
-    width: 60,
+    width: 70,
     borderWidth: 1,
     borderColor: "#ddd",
     borderRadius: 6,
@@ -654,8 +797,22 @@ const s = StyleSheet.create({
     textAlign: "right",
     marginHorizontal: 6,
   },
-  ingUnidad: { fontSize: 12, color: "#888", width: 24 },
-  ingSub: { fontSize: 12, color: "#00796b", marginLeft: 4 },
+  ingUnidad: { fontSize: 12, color: "#888", width: 34 },
+  ingDetalle: {
+    fontSize: 12,
+    color: "#00796b",
+    marginLeft: 32,
+    marginBottom: 2,
+  },
+
+  baseLinea: {
+    flexDirection: "row",
+    justifyContent: "space-between",
+    paddingVertical: 3,
+    paddingLeft: 8,
+  },
+  baseLineaNombre: { flex: 1, fontSize: 12, color: "#666" },
+  baseLineaDetalle: { fontSize: 12, color: "#888" },
 
   configRow: {
     flexDirection: "row",
