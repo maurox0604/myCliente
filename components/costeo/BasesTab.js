@@ -1,75 +1,108 @@
 // components/costeo/BasesTab.js
-import {
-  View,
-  Text,
-  FlatList,
-  Pressable,
-  StyleSheet,
-  TextInput,
-  Alert,
-  Modal,
-  ScrollView,
-} from "react-native";
-import { useState } from "react";
+// Una base se arma con: ingredientes (gr/ml/unidad) + preparaciones caseras
+// (gr/ml) + otras bases (ml).  Ej.: Base chocolatosa = 1000 ml de Base principal
+// + cacao + café.  Cada línea se puede editar en el sitio (tocar la cantidad).
+import React, { useEffect, useState } from "react";
+import { View, Text, FlatList, StyleSheet } from "react-native";
 import { useCosteo } from "../../context/CosteoContext";
+import {
+  C,
+  PAGE,
+  PageHeader,
+  Btn,
+  IconBtn,
+  Tag,
+  Field,
+  Input,
+  SearchBox,
+  Block,
+  EmptyState,
+  DuplicateWarning,
+  AddLinePanel,
+  LineaEditable,
+  ModalShell,
+  FooterBtns,
+  DialogLayer,
+  avisar,
+  confirmar,
+  toast,
+  fmtPeso,
+  fmtCant,
+  fmtUnit,
+  toNum,
+  aTexto,
+  formulaLinea,
+  coincide,
+  catInfo,
+} from "./ui";
 
-const fmt = (n) => Math.round(Number(n ?? 0)).toLocaleString("es-CO");
-// precios unitarios: 4,2 → "4,2" · 1250 → "1.250"
-const fmtUnit = (n) => {
-  const v = Number(n ?? 0);
-  if (isNaN(v)) return "0";
-  return v >= 100
-    ? fmt(v)
-    : v.toLocaleString("es-CO", { maximumFractionDigits: 2 });
+// Un color por tipo de línea (igual que en tu esquema: ingredientes verde,
+// preparaciones morado, bases azul)
+const TIPOS = {
+  ingrediente: {
+    icono: "🥛",
+    tone: "green",
+    etiqueta: "Ingrediente",
+    orden: 0,
+  },
+  preparacion: {
+    icono: "🫙",
+    tone: "purple",
+    etiqueta: "Preparación",
+    orden: 1,
+  },
+  base: { icono: "🧊", tone: "blue", etiqueta: "Otra base", orden: 2 },
 };
-const fmtCant = (n) => {
-  const v = Number(n ?? 0);
-  if (isNaN(v)) return "0";
-  return v % 1 === 0 ? String(v) : parseFloat(v.toFixed(4)).toString();
-};
-const toNum = (v) => {
-  const n = Number(String(v ?? "").replace(",", "."));
-  return Number.isFinite(n) ? n : 0;
-};
+const EMPTY_FORM = { nombre: "", descripcion: "", rendimiento_ml: "1000" };
 
-const EMPTY_BASE = { nombre: "", descripcion: "", rendimiento_ml: "1000" };
-const EMPTY_LINE = {
-  tipo: "ingrediente", // "ingrediente" | "base"
-  ingrediente_id: "",
-  base_origen_id: "",
-  cantidad: "",
-};
+const keyDe = (l) => `${l.tipo}-${l.id}`;
 
 export default function BasesTab() {
-  const { bases, ingredientes, guardarBase, borrarBase } = useCosteo();
+  const {
+    bases,
+    ingredientes,
+    preparaciones,
+    guardarBase,
+    borrarBase,
+    fetchBases,
+    fetchPreparaciones,
+  } = useCosteo();
 
+  const [busqueda, setBusqueda] = useState("");
   const [modal, setModal] = useState(false);
-  const [form, setForm] = useState(EMPTY_BASE);
   const [editId, setEditId] = useState(null);
-  // líneas: { tipo: "ingrediente", ingrediente_id, cantidad }
-  //      o  { tipo: "base",        base_origen_id, cantidad }  (cantidad en ml)
+  const [form, setForm] = useState(EMPTY_FORM);
+  // { tipo, id, cantidad (texto), nombre, unidad, precio }  → se guarda una "foto"
+  // del nombre/precio al abrir o añadir, así la línea siempre se puede ver y editar.
   const [lineas, setLineas] = useState([]);
+  const [panel, setPanel] = useState(false);
   const [saving, setSaving] = useState(false);
 
-  const [lineModal, setLineModal] = useState(false);
-  const [lineForm, setLineForm] = useState(EMPTY_LINE);
+  // Los costos de bases y preparaciones los calcula el servidor: se refrescan
+  // al entrar para no mostrar precios viejos.
+  useEffect(() => {
+    (async () => {
+      try {
+        if (fetchPreparaciones) await fetchPreparaciones();
+        if (fetchBases) await fetchBases();
+      } catch (_) {}
+    })();
+  }, []);
 
-  // ── helpers ───────────────────────────────────────────────
-  const ing = (id) => (ingredientes ?? []).find((i) => i.id === Number(id));
-  const baseById = (id) => (bases ?? []).find((b) => b.id === Number(id));
+  const listaBases = bases ?? [];
+  const baseById = (id) => listaBases.find((b) => b.id === Number(id));
 
   // ¿`desdeId` contiene (directa o indirectamente) a `buscadaId`?
-  // Sirve para no ofrecer bases que crearían un ciclo.
   const contiene = (desdeId, buscadaId, vistos = new Set()) => {
     if (Number(desdeId) === Number(buscadaId)) return true;
     if (vistos.has(desdeId)) return false;
     vistos.add(desdeId);
-    const b = baseById(desdeId);
-    return (b?.sub_bases ?? []).some((s) =>
+    return (baseById(desdeId)?.sub_bases ?? []).some((s) =>
       contiene(s.base_origen_id, buscadaId, vistos),
     );
   };
 
+  // ── abrir / cerrar ─────────────────────────────────────────
   const abrir = (base = null) => {
     setEditId(base?.id ?? null);
     setForm(
@@ -77,30 +110,186 @@ export default function BasesTab() {
         ? {
             nombre: base.nombre,
             descripcion: base.descripcion ?? "",
-            rendimiento_ml: fmtCant(base.rendimiento_ml ?? 1000),
+            rendimiento_ml: aTexto(base.rendimiento_ml ?? 1000),
           }
-        : EMPTY_BASE,
+        : EMPTY_FORM,
     );
     setLineas([
       ...(base?.ingredientes ?? []).map((i) => ({
         tipo: "ingrediente",
-        ingrediente_id: i.ingrediente_id,
-        cantidad: Number(i.cantidad),
+        id: i.ingrediente_id,
+        cantidad: aTexto(i.cantidad),
+        nombre: i.ingr_nombre,
+        unidad: i.unidad,
+        precio: Number(i.precio_unidad),
+      })),
+      ...(base?.preparaciones ?? []).map((p) => ({
+        tipo: "preparacion",
+        id: p.prep_id,
+        cantidad: aTexto(p.cantidad),
+        nombre: p.prep_nombre,
+        unidad: p.prep_unidad ?? "gr",
+        precio: Number(p.costo_por_gr),
       })),
       ...(base?.sub_bases ?? []).map((s) => ({
         tipo: "base",
-        base_origen_id: s.base_origen_id,
-        cantidad: Number(s.cantidad_ml),
+        id: s.base_origen_id,
+        cantidad: aTexto(s.cantidad_ml),
+        nombre: s.origen_nombre,
+        unidad: "ml",
+        precio: Number(s.costo_por_ml),
       })),
     ]);
+    setPanel(false);
     setModal(true);
   };
 
+  const cerrar = () => {
+    setModal(false);
+    setPanel(false);
+  };
+
+  // ── líneas ─────────────────────────────────────────────────
+  const cambiarCantidad = (key, v) =>
+    setLineas((prev) =>
+      prev.map((l) => (keyDe(l) === key ? { ...l, cantidad: v } : l)),
+    );
+  const quitar = (key) =>
+    setLineas((prev) => prev.filter((l) => keyDe(l) !== key));
+
+  const anadir = ({ fuente, id, cantidad }) => {
+    let nueva = null;
+    if (fuente === "ingrediente") {
+      const i = (ingredientes ?? []).find((x) => x.id === id);
+      if (i)
+        nueva = {
+          tipo: "ingrediente",
+          id,
+          nombre: i.nombre,
+          unidad: i.unidad,
+          precio: Number(i.precio_unidad),
+        };
+    } else if (fuente === "preparacion") {
+      const p = (preparaciones ?? []).find((x) => x.id === id);
+      if (p)
+        nueva = {
+          tipo: "preparacion",
+          id,
+          nombre: p.nombre,
+          unidad: p.unidad ?? "gr",
+          precio: Number(p.costo_por_gr ?? 0),
+        };
+    } else {
+      const b = baseById(id);
+      if (b)
+        nueva = {
+          tipo: "base",
+          id,
+          nombre: b.nombre,
+          unidad: "ml",
+          precio: Number(b.costo_por_ml ?? 0),
+        };
+    }
+    if (!nueva)
+      return avisar(
+        "No se pudo añadir",
+        "Ese elemento ya no está disponible. Recarga la pantalla.",
+      );
+    setLineas((prev) => [...prev, { ...nueva, cantidad: aTexto(cantidad) }]);
+  };
+
+  // ── costo en vivo ──────────────────────────────────────────
+  const costoLote = lineas.reduce(
+    (s, l) => s + toNum(l.cantidad) * l.precio,
+    0,
+  );
+  const rendimiento = toNum(form.rendimiento_ml);
+  const costoPorMl = rendimiento > 0 ? costoLote / rendimiento : 0;
+
+  // ── qué se puede añadir ────────────────────────────────────
+  const usadas = (tipo) =>
+    lineas.filter((l) => l.tipo === tipo).map((l) => l.id);
+
+  // Bases que se pueden usar dentro de ésta: no ella misma, no las ya añadidas
+  // y ninguna que ya la use (sería circular: A dentro de B y B dentro de A).
+  const basesCirculares = editId
+    ? listaBases.filter((b) => b.id !== editId && contiene(b.id, editId))
+    : [];
+  const basesOpciones = listaBases.filter(
+    (b) =>
+      b.id !== editId &&
+      !usadas("base").includes(b.id) &&
+      !basesCirculares.some((c) => c.id === b.id),
+  );
+
+  const fuentes = [
+    {
+      key: "ingrediente",
+      label: "🥛 Ingrediente",
+      plural: "ingredientes",
+      tone: "green",
+      items: (ingredientes ?? [])
+        .filter((i) => !usadas("ingrediente").includes(i.id))
+        .map((i) => ({
+          id: i.id,
+          nombre: i.nombre,
+          unidad: i.unidad,
+          sub: `${i.categoria ? catInfo(i.categoria).label + " · " : ""}$${fmtUnit(i.precio_unidad)}/${i.unidad}`,
+        })),
+      vacio: "Ya añadiste todos los ingredientes",
+    },
+    {
+      key: "preparacion",
+      label: "🫙 Preparación",
+      plural: "preparaciones",
+      tone: "purple",
+      items: (preparaciones ?? [])
+        .filter((p) => !usadas("preparacion").includes(p.id))
+        .map((p) => ({
+          id: p.id,
+          nombre: p.nombre,
+          unidad: p.unidad ?? "gr",
+          sub: `$${fmtUnit(p.costo_por_gr)}/${p.unidad ?? "gr"}`,
+        })),
+      vacio: (preparaciones ?? []).length
+        ? "Ya añadiste todas las preparaciones"
+        : "Aún no hay preparaciones. Créalas en la pestaña Preparaciones.",
+    },
+    {
+      key: "base",
+      label: "🧊 Otra base",
+      plural: "bases",
+      tone: "blue",
+      items: basesOpciones.map((b) => ({
+        id: b.id,
+        nombre: b.nombre,
+        unidad: "ml",
+        sub: `$${fmtUnit(b.costo_por_ml)}/ml`,
+      })),
+      vacio: basesCirculares.length
+        ? "No hay otras bases para añadir aquí"
+        : "No hay otras bases creadas todavía",
+      nota: basesCirculares.length
+        ? `No se ofrece ${basesCirculares.map((b) => b.nombre).join(", ")} porque ya usa${basesCirculares.length > 1 ? "n" : ""} esta base: ponerla aquí sería circular.`
+        : undefined,
+    },
+  ];
+
+  // ── guardar / borrar ───────────────────────────────────────
   const guardar = async () => {
-    if (!form.nombre.trim()) return Alert.alert("Nombre requerido");
-    const rendimiento = toNum(form.rendimiento_ml);
+    if (!form.nombre.trim())
+      return avisar("Falta el nombre", "Escribe cómo se llama la base.");
     if (!(rendimiento > 0))
-      return Alert.alert("Rendimiento", "Indica cuántos ml rinde el lote");
+      return avisar(
+        "Falta el rendimiento",
+        "Indica cuántos ml rinde el lote completo.",
+      );
+    const sinCantidad = lineas.filter((l) => !(toNum(l.cantidad) > 0));
+    if (sinCantidad.length)
+      return avisar(
+        "Hay líneas sin cantidad",
+        `Completa o quita: ${sinCantidad.map((l) => l.nombre).join(", ")}.`,
+      );
     setSaving(true);
     try {
       await guardarBase(
@@ -111,561 +300,327 @@ export default function BasesTab() {
           ingredientes: lineas
             .filter((l) => l.tipo === "ingrediente")
             .map((l) => ({
-              ingrediente_id: l.ingrediente_id,
-              cantidad: l.cantidad,
+              ingrediente_id: l.id,
+              cantidad: toNum(l.cantidad),
             })),
+          preparaciones: lineas
+            .filter((l) => l.tipo === "preparacion")
+            .map((l) => ({ prep_id: l.id, cantidad: toNum(l.cantidad) })),
           sub_bases: lineas
             .filter((l) => l.tipo === "base")
             .map((l) => ({
-              base_origen_id: l.base_origen_id,
-              cantidad_ml: l.cantidad,
+              base_origen_id: l.id,
+              cantidad_ml: toNum(l.cantidad),
             })),
         },
         editId,
       );
-      setModal(false);
+      cerrar();
+      toast(editId ? "Base actualizada" : "Base creada");
     } catch (e) {
-      Alert.alert("Error", e.message || "No se pudo guardar la base");
+      avisar("No se pudo guardar la base", e.message || "Inténtalo de nuevo.");
     } finally {
       setSaving(false);
     }
   };
 
-  const borrar = (base) =>
-    Alert.alert("Eliminar", `¿Eliminar la base "${base.nombre}"?`, [
-      { text: "Cancelar", style: "cancel" },
+  const borrar = async (base) => {
+    const si = await confirmar(
+      "Eliminar base",
+      `¿Eliminar "${base.nombre}"? Esta acción no se puede deshacer.`,
       {
-        text: "Eliminar",
-        style: "destructive",
-        onPress: async () => {
-          try {
-            await borrarBase(base.id);
-          } catch (e) {
-            Alert.alert("No se pudo eliminar", e.message);
-          }
-        },
+        confirmText: "Eliminar",
+        destructive: true,
       },
-    ]);
-
-  const addLine = () => {
-    if (lineForm.tipo === "ingrediente" && !lineForm.ingrediente_id)
-      return Alert.alert("Selecciona un ingrediente");
-    if (lineForm.tipo === "base" && !lineForm.base_origen_id)
-      return Alert.alert("Selecciona una base");
-    const cantidad = toNum(lineForm.cantidad);
-    if (!(cantidad > 0)) return Alert.alert("Ingresa la cantidad");
-    setLineas((prev) => [
-      ...prev,
-      lineForm.tipo === "ingrediente"
-        ? {
-            tipo: "ingrediente",
-            ingrediente_id: Number(lineForm.ingrediente_id),
-            cantidad,
-          }
-        : {
-            tipo: "base",
-            base_origen_id: Number(lineForm.base_origen_id),
-            cantidad,
-          },
-    ]);
-    setLineForm(EMPTY_LINE);
-    setLineModal(false);
+    );
+    if (!si) return;
+    try {
+      await borrarBase(base.id);
+      toast("Base eliminada");
+    } catch (e) {
+      avisar("No se pudo eliminar", e.message);
+    }
   };
 
-  const removeLine = (idx) =>
-    setLineas((prev) => prev.filter((_, i) => i !== idx));
-
-  // ── costeo estimado del lote ───────────────────────────────
-  const costoLote = lineas.reduce((acc, l) => {
-    if (l.tipo === "base") {
-      return (
-        acc +
-        Number(l.cantidad) *
-          Number(baseById(l.base_origen_id)?.costo_por_ml ?? 0)
-      );
-    }
-    return (
-      acc +
-      Number(l.cantidad) * Number(ing(l.ingrediente_id)?.precio_unidad ?? 0)
-    );
-  }, 0);
-  const rendimientoNum = toNum(form.rendimiento_ml);
-  const costoPorMl = rendimientoNum > 0 ? costoLote / rendimientoNum : 0;
-
-  // opciones del selector de bases: no ella misma, no las ya usadas,
-  // y ninguna que ya contenga a esta (ciclo)
-  const basesDisponibles = (bases ?? []).filter(
-    (b) =>
-      b.id !== editId &&
-      !lineas.some((l) => l.tipo === "base" && l.base_origen_id === b.id) &&
-      !(editId && contiene(b.id, editId)),
-  );
-  const ingsDisponibles = (ingredientes ?? []).filter(
-    (i) =>
-      !lineas.some(
-        (l) => l.tipo === "ingrediente" && l.ingrediente_id === i.id,
-      ),
-  );
-
-  const unidadLinea = (l) =>
-    l.tipo === "base" ? "ml" : (ing(l.ingrediente_id)?.unidad ?? "");
-
   // ── render ─────────────────────────────────────────────────
+  const visibles = listaBases.filter((b) => coincide(busqueda, b.nombre));
+  const ordenadas = [...lineas].sort(
+    (a, b) => TIPOS[a.tipo].orden - TIPOS[b.tipo].orden,
+  );
+
+  const resumen = (
+    <View style={s.sticky}>
+      <View style={{ flex: 1 }}>
+        <Text style={s.stickyLabel}>Costo del lote</Text>
+        <Text style={s.stickyValor}>${fmtPeso(costoLote)}</Text>
+      </View>
+      <View style={{ alignItems: "flex-end" }}>
+        <Text style={s.stickyLabel}>Costo por ml</Text>
+        <Text style={s.stickyValor}>${fmtUnit(costoPorMl)}</Text>
+      </View>
+    </View>
+  );
+
   return (
     <View style={s.container}>
-      <Pressable style={s.addBtn} onPress={() => abrir()}>
-        <Text style={s.addBtnText}>+ Nueva base</Text>
-      </Pressable>
-
       <FlatList
-        data={bases}
-        keyExtractor={(i) => String(i.id)}
-        contentContainerStyle={{ padding: 12, gap: 8 }}
-        ListEmptyComponent={
-          <Text style={s.empty}>No hay bases definidas.</Text>
-        }
-        renderItem={({ item }) => (
-          <View style={s.card}>
-            <View style={{ flex: 1 }}>
-              <Text style={s.cardNombre}>{item.nombre}</Text>
-              {item.descripcion ? (
-                <Text style={s.cardDesc}>{item.descripcion}</Text>
-              ) : null}
-              {(item.sub_bases ?? []).length > 0 && (
-                <Text style={s.cardSub}>
-                  🧊 Parte de:{" "}
-                  {item.sub_bases
-                    .map(
-                      (b) =>
-                        `${b.origen_nombre} (${fmtCant(b.cantidad_ml)} ml)`,
-                    )
-                    .join(" + ")}
-                </Text>
-              )}
-              <Text style={s.cardDetalle}>
-                {`Lote $${fmt(item.costo_tanda)} · rinde ${fmtCant(item.rendimiento_ml)} ml · $${fmtUnit(item.costo_por_ml)}/ml`}
-              </Text>
-            </View>
-            <Pressable onPress={() => abrir(item)} style={s.iconBtn}>
-              <Text>✏️</Text>
-            </Pressable>
-            <Pressable onPress={() => borrar(item)} style={s.iconBtn}>
-              <Text>🗑️</Text>
-            </Pressable>
-          </View>
-        )}
-      />
-
-      {/* ── MODAL CREAR/EDITAR BASE ─────────────────────── */}
-      <Modal
-        visible={modal}
-        transparent
-        animationType="slide"
-        onRequestClose={() => setModal(false)}
-      >
-        <View style={s.overlay}>
-          <View style={s.sheet}>
-            <ScrollView showsVerticalScrollIndicator={false}>
-              <Text style={s.sheetTitle}>
-                {editId ? "Editar" : "Nueva"} base
-              </Text>
-
-              <Text style={s.label}>Nombre de la base</Text>
-              <TextInput
-                style={s.input}
-                value={form.nombre}
-                onChangeText={(v) => setForm((f) => ({ ...f, nombre: v }))}
-                placeholder="ej: Base chocolatosa"
-              />
-
-              <Text style={s.label}>Descripción (opcional)</Text>
-              <TextInput
-                style={s.input}
-                value={form.descripcion}
-                onChangeText={(v) => setForm((f) => ({ ...f, descripcion: v }))}
-                placeholder="Notas sobre esta base..."
-              />
-
-              <Text style={s.label}>Rendimiento del lote (ml)</Text>
-              <TextInput
-                style={s.input}
-                value={String(form.rendimiento_ml)}
-                onChangeText={(v) =>
-                  setForm((f) => ({ ...f, rendimiento_ml: v }))
-                }
-                keyboardType="decimal-pad"
-                placeholder="ej: 1000"
-              />
-              <Text style={s.hint}>
-                Cuántos ml salen en total con esta receta. Con esto se calcula
-                el costo por ml que usan los helados.
-              </Text>
-
-              {/* Ingredientes y bases del lote */}
-              <View style={s.secHeader}>
-                <Text style={s.secTitle}>🧪 Ingredientes del lote</Text>
-                <Pressable
-                  style={s.addIngBtn}
-                  onPress={() => {
-                    setLineForm(EMPTY_LINE);
-                    setLineModal(true);
-                  }}
-                >
-                  <Text style={s.addIngBtnText}>+ Añadir</Text>
-                </Pressable>
-              </View>
-
-              {lineas.length === 0 ? (
-                <Text style={s.empty}>Sin ingredientes aún.</Text>
-              ) : (
-                lineas.map((l, i) => {
-                  const esBase = l.tipo === "base";
-                  const origen = esBase ? baseById(l.base_origen_id) : null;
-                  const unitario = esBase
-                    ? Number(origen?.costo_por_ml ?? 0)
-                    : Number(ing(l.ingrediente_id)?.precio_unidad ?? 0);
-                  return (
-                    <View key={i} style={s.ingRow}>
-                      <View style={{ flex: 1 }}>
-                        <Text
-                          style={[s.ingNombre, esBase && { color: "#7c3aed" }]}
-                        >
-                          {esBase
-                            ? `🧊 ${origen?.nombre ?? `base#${l.base_origen_id}`}`
-                            : (ing(l.ingrediente_id)?.nombre ??
-                              `#${l.ingrediente_id}`)}
-                        </Text>
-                        <Text style={s.ingCant}>
-                          {fmtCant(l.cantidad)} {unidadLinea(l)} × $
-                          {fmtUnit(unitario)}/{unidadLinea(l) || "u"} = $
-                          {fmt(Number(l.cantidad) * unitario)}
-                        </Text>
-                      </View>
-                      <Pressable
-                        onPress={() => removeLine(i)}
-                        style={s.iconBtn}
-                      >
-                        <Text style={{ color: "#e91e63" }}>✕</Text>
-                      </Pressable>
-                    </View>
-                  );
-                })
-              )}
-
-              {lineas.length > 0 && (
-                <View style={s.costoRow}>
-                  <Text style={s.costoLabel}>
-                    Costo del lote · ${fmtUnit(costoPorMl)}/ml
-                  </Text>
-                  <Text style={s.costoValor}>${fmt(costoLote)}</Text>
-                </View>
-              )}
-
-              <View style={s.modalBtns}>
-                <Pressable style={s.cancelBtn} onPress={() => setModal(false)}>
-                  <Text style={s.cancelBtnText}>Cancelar</Text>
-                </Pressable>
-                <Pressable
-                  style={[s.saveBtn, saving && { opacity: 0.5 }]}
-                  onPress={guardar}
-                  disabled={saving}
-                >
-                  <Text style={s.saveBtnText}>
-                    {saving ? "Guardando…" : "Guardar base"}
-                  </Text>
-                </Pressable>
-              </View>
-            </ScrollView>
-          </View>
-        </View>
-      </Modal>
-
-      {/* ── MODAL AÑADIR INGREDIENTE / BASE ─────────────── */}
-      <Modal
-        visible={lineModal}
-        transparent
-        animationType="fade"
-        onRequestClose={() => setLineModal(false)}
-      >
-        <View style={s.overlay}>
-          <View style={s.modalBox}>
-            <Text style={s.sheetTitle}>Añadir al lote</Text>
-
-            <View style={s.tipoRow}>
-              <Pressable
-                style={[
-                  s.tipoBtn,
-                  lineForm.tipo === "ingrediente" && s.tipoBtnActivo,
-                ]}
-                onPress={() =>
-                  setLineForm((f) => ({
-                    ...f,
-                    tipo: "ingrediente",
-                    base_origen_id: "",
-                  }))
-                }
-              >
-                <Text
-                  style={[
-                    s.tipoBtnText,
-                    lineForm.tipo === "ingrediente" && s.tipoBtnTextActivo,
-                  ]}
-                >
-                  🥛 Ingrediente
-                </Text>
-              </Pressable>
-              <Pressable
-                style={[s.tipoBtn, lineForm.tipo === "base" && s.tipoBtnActivo]}
-                onPress={() =>
-                  setLineForm((f) => ({
-                    ...f,
-                    tipo: "base",
-                    ingrediente_id: "",
-                  }))
-                }
-              >
-                <Text
-                  style={[
-                    s.tipoBtnText,
-                    lineForm.tipo === "base" && s.tipoBtnTextActivo,
-                  ]}
-                >
-                  🧊 Otra base
-                </Text>
-              </Pressable>
-            </View>
-
-            {lineForm.tipo === "ingrediente" ? (
-              <>
-                <Text style={s.label}>Ingrediente</Text>
-                <ScrollView style={{ maxHeight: 160 }} nestedScrollEnabled>
-                  {ingsDisponibles.map((i) => (
-                    <Pressable
-                      key={i.id}
-                      style={[
-                        s.ingOption,
-                        lineForm.ingrediente_id === i.id && s.ingOptionSel,
-                      ]}
-                      onPress={() =>
-                        setLineForm((f) => ({ ...f, ingrediente_id: i.id }))
-                      }
-                    >
-                      <Text
-                        style={[
-                          s.ingOptionText,
-                          lineForm.ingrediente_id === i.id &&
-                            s.ingOptionTextSel,
-                        ]}
-                      >
-                        {i.nombre} ({i.unidad})
-                      </Text>
-                    </Pressable>
-                  ))}
-                  {ingsDisponibles.length === 0 && (
-                    <Text style={s.empty}>No hay más ingredientes.</Text>
-                  )}
-                </ScrollView>
-              </>
-            ) : (
-              <>
-                <Text style={s.label}>Base (se mide en ml)</Text>
-                <ScrollView style={{ maxHeight: 160 }} nestedScrollEnabled>
-                  {basesDisponibles.map((b) => (
-                    <Pressable
-                      key={b.id}
-                      style={[
-                        s.ingOption,
-                        lineForm.base_origen_id === b.id && s.ingOptionSel,
-                      ]}
-                      onPress={() =>
-                        setLineForm((f) => ({ ...f, base_origen_id: b.id }))
-                      }
-                    >
-                      <Text
-                        style={[
-                          s.ingOptionText,
-                          lineForm.base_origen_id === b.id &&
-                            s.ingOptionTextSel,
-                        ]}
-                      >
-                        🧊 {b.nombre} · ${fmtUnit(b.costo_por_ml)}/ml
-                      </Text>
-                    </Pressable>
-                  ))}
-                  {basesDisponibles.length === 0 && (
-                    <Text style={s.empty}>No hay otras bases disponibles.</Text>
-                  )}
-                </ScrollView>
-              </>
-            )}
-
-            <Text style={s.label}>Cantidad</Text>
-            <TextInput
-              style={s.input}
-              value={lineForm.cantidad}
-              onChangeText={(v) => setLineForm((f) => ({ ...f, cantidad: v }))}
-              keyboardType="decimal-pad"
-              placeholder={
-                lineForm.tipo === "base"
-                  ? "en ml"
-                  : `en ${lineForm.ingrediente_id ? (ing(lineForm.ingrediente_id)?.unidad ?? "unidad") : "unidad"}`
+        data={visibles}
+        keyExtractor={(b) => String(b.id)}
+        contentContainerStyle={[PAGE, { paddingBottom: 40 }]}
+        ListHeaderComponent={
+          <View>
+            <PageHeader
+              icon="🧊"
+              tone="blue"
+              title="Bases"
+              subtitle="Mezclas que se usan en varios helados: ingredientes, preparaciones y otras bases"
+              right={
+                <Btn
+                  label="Nueva base"
+                  icon="＋"
+                  tone="pink"
+                  onPress={() => abrir()}
+                />
               }
             />
-
-            <View style={s.modalBtns}>
-              <Pressable
-                style={s.cancelBtn}
-                onPress={() => setLineModal(false)}
-              >
-                <Text style={s.cancelBtnText}>Cancelar</Text>
-              </Pressable>
-              <Pressable style={s.saveBtn} onPress={addLine}>
-                <Text style={s.saveBtnText}>Añadir</Text>
-              </Pressable>
-            </View>
+            {listaBases.length > 4 ? (
+              <View style={s.pad}>
+                <SearchBox
+                  value={busqueda}
+                  onChangeText={setBusqueda}
+                  placeholder="Buscar base…"
+                  style={{ marginTop: 10 }}
+                />
+              </View>
+            ) : null}
           </View>
-        </View>
-      </Modal>
+        }
+        ListEmptyComponent={
+          listaBases.length === 0 ? (
+            <EmptyState
+              icon="🧊"
+              titulo="Aún no hay bases"
+              texto="Crea la base principal con sus ingredientes. Después puedes armar otras a partir de ella."
+              accion="Crear la primera base"
+              onAccion={() => abrir()}
+            />
+          ) : (
+            <EmptyState
+              icon="🔍"
+              titulo="Ninguna base coincide"
+              texto="Prueba con otra palabra."
+            />
+          )
+        }
+        renderItem={({ item }) => {
+          const nIng = (item.ingredientes ?? []).length;
+          const nPrep = (item.preparaciones ?? []).length;
+          const subs = item.sub_bases ?? [];
+          return (
+            <View style={s.pad}>
+              <View style={s.card}>
+                <View style={{ flex: 1, minWidth: 0 }}>
+                  <Text style={s.cardNombre}>{item.nombre}</Text>
+                  {item.descripcion ? (
+                    <Text style={s.cardDesc}>{item.descripcion}</Text>
+                  ) : null}
+                  <View style={s.tags}>
+                    <Tag
+                      tone="green"
+                      icon="🥛"
+                      label={`${nIng} ingrediente${nIng === 1 ? "" : "s"}`}
+                    />
+                    {nPrep > 0 ? (
+                      <Tag
+                        tone="purple"
+                        icon="🫙"
+                        label={`${nPrep} preparación${nPrep === 1 ? "" : "es"}`}
+                      />
+                    ) : null}
+                    {subs.map((b) => (
+                      <Tag
+                        key={b.base_origen_id}
+                        tone="blue"
+                        icon="🧊"
+                        label={`${b.origen_nombre} · ${fmtCant(b.cantidad_ml)} ml`}
+                      />
+                    ))}
+                  </View>
+                  <Text style={s.cardCosto}>
+                    Lote ${fmtPeso(item.costo_tanda)} · rinde{" "}
+                    {fmtCant(item.rendimiento_ml)} ml ·{" "}
+                    <Text style={s.cardCostoMl}>
+                      ${fmtUnit(item.costo_por_ml)}/ml
+                    </Text>
+                  </Text>
+                </View>
+                <IconBtn
+                  icon="✏️"
+                  label={`Editar ${item.nombre}`}
+                  onPress={() => abrir(item)}
+                />
+                <IconBtn
+                  icon="🗑️"
+                  label={`Eliminar ${item.nombre}`}
+                  onPress={() => borrar(item)}
+                />
+              </View>
+            </View>
+          );
+        }}
+      />
+
+      <ModalShell
+        visible={modal}
+        onClose={cerrar}
+        tone="blue"
+        icon="🧊"
+        title={editId ? "Editar base" : "Nueva base"}
+        subtitle={
+          editId ? form.nombre : "Ingredientes, preparaciones y otras bases"
+        }
+        sticky={resumen}
+        footer={
+          <FooterBtns
+            onCancel={cerrar}
+            onSave={guardar}
+            saving={saving}
+            saveLabel="Guardar base"
+          />
+        }
+      >
+        <Field label="Nombre de la base">
+          <Input
+            value={form.nombre}
+            onChangeText={(v) => setForm((f) => ({ ...f, nombre: v }))}
+            placeholder="ej: Base chocolatosa"
+          />
+        </Field>
+        <DuplicateWarning
+          texto={form.nombre}
+          lista={listaBases}
+          excluirId={editId}
+          etiqueta="base"
+          getSub={(b) =>
+            `Rinde ${fmtCant(b.rendimiento_ml)} ml · $${fmtUnit(b.costo_por_ml)}/ml`
+          }
+          onEditar={editId ? undefined : abrir}
+        />
+
+        <Field label="Descripción (opcional)">
+          <Input
+            value={form.descripcion}
+            onChangeText={(v) => setForm((f) => ({ ...f, descripcion: v }))}
+            placeholder="Notas sobre esta base"
+          />
+        </Field>
+
+        <Field
+          label="Rendimiento del lote (ml)"
+          hint="Cuántos ml salen en total con esta receta. Con esto se calcula el costo por ml que usan los helados."
+        >
+          <Input
+            value={form.rendimiento_ml}
+            onChangeText={(v) => setForm((f) => ({ ...f, rendimiento_ml: v }))}
+            keyboardType="decimal-pad"
+            placeholder="ej: 1000"
+            invalid={!(rendimiento > 0)}
+          />
+        </Field>
+
+        <Block
+          tone="blue"
+          icon="🧪"
+          title="Lo que lleva esta base"
+          hint="Toca una cantidad para cambiarla"
+          right={
+            !panel ? (
+              <Btn
+                label="Añadir"
+                icon="＋"
+                small
+                variant="soft"
+                tone="pink"
+                onPress={() => setPanel(true)}
+              />
+            ) : null
+          }
+        >
+          {ordenadas.length === 0 ? (
+            <Text style={s.vacio}>
+              Todavía no tiene nada. Toca «Añadir» para elegir ingredientes,
+              preparaciones u otras bases.
+            </Text>
+          ) : (
+            ordenadas.map((l) => {
+              const t = TIPOS[l.tipo];
+              return (
+                <LineaEditable
+                  key={keyDe(l)}
+                  icono={t.icono}
+                  tone={t.tone}
+                  nombre={l.nombre}
+                  detalle={t.etiqueta}
+                  cantidad={l.cantidad}
+                  unidad={l.unidad}
+                  formula={formulaLinea(l.cantidad, l.unidad, l.precio)}
+                  onChange={(v) => cambiarCantidad(keyDe(l), v)}
+                  onRemove={() => quitar(keyDe(l))}
+                />
+              );
+            })
+          )}
+          {panel ? (
+            <AddLinePanel
+              fuentes={fuentes}
+              onAdd={anadir}
+              onClose={() => setPanel(false)}
+            />
+          ) : null}
+        </Block>
+      </ModalShell>
+
+      <DialogLayer />
     </View>
   );
 }
 
 const s = StyleSheet.create({
-  container: { flex: 1 },
-  addBtn: {
-    margin: 12,
-    backgroundColor: "#e91e63",
-    borderRadius: 10,
-    paddingVertical: 12,
-    alignItems: "center",
-  },
-  addBtnText: { color: "#fff", fontWeight: "700", fontSize: 14 },
-  empty: { textAlign: "center", color: "#aaa", fontSize: 13, marginTop: 20 },
-
+  container: { flex: 1, backgroundColor: C.bg },
+  pad: { paddingHorizontal: 16 },
   card: {
-    backgroundColor: "#fff",
-    borderRadius: 12,
-    padding: 14,
     flexDirection: "row",
     alignItems: "center",
-    shadowColor: "#000",
-    shadowOpacity: 0.05,
-    shadowRadius: 3,
-    elevation: 2,
-  },
-  cardNombre: { fontSize: 14, fontWeight: "700", color: "#1a1a1a" },
-  cardDesc: { fontSize: 12, color: "#888", marginTop: 1 },
-  cardSub: { fontSize: 12, color: "#7c3aed", marginTop: 3 },
-  cardDetalle: { fontSize: 12, color: "#666", marginTop: 4 },
-  iconBtn: { padding: 6 },
-
-  overlay: {
-    flex: 1,
-    backgroundColor: "rgba(0,0,0,0.5)",
-    justifyContent: "flex-end",
-  },
-  sheet: {
-    backgroundColor: "#fff",
-    borderTopLeftRadius: 24,
-    borderTopRightRadius: 24,
-    padding: 20,
-    maxHeight: "90%",
-  },
-  modalBox: {
-    margin: 20,
-    backgroundColor: "#fff",
-    borderRadius: 20,
-    padding: 20,
-    maxHeight: "85%",
-  },
-  sheetTitle: { fontSize: 17, fontWeight: "800", marginBottom: 12 },
-  label: { fontSize: 12, color: "#666", fontWeight: "600", marginTop: 12 },
-  hint: { fontSize: 11, color: "#999", marginTop: 4 },
-  input: {
+    gap: 4,
+    backgroundColor: C.surface,
+    borderRadius: 14,
     borderWidth: 1,
-    borderColor: "#ddd",
-    borderRadius: 10,
-    padding: 10,
-    fontSize: 14,
-    backgroundColor: "#fafafa",
-    marginTop: 4,
+    borderColor: C.border,
+    borderLeftWidth: 4,
+    borderLeftColor: "#1976d2",
+    padding: 14,
+    marginTop: 10,
   },
-
-  secHeader: {
-    flexDirection: "row",
-    justifyContent: "space-between",
-    alignItems: "center",
-    marginTop: 16,
-    marginBottom: 8,
-  },
-  secTitle: { fontSize: 13, fontWeight: "700", color: "#333" },
-  addIngBtn: {
-    backgroundColor: "#fce4ec",
-    borderRadius: 8,
-    paddingHorizontal: 12,
-    paddingVertical: 6,
-  },
-  addIngBtnText: { color: "#e91e63", fontWeight: "700", fontSize: 12 },
-
-  ingRow: {
+  cardNombre: { fontSize: 16, fontWeight: "800", color: C.fg },
+  cardDesc: { fontSize: 12, color: C.fg3, marginTop: 2 },
+  tags: { flexDirection: "row", flexWrap: "wrap", gap: 6, marginTop: 8 },
+  cardCosto: { fontSize: 12, color: C.fg2, marginTop: 8 },
+  cardCostoMl: { color: C.accentDark, fontWeight: "800" },
+  vacio: { fontSize: 13, color: C.fg3, paddingVertical: 10, lineHeight: 19 },
+  sticky: {
     flexDirection: "row",
     alignItems: "center",
-    backgroundColor: "#f9f9f9",
-    borderRadius: 10,
-    padding: 10,
-    marginBottom: 6,
+    backgroundColor: "#e3f2fd",
+    paddingHorizontal: 16,
+    paddingVertical: 10,
+    borderBottomWidth: 1,
+    borderBottomColor: "#bbdefb",
   },
-  ingNombre: { fontSize: 13, fontWeight: "600", color: "#333" },
-  ingCant: { fontSize: 12, color: "#888", marginTop: 2 },
-
-  costoRow: {
-    flexDirection: "row",
-    justifyContent: "space-between",
-    backgroundColor: "#fce4ec",
-    borderRadius: 10,
-    padding: 12,
-    marginTop: 8,
+  stickyLabel: { fontSize: 11, color: "#1565c0", fontWeight: "700" },
+  stickyValor: {
+    fontSize: 18,
+    color: "#1565c0",
+    fontWeight: "800",
+    fontVariant: ["tabular-nums"],
   },
-  costoLabel: { fontSize: 13, color: "#c2185b", fontWeight: "600" },
-  costoValor: { fontSize: 13, color: "#c2185b", fontWeight: "800" },
-
-  tipoRow: { flexDirection: "row", gap: 8, marginTop: 8 },
-  tipoBtn: {
-    flex: 1,
-    padding: 10,
-    borderRadius: 10,
-    backgroundColor: "#f5f5f5",
-    alignItems: "center",
-  },
-  tipoBtnActivo: { backgroundColor: "#fce4ec" },
-  tipoBtnText: { fontSize: 13, color: "#666" },
-  tipoBtnTextActivo: { color: "#e91e63", fontWeight: "700" },
-
-  ingOption: {
-    padding: 10,
-    borderRadius: 8,
-    marginBottom: 4,
-    backgroundColor: "#f5f5f5",
-  },
-  ingOptionSel: { backgroundColor: "#fce4ec" },
-  ingOptionText: { fontSize: 13, color: "#444" },
-  ingOptionTextSel: { color: "#e91e63", fontWeight: "700" },
-
-  modalBtns: { flexDirection: "row", gap: 10, marginTop: 16 },
-  cancelBtn: {
-    flex: 1,
-    padding: 12,
-    borderRadius: 10,
-    backgroundColor: "#f5f5f5",
-    alignItems: "center",
-  },
-  cancelBtnText: { color: "#666", fontWeight: "600" },
-  saveBtn: {
-    flex: 1,
-    padding: 12,
-    borderRadius: 10,
-    backgroundColor: "#e91e63",
-    alignItems: "center",
-  },
-  saveBtnText: { color: "#fff", fontWeight: "700" },
 });
