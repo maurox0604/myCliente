@@ -1,40 +1,66 @@
 // components/costeo/IngredientesTab.js
-import {
-  View,
-  Text,
-  FlatList,
-  Pressable,
-  StyleSheet,
-  TextInput,
-  Alert,
-  Modal,
-} from "react-native";
-import { useState } from "react";
+// Ingredientes con categoría (Base / Fruta / Topping / Otro), buscador de
+// nombres parecidos al escribir (leche "clim" vs "Klim") y avisos visibles en web.
+import React, { useState } from "react";
+import { View, Text, FlatList, StyleSheet } from "react-native";
 import { useCosteo } from "../../context/CosteoContext";
+import {
+  C,
+  CATEGORIAS,
+  PAGE,
+  PageHeader,
+  Btn,
+  IconBtn,
+  Tag,
+  Field,
+  Input,
+  SearchBox,
+  Segmented,
+  Block,
+  EmptyState,
+  DuplicateWarning,
+  ModalShell,
+  FooterBtns,
+  DialogLayer,
+  avisar,
+  confirmar,
+  toast,
+  fmtPeso,
+  fmtCant,
+  fmtUnit,
+  toNum,
+  aTexto,
+  coincide,
+  catInfo,
+  buscarSimilares,
+} from "../../ui";
 
 const UNIDADES = ["gr", "ml", "unidad"];
 const EMPTY = {
   nombre: "",
   unidad: "gr",
-  precio_compra: "", // precio total pagado
-  cantidad_compra: "", // cuántos gr/ml/unidades se compraron
+  categoria: "otro",
+  precio_compra: "",
+  cantidad_compra: "",
   proveedor: "",
-};
-
-const calcPrecioUnidad = (precio, cantidad) => {
-  const p = Number(precio);
-  const c = Number(cantidad);
-  if (!p || !c) return null;
-  return p / c;
 };
 
 export default function IngredientesTab() {
   const { ingredientes, guardarIngrediente, borrarIngrediente } = useCosteo();
-  const [modal, setModal] = useState(false);
-  const [form, setForm] = useState(EMPTY);
-  const [editId, setEditId] = useState(null);
 
-  const precioUnd = calcPrecioUnidad(form.precio_compra, form.cantidad_compra);
+  const [busqueda, setBusqueda] = useState("");
+  const [filtro, setFiltro] = useState("todos");
+  const [modal, setModal] = useState(false);
+  const [editId, setEditId] = useState(null);
+  const [form, setForm] = useState(EMPTY);
+  const [saving, setSaving] = useState(false);
+
+  const lista = ingredientes ?? [];
+  const set = (campo) => (v) => setForm((f) => ({ ...f, [campo]: v }));
+
+  const precio = toNum(form.precio_compra);
+  const cantidad = toNum(form.cantidad_compra);
+  const precioUnd = precio > 0 && cantidad > 0 ? precio / cantidad : null;
 
   const abrir = (item = null) => {
     setEditId(item?.id ?? null);
@@ -43,273 +69,336 @@ export default function IngredientesTab() {
         ? {
             nombre: item.nombre,
             unidad: item.unidad,
-            precio_compra: String(item.precio_compra ?? ""),
-            cantidad_compra: String(item.cantidad_compra ?? ""),
+            categoria: item.categoria ?? "otro",
+            precio_compra: aTexto(item.precio_compra),
+            cantidad_compra: aTexto(item.cantidad_compra),
             proveedor: item.proveedor ?? "",
           }
         : EMPTY,
     );
     setModal(true);
   };
+  const cerrar = () => setModal(false);
 
   const guardar = async () => {
-    if (!form.nombre.trim()) return Alert.alert("Nombre requerido");
-    if (!form.precio_compra) return Alert.alert("Ingresa el precio de compra");
-    if (!form.cantidad_compra)
-      return Alert.alert("Ingresa la cantidad comprada");
-    const precio_unidad = calcPrecioUnidad(
-      form.precio_compra,
-      form.cantidad_compra,
+    const nombre = form.nombre.trim();
+    if (!nombre)
+      return avisar("Falta el nombre", "Escribe cómo se llama el ingrediente.");
+    if (!(precio > 0))
+      return avisar(
+        "Falta el precio",
+        "Escribe cuánto pagaste en total por la compra.",
+      );
+    if (!(cantidad > 0))
+      return avisar(
+        "Falta la cantidad",
+        `Escribe cuántos ${form.unidad} compraste con ese precio.`,
+      );
+
+    const igual = buscarSimilares(nombre, lista, (x) => x.nombre, editId).find(
+      (r) => r.nivel === "igual",
     );
-    await guardarIngrediente(
-      {
-        nombre: form.nombre,
-        unidad: form.unidad,
-        precio_compra: Number(form.precio_compra),
-        cantidad_compra: Number(form.cantidad_compra),
-        precio_unidad, // calculado automáticamente
-        proveedor: form.proveedor,
-      },
-      editId,
-    );
-    setModal(false);
+    if (igual)
+      return avisar(
+        "Ese ingrediente ya existe",
+        `Ya tienes "${igual.item.nombre}". Edítalo en vez de crear otro igual.`,
+      );
+
+    setSaving(true);
+    try {
+      await guardarIngrediente(
+        {
+          nombre,
+          unidad: form.unidad,
+          categoria: form.categoria,
+          precio_compra: precio,
+          cantidad_compra: cantidad,
+          precio_unidad: precio / cantidad,
+          proveedor: form.proveedor.trim(),
+        },
+        editId,
+      );
+      cerrar();
+      toast(editId ? "Ingrediente actualizado" : "Ingrediente creado");
+    } catch (e) {
+      avisar("No se pudo guardar", e.message || "Inténtalo de nuevo.");
+    } finally {
+      setSaving(false);
+    }
   };
 
-  const borrar = (item) =>
-    Alert.alert("Eliminar", `¿Eliminar ${item.nombre}?`, [
-      { text: "Cancelar", style: "cancel" },
+  const borrar = async (item) => {
+    const si = await confirmar(
+      "Eliminar ingrediente",
+      `¿Eliminar "${item.nombre}"?`,
       {
-        text: "Eliminar",
-        style: "destructive",
-        onPress: () => borrarIngrediente(item.id),
+        confirmText: "Eliminar",
+        destructive: true,
       },
-    ]);
+    );
+    if (!si) return;
+    try {
+      await borrarIngrediente(item.id);
+      toast("Ingrediente eliminado");
+    } catch (e) {
+      // ej.: "No se puede eliminar: lo usan las bases Base principal…"
+      avisar("No se puede eliminar", e.message || "Inténtalo de nuevo.");
+    }
+  };
+
+  // ── filtros ────────────────────────────────────────────────
+  const cuenta = (k) =>
+    lista.filter((i) => (i.categoria ?? "otro") === k).length;
+  const visibles = lista
+    .filter((i) => filtro === "todos" || (i.categoria ?? "otro") === filtro)
+    .filter((i) => coincide(busqueda, i.nombre))
+    .sort((a, b) => String(a.nombre).localeCompare(String(b.nombre), "es"));
+
+  const opcionesFiltro = [
+    { value: "todos", label: `Todos (${lista.length})` },
+    ...CATEGORIAS.map((c) => ({
+      value: c.key,
+      label: `${c.icon} ${c.label} (${cuenta(c.key)})`,
+    })),
+  ];
+
+  const cat = catInfo(form.categoria);
 
   return (
     <View style={s.container}>
-      <Pressable style={s.addBtn} onPress={() => abrir()}>
-        <Text style={s.addBtnText}>+ Nuevo ingrediente</Text>
-      </Pressable>
-
       <FlatList
-        data={ingredientes}
+        data={visibles}
         keyExtractor={(i) => String(i.id)}
-        contentContainerStyle={{ padding: 12, gap: 8 }}
-        ListEmptyComponent={
-          <Text style={s.empty}>No hay ingredientes. Agrega el primero.</Text>
-        }
-        renderItem={({ item }) => (
-          <View style={s.card}>
-            <View style={{ flex: 1 }}>
-              <Text style={s.nombre}>{item.nombre}</Text>
-              <Text style={s.detalle}>
-                $
-                {Number(item.precio_unidad) % 1 === 0
-                  ? Number(item.precio_unidad).toLocaleString("es-CO")
-                  : Number(item.precio_unidad).toFixed(2)}{" "}
-                / {item.unidad}
-                {item.precio_compra
-                  ? `  ·  $${Number(item.precio_compra).toLocaleString("es-CO")} × ${item.cantidad_compra} ${item.unidad}`
-                  : ""}
-                {item.proveedor ? `  ·  ${item.proveedor}` : ""}
-              </Text>
-            </View>
-            <Pressable onPress={() => abrir(item)} style={s.editBtn}>
-              <Text>✏️</Text>
-            </Pressable>
-            <Pressable onPress={() => borrar(item)} style={s.editBtn}>
-              <Text>🗑️</Text>
-            </Pressable>
+        contentContainerStyle={[PAGE, { paddingBottom: 40 }]}
+        ListHeaderComponent={
+          <View>
+            <PageHeader
+              icon="🥛"
+              tone="green"
+              title="Ingredientes"
+              subtitle="Materias primas con su costo por gr, ml o unidad"
+              right={
+                <Btn
+                  label="Nuevo"
+                  icon="＋"
+                  tone="pink"
+                  onPress={() => abrir()}
+                />
+              }
+            />
+            {lista.length > 0 ? (
+              <View style={s.pad}>
+                <SearchBox
+                  value={busqueda}
+                  onChangeText={setBusqueda}
+                  placeholder="Buscar ingrediente…"
+                  style={{ marginTop: 10 }}
+                />
+                <View style={{ marginTop: 10 }}>
+                  <Segmented
+                    tone="green"
+                    value={filtro}
+                    onChange={setFiltro}
+                    options={opcionesFiltro}
+                  />
+                </View>
+              </View>
+            ) : null}
           </View>
-        )}
+        }
+        ListEmptyComponent={
+          lista.length === 0 ? (
+            <EmptyState
+              icon="🥛"
+              tone="green"
+              titulo="Aún no hay ingredientes"
+              texto="Empieza por la leche, el azúcar y lo que compras para hacer tus helados."
+              accion="Agregar el primero"
+              onAccion={() => abrir()}
+            />
+          ) : (
+            <EmptyState
+              icon="🔍"
+              titulo="Nada coincide"
+              texto="Prueba con otra palabra o cambia el filtro."
+            />
+          )
+        }
+        renderItem={({ item }) => {
+          const c = catInfo(item.categoria);
+          return (
+            <View style={s.pad}>
+              <View style={[s.card, { borderLeftColor: "#2e9e4f" }]}>
+                <View style={{ flex: 1, minWidth: 0 }}>
+                  <View style={s.nombreRow}>
+                    <Text style={s.nombre} numberOfLines={2}>
+                      {item.nombre}
+                    </Text>
+                    <Tag tone={c.tone} icon={c.icon} label={c.label} />
+                  </View>
+                  <Text style={s.precio}>
+                    ${fmtUnit(item.precio_unidad)}
+                    <Text style={s.precioUnidad}> / {item.unidad}</Text>
+                  </Text>
+                  {item.precio_compra ? (
+                    <Text style={s.detalle}>
+                      Compra: ${fmtPeso(item.precio_compra)} por{" "}
+                      {fmtCant(item.cantidad_compra)} {item.unidad}
+                      {item.proveedor ? `  ·  ${item.proveedor}` : ""}
+                    </Text>
+                  ) : item.proveedor ? (
+                    <Text style={s.detalle}>{item.proveedor}</Text>
+                  ) : null}
+                </View>
+                <IconBtn
+                  icon="✏️"
+                  label={`Editar ${item.nombre}`}
+                  onPress={() => abrir(item)}
+                />
+                <IconBtn
+                  icon="🗑️"
+                  label={`Eliminar ${item.nombre}`}
+                  onPress={() => borrar(item)}
+                />
+              </View>
+            </View>
+          );
+        }}
       />
 
-      <Modal
+      <ModalShell
         visible={modal}
-        transparent
-        animationType="fade"
-        onRequestClose={() => setModal(false)}
+        onClose={cerrar}
+        tone="green"
+        icon="🥛"
+        title={editId ? "Editar ingrediente" : "Nuevo ingrediente"}
+        subtitle={editId ? form.nombre : "Lo que compras y cuánto te cuesta"}
+        footer={
+          <FooterBtns onCancel={cerrar} onSave={guardar} saving={saving} />
+        }
       >
-        <View style={s.overlay}>
-          <View style={s.modalBox}>
-            <Text style={s.modalTitle}>
-              {editId ? "Editar" : "Nuevo"} ingrediente
-            </Text>
+        <Field label="Nombre">
+          <Input
+            value={form.nombre}
+            onChangeText={set("nombre")}
+            placeholder="ej: Leche en polvo"
+          />
+        </Field>
+        <DuplicateWarning
+          texto={form.nombre}
+          lista={lista}
+          excluirId={editId}
+          etiqueta="ingrediente"
+          getSub={(i) =>
+            `${catInfo(i.categoria).label} · $${fmtUnit(i.precio_unidad)}/${i.unidad}`
+          }
+          onEditar={abrir}
+        />
 
-            <Text style={s.label}>Nombre</Text>
-            <TextInput
-              style={s.input}
-              value={form.nombre}
-              onChangeText={(v) => setForm((f) => ({ ...f, nombre: v }))}
-              placeholder="ej: Leche en polvo"
-            />
+        <Field
+          label="Categoría"
+          hint="Los toppings son los que se pueden poner encima del helado en Recetas. Base y Fruta van como ingredientes principales."
+        >
+          <Segmented
+            tone={cat.tone}
+            value={form.categoria}
+            onChange={set("categoria")}
+            options={CATEGORIAS.map((c) => ({
+              value: c.key,
+              label: `${c.icon} ${c.label}`,
+            }))}
+          />
+        </Field>
 
-            <Text style={s.label}>Unidad</Text>
-            <View style={s.chipRow}>
-              {UNIDADES.map((u) => (
-                <Pressable
-                  key={u}
-                  style={[s.chip, form.unidad === u && s.chipActivo]}
-                  onPress={() => setForm((f) => ({ ...f, unidad: u }))}
-                >
-                  <Text
-                    style={[s.chipText, form.unidad === u && s.chipTextActivo]}
-                  >
-                    {u}
-                  </Text>
-                </Pressable>
-              ))}
-            </View>
+        <Field label="Unidad de medida">
+          <Segmented
+            tone="green"
+            value={form.unidad}
+            onChange={set("unidad")}
+            options={UNIDADES.map((u) => ({ value: u, label: u }))}
+          />
+        </Field>
 
-            {/* Precio de compra + cantidad → cálculo automático */}
-            <View style={s.row}>
-              <View style={{ flex: 1 }}>
-                <Text style={s.label}>Precio total de compra ($)</Text>
-                <TextInput
-                  style={s.input}
-                  value={form.precio_compra}
-                  onChangeText={(v) =>
-                    setForm((f) => ({ ...f, precio_compra: v }))
-                  }
-                  keyboardType="numeric"
-                  placeholder="ej: 8500"
-                />
-              </View>
-              <View style={s.divider} />
-              <View style={{ flex: 1 }}>
-                <Text style={s.label}>Cantidad comprada ({form.unidad})</Text>
-                <TextInput
-                  style={s.input}
-                  value={form.cantidad_compra}
-                  onChangeText={(v) =>
-                    setForm((f) => ({ ...f, cantidad_compra: v }))
-                  }
-                  keyboardType="numeric"
-                  placeholder="ej: 500"
-                />
-              </View>
-            </View>
-
-            {/* Resultado automático */}
-            <View style={s.resultRow}>
-              <Text style={s.resultLabel}>Costo por {form.unidad}:</Text>
-              <Text style={s.resultValor}>
-                {precioUnd !== null
-                  ? `$${precioUnd % 1 === 0 ? precioUnd.toLocaleString("es-CO") : precioUnd.toFixed(2)}`
-                  : "—"}
-              </Text>
-            </View>
-
-            <Text style={s.label}>Proveedor (opcional)</Text>
-            <TextInput
-              style={s.input}
-              value={form.proveedor}
-              onChangeText={(v) => setForm((f) => ({ ...f, proveedor: v }))}
-              placeholder="ej: Lácteos del Valle"
-            />
-
-            <View style={s.modalBtns}>
-              <Pressable style={s.cancelBtn} onPress={() => setModal(false)}>
-                <Text style={s.cancelBtnText}>Cancelar</Text>
-              </Pressable>
-              <Pressable style={s.saveBtn} onPress={guardar}>
-                <Text style={s.saveBtnText}>Guardar</Text>
-              </Pressable>
-            </View>
+        <View style={s.dosCols}>
+          <View style={{ flex: 1 }}>
+            <Field label="Precio total pagado ($)">
+              <Input
+                value={form.precio_compra}
+                onChangeText={set("precio_compra")}
+                keyboardType="decimal-pad"
+                placeholder="ej: 8500"
+              />
+            </Field>
+          </View>
+          <View style={{ flex: 1 }}>
+            <Field label={`Cantidad comprada (${form.unidad})`}>
+              <Input
+                value={form.cantidad_compra}
+                onChangeText={set("cantidad_compra")}
+                keyboardType="decimal-pad"
+                placeholder="ej: 500"
+              />
+            </Field>
           </View>
         </View>
-      </Modal>
+
+        <Block
+          tone="pink"
+          icon="🧮"
+          title={`Costo por ${form.unidad}`}
+          hint="Se calcula solo: precio ÷ cantidad"
+        >
+          <Text style={s.resultado}>
+            {precioUnd !== null
+              ? `$${fmtUnit(precioUnd)} / ${form.unidad}`
+              : "—"}
+          </Text>
+        </Block>
+
+        <Field label="Proveedor (opcional)">
+          <Input
+            value={form.proveedor}
+            onChangeText={set("proveedor")}
+            placeholder="ej: Lácteos del Valle"
+          />
+        </Field>
+      </ModalShell>
+
+      <DialogLayer />
     </View>
   );
 }
 
 const s = StyleSheet.create({
-  container: { flex: 1 },
-  addBtn: {
-    margin: 12,
-    backgroundColor: "#e91e63",
-    borderRadius: 10,
-    paddingVertical: 12,
-    alignItems: "center",
-  },
-  addBtnText: { color: "#fff", fontWeight: "700", fontSize: 14 },
-  empty: { textAlign: "center", color: "#aaa", fontSize: 13, marginTop: 20 },
-
+  container: { flex: 1, backgroundColor: C.bg },
+  pad: { paddingHorizontal: 16 },
   card: {
-    backgroundColor: "#fff",
-    borderRadius: 12,
-    padding: 14,
     flexDirection: "row",
     alignItems: "center",
-    shadowColor: "#000",
-    shadowOpacity: 0.05,
-    shadowRadius: 3,
-    elevation: 2,
-  },
-  nombre: { fontSize: 14, fontWeight: "700", color: "#1a1a1a" },
-  detalle: { fontSize: 12, color: "#777", marginTop: 2 },
-  editBtn: { padding: 6 },
-
-  overlay: {
-    flex: 1,
-    backgroundColor: "rgba(0,0,0,0.5)",
-    justifyContent: "center",
-    padding: 20,
-  },
-  modalBox: { backgroundColor: "#fff", borderRadius: 20, padding: 20, gap: 6 },
-  modalTitle: { fontSize: 17, fontWeight: "800", marginBottom: 8 },
-  label: { fontSize: 12, color: "#666", fontWeight: "600", marginTop: 8 },
-  input: {
+    gap: 4,
+    backgroundColor: C.surface,
+    borderRadius: 14,
     borderWidth: 1,
-    borderColor: "#ddd",
-    borderRadius: 10,
-    padding: 10,
-    fontSize: 14,
-    backgroundColor: "#fafafa",
-    marginTop: 4,
+    borderColor: C.border,
+    borderLeftWidth: 4,
+    padding: 14,
+    marginTop: 10,
   },
-
-  row: { flexDirection: "row", alignItems: "flex-start", marginTop: 4 },
-  divider: { width: 10 },
-
-  resultRow: {
+  nombreRow: {
     flexDirection: "row",
-    justifyContent: "space-between",
     alignItems: "center",
-    backgroundColor: "#fce4ec",
-    borderRadius: 10,
-    padding: 10,
-    marginTop: 8,
+    flexWrap: "wrap",
+    gap: 8,
   },
-  resultLabel: { fontSize: 13, color: "#c2185b", fontWeight: "600" },
-  resultValor: { fontSize: 14, color: "#c2185b", fontWeight: "800" },
-
-  chipRow: { flexDirection: "row", gap: 8, marginTop: 4 },
-  chip: {
-    paddingHorizontal: 16,
-    paddingVertical: 8,
-    borderRadius: 20,
-    backgroundColor: "#f0f0f0",
+  nombre: { fontSize: 15, fontWeight: "800", color: C.fg },
+  precio: {
+    fontSize: 17,
+    fontWeight: "800",
+    color: C.accentDark,
+    marginTop: 6,
   },
-  chipActivo: { backgroundColor: "#fce4ec" },
-  chipText: { fontSize: 13, color: "#666" },
-  chipTextActivo: { color: "#e91e63", fontWeight: "700" },
-
-  modalBtns: { flexDirection: "row", gap: 10, marginTop: 16 },
-  cancelBtn: {
-    flex: 1,
-    padding: 12,
-    borderRadius: 10,
-    backgroundColor: "#f5f5f5",
-    alignItems: "center",
-  },
-  cancelBtnText: { color: "#666", fontWeight: "600" },
-  saveBtn: {
-    flex: 1,
-    padding: 12,
-    borderRadius: 10,
-    backgroundColor: "#e91e63",
-    alignItems: "center",
-  },
-  saveBtnText: { color: "#fff", fontWeight: "700" },
+  precioUnidad: { fontSize: 12, fontWeight: "600", color: C.fg3 },
+  detalle: { fontSize: 12, color: C.fg3, marginTop: 4 },
+  dosCols: { flexDirection: "row", gap: 10 },
+  resultado: { fontSize: 20, fontWeight: "800", color: C.accentDark },
 });

@@ -154,7 +154,7 @@ export const formulaLinea = (cantidad, unidad, precio) => {
 const sinTildes = (s) =>
   String(s ?? "")
     .normalize("NFD")
-    .replace(/[̀-ͯ]/g, "");
+    .replace(/[\u0300-\u036f]/g, "");
 
 // Clave fonética simple para español: ignora mayúsculas, tildes, c/k/q,
 // s/z/c suave, v/b, h muda, letras dobles y plural.
