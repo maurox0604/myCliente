@@ -24,7 +24,7 @@ export function CosteoProvider({ children }) {
   });
 
   // Lanza Error con el mensaje del servidor si la respuesta no es 2xx.
-  // (lo usan ingredientes, bases y recetas; el resto de CRUDs queda como estaba)
+  // (lo usan ingredientes, preparaciones, bases y recetas; el resto de CRUDs queda como estaba)
   const assertOk = async (res, fallback) => {
     if (res.ok) return;
     let msg = fallback;
@@ -157,25 +157,35 @@ export function CosteoProvider({ children }) {
   };
 
   // ── PREPARACIONES CRUD ───────────────────────────────────
+  // El costo de una preparación entra en el de las bases: se recargan ambas.
+  const refrescarPorPreparacion = async () => {
+    await fetchPreparaciones();
+    try {
+      await fetchBases();
+    } catch (_) {}
+  };
+
   const guardarPreparacion = async (data, id = null) => {
     const method = id ? "PUT" : "POST";
     const url = id
       ? `${API}/api/costeo/preparaciones/${id}`
       : `${API}/api/costeo/preparaciones`;
-    await fetch(url, {
+    const res = await fetch(url, {
       method,
       headers: await headers(),
       body: JSON.stringify(data),
     });
-    await fetchPreparaciones();
+    await assertOk(res, "No se pudo guardar la preparación");
+    await refrescarPorPreparacion();
   };
 
   const borrarPreparacion = async (id) => {
-    await fetch(`${API}/api/costeo/preparaciones/${id}`, {
+    const res = await fetch(`${API}/api/costeo/preparaciones/${id}`, {
       method: "DELETE",
       headers: await headers(),
     });
-    await fetchPreparaciones();
+    await assertOk(res, "No se pudo eliminar la preparación");
+    await refrescarPorPreparacion();
   };
 
   // ── PACKAGING CRUD ───────────────────────────────────────
