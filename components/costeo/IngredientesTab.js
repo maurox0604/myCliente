@@ -33,7 +33,7 @@ import {
   coincide,
   catInfo,
   buscarSimilares,
-} from "../../ui";
+} from "./ui";
 
 const UNIDADES = ["gr", "ml", "unidad"];
 const EMPTY = {
