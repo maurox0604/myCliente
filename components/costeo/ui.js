@@ -225,7 +225,8 @@ export const buscarSimilares = (
     const k = clave(getNombre(item));
     if (!k) continue;
     let nivel = null;
-    if (k === q) nivel = "igual";
+    if (k === q || k.replace(/ /g, "") === q.replace(/ /g, ""))
+      nivel = "igual"; // "vaso 8 oz" = "Vaso 8oz"
     else {
       const kT = k.split(" ");
       const contiene =

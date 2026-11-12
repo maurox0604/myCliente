@@ -24,7 +24,7 @@ export function CosteoProvider({ children }) {
   });
 
   // Lanza Error con el mensaje del servidor si la respuesta no es 2xx.
-  // (lo usan ingredientes, preparaciones, bases y recetas; el resto de CRUDs queda como estaba)
+  // (lo usan todos los guardar/borrar: el mensaje del servidor llega a la pantalla)
   const assertOk = async (res, fallback) => {
     if (res.ok) return;
     let msg = fallback;
@@ -194,19 +194,21 @@ export function CosteoProvider({ children }) {
     const url = id
       ? `${API}/api/costeo/packaging/${id}`
       : `${API}/api/costeo/packaging`;
-    await fetch(url, {
+    const res = await fetch(url, {
       method,
       headers: await headers(),
       body: JSON.stringify(data),
     });
+    await assertOk(res, "No se pudo guardar el packaging");
     await fetchPackaging();
   };
 
   const borrarPackaging = async (id) => {
-    await fetch(`${API}/api/costeo/packaging/${id}`, {
+    const res = await fetch(`${API}/api/costeo/packaging/${id}`, {
       method: "DELETE",
       headers: await headers(),
     });
+    await assertOk(res, "No se pudo eliminar el packaging");
     await fetchPackaging();
   };
 
@@ -240,28 +242,34 @@ export function CosteoProvider({ children }) {
     const url = id
       ? `${API}/api/costeo/costos-fijos/${id}`
       : `${API}/api/costeo/costos-fijos`;
-    await fetch(url, {
+    const res = await fetch(url, {
       method,
       headers: await headers(),
       body: JSON.stringify(data),
     });
+    await assertOk(res, "No se pudo guardar el costo fijo");
     await fetchCostosFijos();
   };
 
   const borrarCostoFijo = async (id) => {
-    await fetch(`${API}/api/costeo/costos-fijos/${id}`, {
+    const res = await fetch(`${API}/api/costeo/costos-fijos/${id}`, {
       method: "DELETE",
       headers: await headers(),
     });
+    await assertOk(res, "No se pudo eliminar el costo fijo");
     await fetchCostosFijos();
   };
 
   const actualizarUnidadesMes = async (unidades_mes) => {
-    await fetch(`${API}/api/costeo/costos-fijos/config/unidades-mes`, {
-      method: "PUT",
-      headers: await headers(),
-      body: JSON.stringify({ unidades_mes }),
-    });
+    const res = await fetch(
+      `${API}/api/costeo/costos-fijos/config/unidades-mes`,
+      {
+        method: "PUT",
+        headers: await headers(),
+        body: JSON.stringify({ unidades_mes }),
+      },
+    );
+    await assertOk(res, "No se pudo guardar la producción mensual");
     await fetchCostosFijos();
   };
 
